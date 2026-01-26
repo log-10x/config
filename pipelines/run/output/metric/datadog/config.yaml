@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/output/metric/datadog/schema.json
+
+# 🔟❎ 'run' Datadog metric output configuration
+
+# Configure Datadog metric counter outputs.
+# To learn more see https://doc.log10x.com/run/output/metric/datadog/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/output/metric/datadog
+
+# ============================== Datadog Options ==============================
+
+# Define multiple Datadog metric outputs below
+datadog:
+  
+    # --------------------------- Connection Options --------------------------
+
+    # 'apiKey' and 'applicationKey' set the Datadog API and app keys (required).
+    #  To learn more see: https://docs.datadoghq.com/account_management/api-app-keys/
+  - apiKey: $=TenXEnv.get("DD_API_KEY")         # (EnvVar REQUIRED)
+
+    applicationKey: $=TenXEnv.get("DD_APP_KEY") # (EnvVar REQUIRED)
+
+    # 'uri' sets the Datadog site address to which to connect.
+    #  To learn more see: https://docs.datadoghq.com/getting_started/site/
+    uri: https://us5.datadoghq.com # (or https://api.us3.datadoghq.com)
+
+    # ---------------------------- Publish Options ----------------------------
+
+    # 'descriptions' sets whether to send meter descriptions to Datadog
+    #  Turn this off to minimize the amount of data sent on each write
+    descriptions: false
+
+    # 'step' sets the interval to send metrics to CloudWatch (e.g., '1m').
+    #  To learn more see: https://micrometer.io/docs/concepts#rate-aggregation
+    step: 5s
+
+    # ---------------------------- Counter Options ----------------------------
+
+    # 'nameField' sets the TenXSummary field whose value identifies the micrometer counter to increment. 
+    #  The 'inputName' field returns the name of the aggregator that produced the target TenXSummary instance.
+    #  To learn more see https://doc.log10x.com/run/aggregate
+    nameField: inputName
+
+    # 'counterFields' specifies the TenXSummary fields whose values are used to increment the counter.
+    #  To learn more see https://doc.log10x.com/run/aggregate/#summary-fields
+    counterFields:
+      - summaryVolume
+      - summaryBytes
+      - summaryTotals
+
+    # 'tagFields' sets the TenXSummary fields used as the counter tag dimension values.
+    #  Defaults to https://doc.log10x.com/run/initialize/#enrichmentFields
+    tagFields:
+      - $=yield TenXEnv.get("enrichmentFields")
+
+    # 'tagFieldNames' allows setting custom names to aggregated fields for metrics reporting.
+    #  Defaults to https://doc.log10x.com/run/initialize/#metricFieldNames
+    tagFieldNames:
+      - $=yield TenXEnv.get("metricFieldNames")
+
+    # 'filter' sets a JavaScript expression that TenXSummaries must evaluate as truthy to write to the output.
+    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    filter: isSummary

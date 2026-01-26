@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/output/metric/signalFx/schema.json
+
+# 🔟❎ 'run' SignalFx metric output configuration
+
+# Configures SignalFx remote write metric counter outputs.
+# To learn more see https://doc.log10x.com/run/output/metric/signalFx/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/output/metric/signalFx
+
+# ============================ SignalFx Options ===============================
+
+# Define multiple SignalFx metric outputs below
+signalfx:
+
+    # --------------------------- Connection Options --------------------------
+
+    # 'accessToken' sets the SignalFx access token.
+    #  To learn more see https://dev.splunk.com/observability/reference/api/org_tokens/latest
+  - accessToken: $=TenXEnv.get("SIGNALFX_ACCESS_TOKEN")  # (EnvVar REQUIRED)
+
+    # 'source' sets the value to map to "host" when shipping metrics to SignalFx.
+    #  Defaults to local hostname
+    source: null
+
+    # 'sourceUri' sets the URI of an internal proxy en route to signalFx.
+    sourceUri: https://ingest.signalfx.com
+
+    # ---------------------------- Counter Options ----------------------------
+
+    # 'nameField' sets the TenXSummary field whose value identifies the micrometer counter to increment. 
+    #  The 'inputName' field returns the name of the aggregator that produced the target TenXSummary instance.
+    #  To learn more see https://doc.log10x.com/run/aggregate
+    nameField: inputName
+
+    # 'counterFields' specifies the TenXSummary fields whose values are used to increment the counter.
+    #  To learn more see https://doc.log10x.com/run/aggregate/#summary-fields
+    counterFields:
+      - summaryVolume
+      - summaryBytes
+      - summaryTotals
+
+    # 'tagFields' sets the TenXSummary fields used as the counter tag dimension values.
+    #  Defaults to https://doc.log10x.com/run/initialize/#enrichmentFields
+    tagFields:
+      - $=yield TenXEnv.get("enrichmentFields")
+
+    # 'tagFieldNames' allows setting custom names to aggregated fields for metrics reporting.
+    #  Defaults to https://doc.log10x.com/run/initialize/#metricFieldNames
+    tagFieldNames:
+      - $=yield TenXEnv.get("metricFieldNames")
+
+    # 'filter' sets a JavaScript expression that TenXSummaries must evaluate as truthy to write to the output.
+    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    filter: isSummary
+
+    # ---------------------------- Publish Options ----------------------------
+
+    # 'step' sets the interval to send metrics to SignalFx (e.g., '1m').
+    #  To learn more see https://micrometer.io/docs/concepts#rate-aggregation
+
+    # 'publishCumulativeHistogram' sets whether the SignalFx registry should emit cumulative histogram
+    publishCumulativeHistogram: false

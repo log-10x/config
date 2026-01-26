@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/optimize/schema.json
+
+# 🔟❎ 'run' Fluentd optimizer configuration
+
+# Configure an input that reads events from a Fluentd forwarder and
+# writes optimized TenXObjects back to Fluentd to ship to output (e.g., ElasticSearch, Splunk).
+
+# To learn more see https://doc.log10x.com/run/input/forwarder/fluentd/optimize/
+
+# This config file runs in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/fluentd/optimize/#install
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include optimizer output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/fluentd/optimize/module.yaml
+
+  # define the stdin input from which to read events the forwarder
+  - run/modules/input/forwarder/fluentd/input
+
+  # define Unix domain/stdout output to write events to the forwarder
+  - '$="run/modules/input/forwarder/fluentd/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "stdio" : "unix")'
+
+# ============================== Fluentd Options ==============================
+
+fluentd:
+  # 'encodeObjects' is set to true to write TenXObjects to the forwarder using the encode() function.
+  #  To learn more see https://doc.log10x.com/api/js/#TenXObject+encode
+  encodeObjects: true
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the encoded event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

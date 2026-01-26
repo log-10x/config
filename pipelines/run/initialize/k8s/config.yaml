@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/initialize/k8s/schema.json
+
+# 🔟❎ 'run' k8s lookup configuration
+
+# Configure a k8s field extractors to enrich TenXObjects
+# To learn more see https://doc.log10x.com/run/initialize/k8s/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/initialize/k8s
+
+# ============================== Symbol Options ===============================
+
+k8s:
+
+  # 'extractorName' specifies which extractor (e.g., fluentK8s/filebeatK8s) to use for k8s metadata extraction
+  extractorName: fluentK8s # extract k8s context using Fluent schema
+
+  # 'namespaceNameField' specifies the name of the field in which to assign an extracted k8 namespace name status code, if found
+  namespaceNameField: k8s_namespace
+
+  # 'containerNameField' specifies the name of the field in which to assign an extracted k8 container name status code, if found
+  containerNameField: k8s_container
+
+  # 'podNameField' specifies the name of the field in which to assign an extracted k8 pod name status code, if found
+  podNameField: k8s_pod

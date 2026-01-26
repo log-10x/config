@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/filebeat/optimize/schema.json
+
+# 🔟❎ 'run' Filebeat optimizer configuration
+
+# Configure an input that reads events from a Filebeat forwarder and output
+# optimized TenXObjects back to Filebeat to ship to output (e.g., ElasticSearch, Splunk).
+# To learn more see https://doc.log10x.com/run/input/forwarder/filebeat/optimize/
+
+# Set the 10x pipeline to 'run' 
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include optimizer output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/filebeat/optimize/module.yaml
+
+  # Input module to read events from Filebeat into 10x pipeline
+  - run/modules/input/forwarder/filebeat/input
+
+  # Output module to write encoded events from 10x pipeline into Filebeat
+  - run/modules/input/forwarder/filebeat/output
+
+# ---------------------------- Filebeat Options -------------------------------
+
+filebeat:
+  # 'encodeObjects' is set to true to write TenXObjects
+  #  back to the forwarder using the encode() function field.
+  #  To learn more see https://doc.log10x.com/api/js/#TenXObject+encode
+  encodeObjects: true
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the encoded event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

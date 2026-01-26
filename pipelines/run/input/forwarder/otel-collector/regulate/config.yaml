@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/regulate/schema.json
+
+# 🔟❎ 'run' OpenTelemetry Collector regulator configuration
+#
+# Configure an input that reads events from OpenTelemetry Collector via syslog
+# and an output that writes filtered TenXObjects back via Forward protocol.
+#
+# Architecture:
+#   OTel Collector --[syslog/unix]--> Log10x Regulator --[forward/unix]--> OTel Collector --> Final destinations
+#
+# Only events that pass the regulation filter are returned to OTel Collector.
+# Filtered (dropped) events are not sent to the final destination.
+#
+# Usage:
+#   tenx run @run/input/forwarder/otel-collector/regulate @apps/edge/regulator
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/otel-collector/regulate/module.yaml
+
+  # Read events from OTel Collector via Unix socket with syslog parsing
+  - run/modules/input/forwarder/otel-collector/input
+
+  # Write filtered events back to OTel Collector via Forward protocol
+  - run/modules/input/forwarder/otel-collector/output/unix
+
+# ========================= Configuration Options =============================
+
+otelCollector:
+  # Write filtered TenXObjects in their original form (plain-text)
+  encodeObjects: false
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the main event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

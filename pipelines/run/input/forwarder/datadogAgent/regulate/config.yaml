@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=schema.json
+
+# 🔟❎ 'run' Datadog Agent regulator configuration
+
+# Configure an input that reads events from a Fluent Bit forwarder and
+# an output that writes filtered TenXObjects to a file relay for Datadog Agent.
+
+# This config file operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/datadogAgent/regulate/#install
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include output encoding format options
+  - run/modules/input/forwarder/fluentbit/output/module.yaml
+
+  # Include the stdin input to read events from the forwarder
+  - run/modules/input/forwarder/fluentbit/input
+
+  # Include Unix domain/TCP socket output to write events into the forwarder
+  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+
+# ============================= Fluent Bit Options ============================
+
+fluentbit:
+  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
+  #  TenXObjects in a plain-text format using the intrinsic 'fullText' field.
+  encodeObjects: false

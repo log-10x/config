@@ -1,0 +1,13 @@
+{
+  "type" : "object",
+  "properties" : {
+    "tenx" : {
+      "type" : "string"
+    },
+    "antlrParseUnitTimeout" : {
+      "type" : [ "string", "null" ],
+      "markdownDescription" : "Source file parse timeout\n\nDefines the timeout interval for parsing and scanning a source/binary input file before aborting. default value: 60sec"
+    }
+  },
+  "additionalProperties" : false
+}

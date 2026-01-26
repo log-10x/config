@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GitOps Configuration",
+  "description": "Configuration for pulling symbol, config and lookup files from a remote GitHub repo to enable centralized configuration management",
+  "type": "object",
+  "properties": {
+    "tenx": {
+      "type": "string",
+      "description": "The target 10x pipeline to run (e.g., run, compile)"
+    },
+    "include": {
+      "type": "array",
+      "description": "List of include sources",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "const": "github",
+            "description": "The source type for this include"
+          },
+          "options": {
+            "$ref": "#/definitions/PipelineLaunchGitHubOptions"
+          }
+        },
+        "required": ["source", "options"]
+      }
+    }
+  },
+  "definitions": {
+    "PipelineLaunchGitHubOptions": {
+      "type": "object",
+      "description": "GitHub pull configuration options",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Controls whether to enable this pull config",
+          "default": false
+        },
+        "token": {
+          "type": "string",
+          "description": "Access token for accessing the GitHub repo. See https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens"
+        },
+        "repo": {
+          "type": ["string", "null"],
+          "description": "The GitHub user/repo from which to pull (e.g., 'owner/repo')"
+        },
+        "branch": {
+          "type": ["string", "null"],
+          "description": "Branch on repo. If null, uses the repo's default branch",
+          "default": null
+        },
+        "paths": {
+          "type": "array",
+          "description": "Glob patterns within 'repo' to pull and extract to a temp folder",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            ["config/*.yaml", "symbols/*.10x.tar", "lookups/*.csv", "scripts/*.js"]
+          ]
+        },
+        "syncInterval": {
+          "type": ["string", "null"],
+          "description": "Interval to check the remote branch for updates (e.g., '5min'). Set to null to disable sync",
+          "default": null,
+          "examples": ["5min", "1h", "30s"]
+        }
+      },
+      "required": ["enabled", "repo"],
+      "additionalProperties": false
+    }
+  }
+}

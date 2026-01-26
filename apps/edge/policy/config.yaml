@@ -1,0 +1,29 @@
+#
+# 🔟❎ dev app main config
+
+# The dev app locally tests, and validates structured event processing.
+
+# To learn more see https://doc.log10x.com/apps/dev
+
+# ============================ Bootstrap Runtime ==============================
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myRegulatorPolicy")
+
+# ============================ Load App Modules ===============================
+
+# Uncomment and edit selected config.yaml files (e.g., run/input/file/config.yaml)
+
+include:
+
+# ------------------------------ App settings ---------------------------------
+
+  # Load general app settings:
+  - edge/policy
+
+# ------------------------------ Open Inputs ----------------------------------
+
+  # read log/trace events from inputs to transform into well-defined TenXObjects:
+
+  - run/regulate/policy       # https://doc.log10x.com/run/regulate/policy

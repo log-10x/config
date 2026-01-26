@@ -1,0 +1,73 @@
+{
+  "type" : "object",
+  "properties" : {
+    "tenx" : {
+      "type" : "string"
+    },
+    "symbol" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "sequenceReserved" : {
+          "type" : [
+            "array",
+            "null"
+          ],
+          "markdownDescription" : "List of terms to ignore when scanning symbol tokens\n\nDefines a list of terms that to ignore when searching for the symbol tokens constituting an TenXTemplate's 'message' portion (i.e., the longest consecutive sequence of [symbol](https://doc.log10x.com/run/transform/structure/#symbols) tokens). For example, for an TenXObject whose text contains: 'connect success = true', the value 'true' will not be considered a part of the instance's message, as it is mostly likely the result of a variable boolean state. To learn more see [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence). (Default: [\"null\",\"nil\",\"true\",\"false\"])",
+          "items" : {
+            "type" : "string"
+          },
+          "default" : [
+            "null",
+            "nil",
+            "true",
+            "false"
+          ]
+        },
+        "maxOrigins" : {
+          "type" : [
+            "number",
+            "string"
+          ],
+          "markdownDescription" : "Max number of source/binary origins to list per symbol\n\nControls the number of source code/binary origins to list per symbol token sequence. As a series of tokens within  a given template (e.g., 'ERROR', 'could not connect to \"{}') may appear  in multiple source/binary files within the pipeline's symbol files, the sorting algorithm selects [maxSymbolOrigins](https://doc.log10x.com/run/transform/symbol/#symbolmaxorigins) for comparison. (Accepts number or string with $= prefix for runtime evaluation) (Default: 64)",
+          "default" : 64
+        },
+        "debug" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "origins" : {
+              "type" : [
+                "array",
+                "null"
+              ],
+              "markdownDescription" : "List of source scanned file names for which to log information\n\nSpecifies a list of input file names within the loaded symbol library (e.g., 'my.scala', 'foo.java') for which to log information on if/how they participate in selecting the origin of a target TenXTemplate symbol sequence. This option helps debug how the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function selects  origin values for a target TenXTemplate symbol sequence.  Specify '*' for all input files.",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "symbols" : {
+              "type" : [
+                "array",
+                "null"
+              ],
+              "markdownDescription" : "List of TenXTemplate symbol values for which to log information\n\nList of symbol values such as class and method names(e.g., 'MyClass', 'foo') for which to log information on how their origin information is selected. This option helps debug how the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function selects  origin values for a target TenXTemplate symbol sequence.  Specify '*' for all symbols.",
+              "items" : {
+                "type" : "string"
+              }
+            },
+            "loggerName" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Debug logger name\n\nControls the name of the log4j logger used by [debugOrigins](https://doc.log10x.com/run/transform/symbol/#symboldebugorigins) and [debugSymbols](https://doc.log10x.com/run/transform/symbol/#symboldebugsymbols). (Default: [consoleOut](https://github.com/log-10x/config/blob/main/log4j2.yaml#L66))",
+              "default" : "[consoleOut](https://github.com/log-10x/config/blob/main/log4j2.yaml#L66)"
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties" : false
+}

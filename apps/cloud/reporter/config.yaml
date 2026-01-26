@@ -1,0 +1,73 @@
+#
+# 🔟❎  Cloud reporter app main config
+
+# Loads the required modules for a Cloud reporter app instance.
+# To learn more see https://doc.log10x.com/apps/cloud/reporter
+
+# ============================ Bootstrap Runtime ==============================
+
+# Initialize the runtime. To learn more see https://doc.log10x.com/run/bootstrap
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myCloudReporter")
+
+# ============================ Load App Modules ===============================
+
+# Uncomment and edit selected config.yaml files (e.g., run/input/analyzer/elastic/config.yaml)
+
+include:
+
+# ------------------------------ App settings ---------------------------------
+
+  # Load app settings:
+  - cloud/reporter
+
+  # Load gitops settings for pulling additional assets from Github.
+  # Edit the gitops/config.yaml file with specific config
+  #
+  # For additional info see - https://doc.log10x.com/config/github
+  - gitops
+
+# ------------------------------ Select Inputs --------------------------------
+
+  # This application supports multiple possible inputs, at least one of which should be enabled
+  #
+  # Uncomment and edit to read events from remote log analyzers input(s):
+  #
+  # - run/input/analyzer/elastic         # https://doc.log10x.com/run/input/analyzer/elasticsearch
+  # - run/input/analyzer/coralogix       # https://doc.log10x.com/run/input/analyzer/elasticsearch
+  # - run/input/analyzer/logzio          # https://doc.log10x.com/run/input/analyzer/elasticsearch
+  # - run/input/analyzer/datadogLogs     # https://doc.log10x.com/run/input/analyzer/datadogLogs
+  # - run/input/analyzer/splunk          # https://doc.log10x.com/run/input/analyzer/splunk
+  # - run/input/analyzer/cloudwatchLogs  # https://doc.log10x.com/run/input/analyzer/cloudwatchLogs
+
+# --------------------------- Enrich TenXObjects ------------------------------
+
+  # Uncomment and edit config files to enrich TenXObjects with calculated fields:
+
+  - run/initialize/inputField   # https://doc.log10x.com/run/initialize/#inputfield
+  - run/initialize/level        # https://doc.log10x.com/run/initialize/level
+  - run/initialize/group        # https://doc.log10x.com/run/initialize/group
+  - run/initialize/message      # https://doc.log10x.com/run/initialize/message
+  - run/initialize/httpCode     # https://doc.log10x.com/run/initialize/httpCode
+  - run/initialize/lookup       # https://doc.log10x.com/run/initialize/lookup
+  - run/initialize/custom       # https://doc.log10x.com/run/transform/script/object
+  - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
+  # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
+
+# -------------------------- Select Metric Outputs ----------------------------
+
+  # Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+  #
+  # NOTE - in order to use the public Log10x grafana dashboards, log10x must be enabled
+
+  - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
+  # - run/output/metric/prometheus/scrape        # https://doc.log10x.com/run/output/metric/prometheus/scrape
+  # - run/output/metric/prometheus/push-gateway  # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
+  # - run/output/metric/prometheus/remote-write  # https://doc.log10x.com/run/output/metric/prometheus/remote-write
+  # - run/output/metric/cloudwatch               # https://doc.log10x.com/run/output/metric/cloudwatch
+  # - run/output/metric/datadog                  # https://doc.log10x.com/run/output/metric/datadog
+  # - run/output/metric/elastic                  # https://doc.log10x.com/run/output/metric/elastic
+  # - run/output/metric/signalFx                 # https://doc.log10x.com/run/output/metric/signalFx
+  # - run/output/metric/log                      # https://doc.log10x.com/run/output/metric/log

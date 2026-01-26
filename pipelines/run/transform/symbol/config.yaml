@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/symbol/schema.json
+
+# 🔟❎ 'run' symbol origin configuration
+
+# Identify the origin of symbol values within TenXTemplates.
+# To learn more see https://doc.log10x.com/run/transform/symbol/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Origin Options ==============================
+
+symbol:
+
+  # 'maxOrigins' controls the number of source/binary origins to list 
+  #  per symbol token sequence. As a series of tokens within 
+  #  a target TenXTemplate (e.g., 'ERROR', 'could not connect to "{}') may appear 
+  #  in multiple source/binary files within the pipeline's loaded library.
+  #  The sorting algorithm configured below is used to select the 'maxSymbolOrigins' 
+  #  topmost entries to list.
+  maxOrigins: 64
+  
+  # 'sequenceReserved' defines a list of terms to ignore when searching
+  #  for the symbol tokens that constitute an TenXTemplate's 'message' portion.
+  #  For example, for an event whose text contains: 'connect success = true',
+  #  the value 'true' will not be considered a part of the event's message,
+  #  as the 'true' value is mostly likely the result of a variable boolean state.
+  #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbolSequence
+  sequenceReserved:
+    - "null"
+    - "nil"
+    - "true"
+    - "false"
+    - "to"
+    - "the"
+    - "a"
+    - "at"
+    - "for"
+    - "log"
+    - "info"
+    - "http"  
+    - TRACE
+    - DEBUG
+    - INFO
+    - NOTICE
+    - WARN
+    - ERROR
+    - CRITICAL
+    - ALERT
+    - EMERGENCY
+
+  # ----------------------------- Debug Options -------------------------------
+  
+  debug:
+
+    # 'symbol' debugging allows for verbose printing of the selection process
+    #  for symbol tokens from the pipeline's 10x symbol files used to produce the
+    #  results of 10x reflection functions.
+    #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbol
+    
+
+    # 'origins' outputs information about the origin selection process for an TenXTemplate symbol.
+    #  For example, setting 'units' to 'foo.js' will output information about if/how it 
+    #  was selected as the origin of TenXTemplate symbols.
+    #  In other words, if a symbol (e.g., 'MyClass') has 'foo.java' as the source file
+    #  from which it originated, adding 'foo.js' to 'units' will emit information
+    #  about the selection process.
+    #  Specifying '*' will emit information for all source /binary files that have
+    #  been selected as the origin of any TenXTemplate objects within the pipeline.
+    origins: [
+    #  '*'
+    ]
+
+    # 'symbols' logs the origin selection process for symbol tokens within an TenXTemplate.
+    #  For example, set 'symbols' to 'Could not connect to' to log how the 10x JavaScript 'symbolSequence' 
+    #  determines the origin source code/binary file within the pipeline's symbol library. 
+
+    #  Specifying '*' will emit information for all source code /binary files that have
+    #  been selected as the origin of any TenXTemplate objects within the pipeline.
+    symbols: [
+     # '*'
+    ]

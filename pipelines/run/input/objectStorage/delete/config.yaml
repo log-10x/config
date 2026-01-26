@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/objectStorage/delete/schema.json
+
+# 🔟❎ 'run' Object storage delete index objects configuration
+
+# Configure query AWS S3 bucket settings
+# To learn more see https://doc.log10x.com/run/input/objectStorage/index/delete
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/input/objectStorage/index/delete
+
+# ============================= AWS S3 Query Options ==========================
+
+indexDelete:
+
+  # 'objectStorage' is set to target AWS S3.
+  #  To learn more about configuring Object storage, see: https://doc.log10x.com/run/input/objectStorage
+
+  # AWS Authentication is made via the default provider credentials chain:
+  # https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/auth/credentials/DefaultCredentialsProvider.html
+
+  # AWS Region selection is made via the default region provider chain:
+  # https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/regions/providers/DefaultAwsRegionProviderChain.html
+
+  - objectStorageName: AWS
+
+    # 'objectStorageArgs' provides arguments to the constructor of the class defined by 'objectStorageName'.
+    # Setting [invoke, sqs] configures the storage accessor to route pipeline invocations via SQS messages.
+    objectStorageArgs: [invoke, sqs]
+
+    # 'container' specifies the container in which index objects created by the 'index' module reside.
+    container: $=TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.bucket.name")
+
+    # 'target' sets a logical name under which output index objects reside.
+    #  This commonly refers to the name of the application/service which generated
+    #  'targetObject' (e.g., 'my-service', 'my-broker')
+    target: app
+
+    # 'targetObject' points to the blob (e.g., log file) within being deleted
+    object: $=TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.object.key")

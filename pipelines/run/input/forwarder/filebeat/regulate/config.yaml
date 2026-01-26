@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/filebeat/regulate/schema.json
+
+# 🔟❎ 'run' Filebeat regulator configuration
+
+# Configure an input that reads events from a Filebeat forwarder and
+# an output that writes filtered TenXObjects back to Filebeat.
+
+# This config file operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/filebeat/regulate/#install
+
+# Set the 10x pipeline to 'run' 
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/filebeat/regulate/module.yaml
+
+  # Input module to read events from Filebeat into 10x pipeline
+  - run/modules/input/forwarder/filebeat/input
+
+  # Output module to write filtered events from 10x pipeline into Filebeat
+  - run/modules/input/forwarder/filebeat/output
+
+# ============================== Filebeat Options ==============================
+
+filebeat:
+  # 'encodeObjects' is false to designate the target output (Unix/stdout)
+  #  to emit filtered TenXObjects in their full-body form.
+  encodeObjects: false
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the main event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/report/schema.json
+
+# 🔟❎ 'run' OpenTelemetry Collector reporter configuration
+#
+# Configure an input that reads events from OpenTelemetry Collector via syslog
+# for metrics collection. Reporter does not write events back to OTel Collector.
+#
+# Architecture:
+#   OTel Collector --[syslog/unix]--> Log10x Reporter (metrics only)
+#                  \--[exporters]--> Final destinations (parallel)
+#
+# Usage:
+#   tenx run @run/input/forwarder/otel-collector/report @apps/edge/reporter
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+# Read events from OTel Collector via Unix socket with syslog parsing
+include: run/modules/input/forwarder/otel-collector/input
+
+# ========================= Configuration Options =============================
+
+# Reporter only reads events for metrics - no output back to OTel Collector
+# OTel Collector should send logs to both Log10x AND final destinations in parallel

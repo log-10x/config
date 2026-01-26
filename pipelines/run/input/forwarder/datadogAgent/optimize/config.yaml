@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=schema.json
+
+# 🔟❎ 'run' Datadog Agent optimizer configuration
+
+# Configure an input that reads events from a Fluent Bit forwarder and
+# writes optimized TenXObjects to a file relay for Datadog Agent to ship to Datadog.
+# To learn more see https://doc.log10x.com/run/input/forwarder/datadogAgent/optimize/
+
+# This config runs in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/datadogAgent/optimize/#install
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include output encoding format options
+  - run/modules/input/forwarder/fluentbit/output/module.yaml
+
+  # Include the stdin input from which to read events from the forwarder
+  - run/modules/input/forwarder/fluentbit/input
+
+  # Include Unix domain/TCP socket output to which events into the forwarder
+  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+
+# ============================= Fluentbit Options =============================
+
+fluentbit:
+  # 'encodeObjects' is set to true to write TenXObjects
+  #  back to the forwarder using the encode() function.
+  #  To learn more see https://doc.log10x.com/api/js/#TenXObject+encode
+  encodeObjects: true

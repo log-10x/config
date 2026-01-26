@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/logstash/optimize/schema.json
+
+# 🔟❎ 'run' Logstash optimizer configuration
+
+# Configure an input that reads events from a Logstash forwarder and
+# writes optimized TenXObjects back to Logstash to ship to output (e.g., ElasticSearch, Splunk).
+
+# To learn more see https://doc.log10x.com/run/input/forwarder/logstash/optimize/
+
+# This file is operates in conjunction with the following Logstash '.conf' files:
+
+# 1) tenx-pipe-out.conf: configures a Logstash plugin to launch a
+#    10x sub-process and write incoming events to its stdin pipe.
+
+# 2) tenx-pipe-in-<unix/tcp>.conf: configures a Logstash input to read
+#    encoded events back via a unix or tcp socket (win):
+#      unix: https://github.com/log-10x/config/blob/main/pipelines/run/input/forwarder/logstash/optimize/tenx-pipe-in-unix.conf
+#      win : https://github.com/log-10x/config/blob/main/pipelines/run/input/forwarder/logstash/regulate/tenx-pipe-in-tcp.conf
+
+# 3) tenx-elastic.conf
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include optimizer output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/logstash/optimize/module.yaml
+
+    # Include the stdin input to read events from the forwarder
+  - run/modules/input/forwarder/logstash/input
+
+    # Include Unix domain/TCP socket output to write TenXObjects to the forwarder
+  - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+
+# ============================== Logstash Options =============================
+
+logstash:
+  # 'encodeObjects' is set to true to write TenXObjects using the encode() function
+  #  To learn more see https://doc.log10x.com/api/js/#TenXObject+encode
+  encodeObjects: true
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the encoded event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

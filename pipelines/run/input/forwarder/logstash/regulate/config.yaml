@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/logstash/regulate/schema.json
+
+# 🔟❎ 'run' Logstash regulator configuration
+
+# Configure an input that reads events from a Logstash forwarder and
+# an output that writes filtered TenXObjects back to Logstash.
+
+# This config operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/logstash/regulate/#install
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
+  - run/modules/input/forwarder/logstash/regulate/module.yaml
+
+    # Include the stdin input to read events from the forwarder
+  - run/modules/input/forwarder/logstash/input
+
+    # Include Unix domain/TCP socket output to write events to the forwarder
+  - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+
+# ============================== Logstash Options ==============================
+
+logstash:
+  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
+  #  TenXObjects in their original form via the intrinsic 'fullText' field.
+  encodeObjects: false
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the main event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

@@ -1,0 +1,50 @@
+{
+  "type" : "object",
+  "properties" : {
+    "include" : {
+      "type" : "string"
+    },
+    "tenx" : {
+      "type" : "string"
+    },
+    "symbol" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "contexts" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Types of symbols to search\n\nSpecifies a comma delimited list of [symbol contexts](https://doc.log10x.com/run/transform/symbol/#contexts) values. This is argument is passed as the `symbolContexts` argument value for the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function. (Default: log,exec)",
+          "default" : "log,exec"
+        },
+        "maxLen" : {
+          "type" : [
+            "number",
+            "string"
+          ],
+          "markdownDescription" : "Max number of output chars\n\nSpecifies the max number of chars of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield). Set 0 to unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
+          "default" : 0
+        },
+        "messageField" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).   For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
+          "default" : "symbolMessage"
+        },
+        "originField" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Field name to assign with symbol message origin file\n\nSpecifies the name of the field to assign the return value of [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: symbolOrigin)",
+          "default" : "symbolOrigin"
+        }
+      }
+    }
+  },
+  "additionalProperties" : false
+}

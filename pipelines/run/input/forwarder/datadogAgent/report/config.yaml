@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=schema.json
+
+# 🔟❎ 'run' Datadog Agent reporter configuration
+
+# Configure an input that reads events from a Fluent Bit forwarder (file relay to Datadog Agent).
+# To learn more see https://doc.log10x.com/run/input/forwarder/datadogAgent/report/
+
+# This config file operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/datadogAgent/report/#install
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/input/forwarder/fluentbit/input
+

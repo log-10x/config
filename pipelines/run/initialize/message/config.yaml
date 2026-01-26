@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/initialize/message/schema.json
+
+# 🔟❎ 'run' symbol lookup configuration
+
+# Configure a symbol origin lookup to enrich TenXObjects
+# To learn more see https://doc.log10x.com/run/initialize/message/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/initialize/message
+
+# ============================== Symbol Options ===============================
+
+symbol:
+
+  # 'types' specifies the types of symbols to search for; if the first type does not yield a result, the next one is tried etc.
+  #  Supported values (case insensitive), PACKAGE, CLASS, METHOD, LOG, ENUM, CONST, TEXT, EXEC, ANY
+  #  To learn more see https://doc.log10x.com/run/transform/symbol/#contexts
+  contexts: log,exec
+
+  # 'messageField' specifies the field name to assign the source/binary origin file name to target TenXObjects
+  messageField: message_pattern
+
+  # 'maxLen' specifies the max char len of the output messageField
+  maxLen: 70

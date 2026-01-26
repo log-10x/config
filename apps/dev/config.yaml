@@ -1,0 +1,61 @@
+#
+# 🔟❎ dev app main config
+
+# The dev app locally tests, and validates structured event processing.
+
+# To learn more see https://doc.log10x.com/apps/dev
+
+# ============================ Bootstrap Runtime ==============================
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myDev")
+
+# ============================ Load App Modules ===============================
+
+# Uncomment and edit selected config.yaml files (e.g., run/input/file/config.yaml)
+
+include:
+
+# ------------------------------ App settings ---------------------------------
+
+  # Load general app settings:
+  - dev
+
+  # Load gitops settings for pulling additional assets from Github.
+  # Edit the gitops/config.yaml file with specific config
+  #
+  # For additional info see - https://doc.log10x.com/config/github
+  - gitops
+
+# ------------------------------ Open Inputs ----------------------------------
+
+  # read log/trace events from inputs to transform into well-defined TenXObjects:
+
+  - run/input/file       # https://doc.log10x.com/run/input/file
+  # - run/input/stdin    # https://doc.log10x.com/run/input/stdin
+
+# --------------------------- Enrich TenXObjects ------------------------------
+
+  # Uncomment and edit config files to enrich TenXObjects with calculated fields:
+
+  - run/initialize/inputField   # https://doc.log10x.com/run/initialize/#inputfield
+  - run/initialize/level        # https://doc.log10x.com/run/initialize/level
+  - run/initialize/group        # https://doc.log10x.com/run/initialize/group
+  - run/initialize/message      # https://doc.log10x.com/run/initialize/message
+  - run/initialize/httpCode     # https://doc.log10x.com/run/initialize/httpCode
+  - run/initialize/lookup       # https://doc.log10x.com/run/initialize/lookup
+  - run/initialize/custom       # https://doc.log10x.com/run/transform/script/object
+  - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
+  # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
+
+# --------------------------- Output TenXObjects -------------------------------
+
+  # Uncomment and edit to write TenXObjects summaries to output(s):
+
+  - run/output/event/file          # https://doc.log10x.com/run/output/event/file
+  # - run/output/event/stdout      # https://doc.log10x.com/run/output/event/stdout
+  # - run/output/event/process     # https://doc.log10x.com/run/output/event/process
+  # - run/output/event/http        # https://doc.log10x.com/run/output/event/http
+  # - run/output/event/unix        # https://doc.log10x.com/run/output/event/unix
+  # - run/output/event/forward     # https://doc.log10x.com/run/output/event/forward

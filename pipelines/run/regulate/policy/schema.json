@@ -1,0 +1,157 @@
+{
+  "type" : "object",
+  "properties" : {
+    "include" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tenx" : {
+      "type" : "string"
+    },
+    "policy" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "prometheus" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "properties" : {
+              "endpoint" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Prometheus instance endpoint\n\nDefines the address of the Prometheus [HTTP API](https://prometheus.io/docs/prometheus/latest/querying/api/) to query (Default: https://prometheus.log10x.com)",
+                "default" : "https://prometheus.log10x.com"
+              },
+              "series" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Prometheus series to query\n\nDefines the name of the series to query for events volume in bytes (Default: all_events_summaryBytes_total)",
+                "default" : "all_events_summaryBytes_total"
+              },
+              "labels" : {
+                "type" : [
+                  "array"
+                ],
+                "markdownDescription" : "Prometheus metric labels for grouping\n\nSpecifies the list of metric labels to group by in the Prometheus query. NOTE: this list must match the [rateRegulatorFieldNames](https://doc.log10x.com/run/regulate/rate/#rateRegulatorFieldNames) specified by the edge rate regulator. (Default: [\"symbolMessage\"])",
+                "items" : {
+                  "type" : "string"
+                },
+                "default" : [
+                  "symbolMessage"
+                ]
+              },
+              "apps" : {
+                "type" : [
+                  "array",
+                  "null"
+                ],
+                "markdownDescription" : "Prometheus metric app names\n\nSpecifies the list of 10x edge app names to specify in the Prometheus query.",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "start" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Query start time\n\nSets query's beginning timestamp for Prometheus data retrieval (e.g., 2025-10-13T23:29:23Z, 1736724563)."
+              },
+              "rangeInterval" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Query time range interval\n\nDefines the time range interval for the Prometheus range query (e.g., '5m', '1h') (Default: 6h)",
+                "default" : "6h"
+              },
+              "stepDuration" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Query resolution step duration\n\nDefines the query resolution step duration for the Prometheus range query (e.g., '30s', '1m') (Default: 5m)",
+                "default" : "5m"
+              },
+              "topEvents" : {
+                "type" : [
+                  "number",
+                  "string"
+                ],
+                "markdownDescription" : "Number of top events to return from Prometheus query\n\nSpecifies the number of highest-rate event patterns to return using the Prometheus [topk operator](https://prometheus.io/docs/prometheus/latest/querying/operators/#aggregation-operators) (Accepts number or string with $= prefix for runtime evaluation) (Default: 50)",
+                "default" : 50
+              }
+            },
+            "required" : [
+              "labels",
+              "rangeInterval",
+              "stepDuration"
+            ]
+          },
+          "ingestionCostPerGB" : {
+            "type" : [
+              "number",
+              "string"
+            ],
+            "markdownDescription" : "Vendor ingestion cost per GB in USD for cost calculation\n\nDefines the cost per GB charged by your observability vendor for log ingestion. Used to calculate cost-per-hour data for each event pattern in the generated lookup file.  Edge rate regulators in global mode use this cost data (from the lookup) to enforce cluster-wide budget policies.  **Important:** This value should match[rateRegulatorIngestionCostPerGB](https://doc.log10x.com/run/regulate/policy/#policyingestioncostpergb) configured on your edge rate regulators.  **Common vendor pricing (2025):** - **Splunk Cloud**: ~$1.50/GB (varies by contract, SKU) - **Datadog Logs**: ~$0.10-$0.25/GB (depends on tier: standard, flex, online archives) - **Elastic Cloud**: ~$0.109/GB (standard logging tier) - **New Relic**: ~$0.30/GB (Data Plus) - **Sumo Logic**: ~$1.50/GB (depends on plan) - **AWS CloudWatch Logs**: ~$0.50/GB ingestion + $0.03/GB storage  **Example:** If your Splunk contract is $1.50/GB and you emit 100GB/hour across all apps, the total cost is $150/hour. The policy module calculates per-event-pattern costs (e.g., \"error_login|frontend\" = $20/hour) and writes them to the lookup. Edge regulators then enforce per-app or per-pattern caps based on this data. (Accepts number or string with $= prefix for runtime evaluation) (Default: 1)",
+            "default" : 1
+          },
+          "output" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "properties" : {
+              "path" : {
+                "type" : [
+                  "string",
+                  "null"
+                ],
+                "markdownDescription" : "Output path for the generated policy lookup file\n\nDefines the output path for the policy lookup file containing cluster-wide spend data (per field set and total) averaged over the configured time range. **Behavior depends on `policyOutputGithubRepo`:**  - **If [policyOutputGithubRepo](https://doc.log10x.com/run/regulate/policy/#policyoutputgithubrepo) is NOT set**: Local file path where the lookup will be written (e.g., `/tmp/rate-policy.csv`, `./policies/rate-lookup.csv`) - **If [policyOutputGithubRepo](https://doc.log10x.com/run/regulate/policy/#policyoutputgithubrepo) IS set**: Path within the GitHub repository where the lookup will be pushed (e.g., `policies/rate-lookup.csv`, `rate-policy.csv`)  Edge rate regulators in global mode pull this file to enforce cluster-wide budgets."
+              },
+              "github" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "repo" : {
+                    "type" : [
+                      "string",
+                      "null"
+                    ],
+                    "markdownDescription" : "GitHub repository to push the policy lookup file\n\nDefines the GitHub repository (format: `owner/repo`) where the generated policy lookup file will be pushed. Used for sharing the lookup with distributed edge rate regulators.  Requires GitHub authentication (via token or SSH key).  **Example:** `my-org/observability-policies`"
+                  },
+                  "branch" : {
+                    "type" : [
+                      "string",
+                      "null"
+                    ],
+                    "markdownDescription" : "GitHub branch for pushing the policy lookup file\n\nDefines the Git branch to use when pushing the policy lookup file to GitHub. **Example:** `main`, `production`, or `policies` (Default: main)",
+                    "default" : "main"
+                  },
+                  "squashMerge" : {
+                    "type" : [
+                      "boolean",
+                      "string"
+                    ],
+                    "markdownDescription" : "Use squash merge when merging GitHub pull requests\n\nSpecifies whether to use squash merge (true) or regular merge (false) when merging pull requests to GitHub. Squash merge combines all commits into a single commit, resulting in a cleaner commit history. This is particularly useful for automated policy updates that run frequently (e.g., every 5 minutes).  **Recommendation:** Enable this for production environments with frequent policy updates. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
+                    "default" : true
+                  }
+                }
+              }
+            },
+            "required" : [
+              "path"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties" : false
+}
