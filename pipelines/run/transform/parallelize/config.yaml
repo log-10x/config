@@ -22,12 +22,12 @@ parallelEvent:
 
   # 'batchSize' specifies the maximum number of events to queue for concurrent processing before flushing.
   #  If 'threadPoolSize' is 1, this value is unused, and events are transformed into TenXObject synchronously 
-  #  to their calling input's thread.  If 0, flush pending events after 'parallelEventFlushInterval' expires or the
+  #  to their calling input's thread.  If 0, flush pending events after 'flushInterval' expires or the
   #  source input reaches end-of-file.
   batchSize: 1000
 
   # 'flushInterval'  specifies the maximum wait duration before flushing queued events 
-  #  If 'parallelThreadPoolSize' is 1, this value is unused, and events are transformed into TenXObject synchronously 
+  #  If 'threadPoolSize' is 1, this value is unused, and events are transformed into TenXObject synchronously 
   #  to their input thread. If 0, no wait flush interval is applied. 
   flushInterval: 2s
 
