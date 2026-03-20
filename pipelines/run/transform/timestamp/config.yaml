@@ -84,6 +84,7 @@ timestamp:
   - "'F'MMdd HH:mm:ss.SSSS"                    # Used in Kubernetes kube-apiserver logs with FATAL prefix, 4-digit microsecond precision.
   - "'F'MMdd HH:mm:ss.SSSSS"                   # Used in Kubernetes kube-apiserver logs with FATAL prefix, 5-digit microsecond precision.
   - "'F'MMdd HH:mm:ss.SSSSSS"                  # Used in Kubernetes kube-apiserver logs with FATAL prefix, 6-digit microsecond precision.
+  - "yyyy-MM-dd HH:mm:ss.SSSSSSZ"              # Used in macOS unified logs (log show), with microsecond precision and timezone offset (e.g., -0400).
   - "yyyy-MM-dd HH:mm:ss"                      # Widely used in Java applications, databases (e.g., MySQL, PostgreSQL), and application servers (e.g., Tomcat, JBoss).
   - "yyyy-MM-dd'T'HH:mm:ss.SSSZ"               # Common in web services, APIs, Java (with DateTimeFormatter.ISO_OFFSET_DATE_TIME), Python (with datetime.isoformat()), and systems requiring precise timestamps with timezone information.
   - "MMM dd HH:mm:ss"                          # Frequently seen in syslog, Unix-based systems, network devices (e.g., Cisco routers), and web servers (e.g., Apache, Nginx).
