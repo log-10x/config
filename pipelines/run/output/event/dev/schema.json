@@ -1,0 +1,103 @@
+{
+  "type" : "object",
+  "properties" : {
+    "include" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tenx" : {
+      "type" : "string"
+    },
+    "devOutput" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "enabled" : {
+            "type" : [
+              "boolean",
+              "string"
+            ],
+            "markdownDescription" : "Enable/disable dev output\n\nControls whether to generate a shareable console URL from the analysis results. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
+            "default" : true
+          },
+          "baseUrl" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Base URL of the console viewer\n\nSpecifies the base URL of the Log10x Console used to view results. (Default: https://console.log10x.com)",
+            "default" : "https://console.log10x.com"
+          },
+          "openBrowser" : {
+            "type" : [
+              "boolean",
+              "string"
+            ],
+            "markdownDescription" : "Auto-open results in browser\n\nIf true, automatically opens the generated console URL in the default browser when the pipeline completes. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
+            "default" : false
+          },
+          "localOnly" : {
+            "type" : [
+              "boolean",
+              "string"
+            ],
+            "markdownDescription" : "Local-only mode, output JSON without generating a URL\n\nIf true, outputs the analysis JSON to the console without generating or opening a URL. Use this for privacy when you prefer not to generate an external URL. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
+            "default" : false
+          },
+          "filePath" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "File path to write JSON output\n\nSpecifies a path on disk to write the analysis JSON. If not specified, the JSON is only printed to console (in local mode) or encoded into the URL."
+          },
+          "sourceName" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Display name of the input log source\n\nSpecifies the display name of the input log source shown in the console viewer. (Default: your logs)",
+            "default" : "your logs"
+          },
+          "dailyGb" : {
+            "type" : [
+              "number",
+              "string"
+            ],
+            "markdownDescription" : "Estimated daily log volume in GB for ROI projections\n\nSpecifies an estimated daily log volume in gigabytes. The console viewer uses this value to project cost savings and ROI. Adjust to match your environment's actual daily log volume. (Accepts number or string with $= prefix for runtime evaluation) (Default: 100)",
+            "default" : 100
+          },
+          "topPatterns" : {
+            "type" : [
+              "number",
+              "string"
+            ],
+            "markdownDescription" : "Number of top patterns to include by bytes\n\nSets the number of top log patterns (by bytes) to include in the output. (Accepts number or string with $= prefix for runtime evaluation) (Default: 10)",
+            "default" : 10
+          },
+          "vrTemplates" : {
+            "type" : [
+              "number",
+              "string"
+            ],
+            "markdownDescription" : "Number of templates to include in volume reduction samples\n\nSets the number of template samples to include for the volume reduction proof dialog in the console viewer. Templates are selected by reduction ratio (compact size vs original size) weighted by frequency. (Accepts number or string with $= prefix for runtime evaluation) (Default: 10)",
+            "default" : 10
+          },
+          "vrEventsPerTemplate" : {
+            "type" : [
+              "number",
+              "string"
+            ],
+            "markdownDescription" : "Number of encoded events per template in volume reduction samples\n\nSets the number of encoded event samples to include per template for the volume reduction proof dialog. (Accepts number or string with $= prefix for runtime evaluation) (Default: 1)",
+            "default" : 1
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties" : false
+}
