@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/output/event/dev/schema.json
+
+# 🔟❎ 'run' dev analysis output configuration
+
+# Configure the dev output to generate a shareable console URL from analysis results.
+# To learn more see https://doc.log10x.com/run/output/event/dev
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+  - run/modules/output/event/dev
+
+# ============================== Dev Output Options ============================
+
+devOutput:
+
+    # 'enabled' controls whether to generate a console URL from analysis results
+  - enabled: true
+
+    # 'openBrowser' auto-opens the console URL in the default browser
+    openBrowser: true
+
+    # 'localOnly' outputs JSON to console without generating a URL.
+    #  Use for privacy when you prefer not to generate an external URL.
+    localOnly: false
+
+    # 'baseUrl' sets the base URL of the console viewer
+    baseUrl: https://console.log10x.com
+
+    # 'sourceName' sets the display name of the input log source in the console viewer
+    sourceName: your logs
+
+    # 'dailyGb' sets the estimated daily log volume in GB for ROI projections.
+    #  Adjust to match your environment's actual daily log volume.
+    dailyGb: 100
+
+    # 'filePath' specifies a path on disk to write the analysis JSON.
+    #  If not specified, the JSON is only encoded into the URL.
+    # filePath:
+
+    # 'topPatterns' sets the number of top log patterns (by bytes) to include
+    topPatterns: 10
+
+    # 'vrTemplates' sets the number of template samples for volume reduction proof
+    vrTemplates: 10
+
+    # 'vrEventsPerTemplate' sets the number of encoded event samples per template
+    vrEventsPerTemplate: 1
