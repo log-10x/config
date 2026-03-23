@@ -13,11 +13,11 @@
       "properties" : {
         "enabled" : {
           "type" : [
-            "boolean",
-            "string"
+            "string",
+            "null"
           ],
-          "markdownDescription" : "Enable/disable stdin input\n\nSpecifies whether to read event data from the stdin pipe (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
-          "default" : true
+          "markdownDescription" : "Enable/disable stdin input\n\nSpecifies whether to read event data from the stdin pipe (Default: true)",
+          "default" : "true"
         },
         "extractors" : {
           "type" : [

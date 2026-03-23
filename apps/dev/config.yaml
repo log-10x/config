@@ -54,6 +54,7 @@ include:
   # Uncomment and edit to write TenXObjects summaries to output(s):
 
   - run/output/event/file          # https://doc.log10x.com/run/output/event/file
+  - run/output/event/dev           # https://doc.log10x.com/run/output/event/dev
   # - run/output/event/stdout      # https://doc.log10x.com/run/output/event/stdout
   # - run/output/event/process     # https://doc.log10x.com/run/output/event/process
   # - run/output/event/http        # https://doc.log10x.com/run/output/event/http
