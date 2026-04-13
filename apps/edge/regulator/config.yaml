@@ -62,12 +62,11 @@ include:
   - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
   # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
 
-# ------------------------ Select Regulator Policies --------------------------
+# ---------------------------- Select Regulator ------------------------------
 
-  #  Uncomment and edit to regulate TenXObjects based on local or central policies:
+  #  Regulate TenXObjects via per-node budget sampling or a field-set mute file:
 
   - run/regulate/rate           # https://doc.log10x.com/run/regulate/rate
-  # - run/regulate/policy         # https://doc.log10x.com/run/regulate/policy
 
 # -------------------------- Select Metric Outputs ----------------------------
 
