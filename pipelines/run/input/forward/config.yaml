@@ -18,12 +18,12 @@ forward:
 
   # ----------------------------- Input Options -----------------------------
 
-  # 'inputPort' sets the TCP port to listen on for Forward protocol messages.
-  inputPort: 24224
+  # 'inputPort' specifies the TCP port to listen on for Forward protocol messages
+  inputPort: $=TenXEnv.get("TENX_FORWARD_INPUT_SOCKET", "24224")
 
-  # 'inputPath' sets a Unix domain socket path to listen on instead of TCP.
+  # 'inputPath' specifies a Unix domain socket path to listen on instead of TCP.
   #  When set, takes precedence over 'inputPort'.
-  # inputPath: /tmp/tenx-forward-in.sock
+  inputPath: $=TenXEnv.get("TENX_FORWARD_INPUT_ADDRESS", "")
 
   # ---------------------------- Parsing Options ----------------------------
 
