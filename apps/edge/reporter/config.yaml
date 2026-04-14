@@ -41,6 +41,7 @@ include:
   # https://doc.log10x.com/apps/edge/reporter/run
   # https://doc.log10x.com/apps/edge/reporter/deploy
   #
+  # - run/input/forward                          # https://doc.log10x.com/run/input/forward
   # - run/input/forwarder/filebeat/report
   # - run/input/forwarder/fluentbit/report
   # - run/input/forwarder/fluentd/report
