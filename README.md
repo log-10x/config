@@ -34,9 +34,8 @@ config/
 ├── apps/                      # Application entry points
 │   ├── edge/                  # Edge applications
 │   │   ├── optimizer/         # Log volume reduction
-│   │   ├── regulator/         # Policy-based filtering
-│   │   ├── reporter/          # Cost attribution
-│   │   └── policy/            # Compliance enforcement
+│   │   ├── regulator/         # Rate regulation & mute files
+│   │   └── reporter/          # Cost attribution
 │   ├── cloud/                 # Cloud applications
 │   │   ├── reporter/          # Analyzer cost analysis
 │   │   └── streamer/          # S3 data lake (index/query)
@@ -77,7 +76,6 @@ Application configs are entry points that include pipeline modules. Edit these t
 | **Edge Optimizer** | `apps/edge/optimizer/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/optimizer/) \| [Run](https://doc.log10x.com/apps/edge/optimizer/run/) |
 | **Edge Regulator** | `apps/edge/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/regulator/) \| [Run](https://doc.log10x.com/apps/edge/regulator/run/) |
 | **Edge Reporter** | `apps/edge/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/reporter/) \| [Run](https://doc.log10x.com/apps/edge/reporter/run/) |
-| **Edge Policy** | `apps/edge/policy/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/policy/) \| [Run](https://doc.log10x.com/apps/edge/policy/run/) |
 | **Cloud Reporter** | `apps/cloud/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/cloud/reporter/) \| [Run](https://doc.log10x.com/apps/cloud/reporter/run/) |
 | **Storage Streamer** | `apps/cloud/streamer/*/config.yaml` | [Overview](https://doc.log10x.com/apps/cloud/streamer/) \| [Run](https://doc.log10x.com/apps/cloud/streamer/run/) |
 | **Compiler** | `apps/compiler/config.yaml` | [Overview](https://doc.log10x.com/apps/compiler/) \| [Run](https://doc.log10x.com/apps/compiler/run/) |
