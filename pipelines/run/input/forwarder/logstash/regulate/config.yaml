@@ -27,9 +27,10 @@ include:
 # ============================== Logstash Options ==============================
 
 logstash:
-  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
-  #  TenXObjects in their original form via the intrinsic 'fullText' field.
-  encodeObjects: false
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'rateRegulatorOptimize':
+  #  when optimize is enabled, events are encoded using encode() for volume reduction;
+  #  otherwise, events are emitted in their original form via the fullText field.
+  encodeObjects: $=TenXEnv.get("rateRegulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

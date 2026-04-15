@@ -4,6 +4,8 @@
 
 # This file configures aggregators for tracking emitted (non-dropped) events with
 # additional metrics for tracking regulated (dropped) events for cost saving analysis.
+# When 'rateRegulatorOptimize' is enabled, the emitted_events aggregator also tracks
+# optimized event sizes to measure optimization effectiveness.
 # To learn more see https://doc.log10x.com/run/aggregate
 
 # Set the 10x pipeline to 'run'
@@ -35,8 +37,12 @@ aggregator:
     fields:
       - $=yield TenXEnv.get("enrichmentFields")
 
-    # 'totalFields' specifies fields to extract and tally into generated TenXSummaries
-    totalFields: []
+    # 'totalFields' specifies fields to extract and tally into generated TenXSummaries.
+    #  When rateRegulatorOptimize is enabled, tracks the utf8 byte size of encoded events
+    #  to measure optimization effectiveness.
+    #  To learn more see https://doc.log10x.com/api/js/#TenXObject+encode
+    totalFields:
+      - '$=yield TenXEnv.get("rateRegulatorOptimize") ? "optimized_size=this.utf8Size(\"encoded=encode()\")" : ""'
 
     # 'flushThreshold' sets the max number of TenXObjects whose values to upsert into
     #  the aggregator's in-mem table. Once exceeded, the aggregator instantiates TenXSummaries

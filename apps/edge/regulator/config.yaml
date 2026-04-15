@@ -2,6 +2,12 @@
 # 🔟❎  Edge Regulator app main config
 #
 # Loads the required modules for an Edge Regulator app instance.
+# The regulator filters noisy events and optionally encodes them for volume reduction.
+#
+# To enable optimization (encode events for 50-80% volume reduction), set:
+#   rateRegulator.optimize: true
+# in the rate regulator config, or pass -rateRegulatorOptimize true on the command line.
+#
 # To learn more see https://doc.log10x.com/apps/edge/regulator
 
 # ============================ Bootstrap Runtime ==============================
@@ -36,6 +42,9 @@ include:
   # NOTE - When deploying via Helm, or using the provided forwarder configuration
   # files, the activation of the correct forwarder input is handled automatically,
   # keep all of the below options commented out.
+  #
+  # All forwarder configs support both regulation and optimization modes.
+  # Set rateRegulator.optimize: true in the rate regulator config to enable optimization.
   #
   # For additional info, see -
   # https://doc.log10x.com/apps/edge/regulator/run

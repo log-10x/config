@@ -3,7 +3,8 @@
 # 🔟❎ 'run' Filebeat regulator configuration
 
 # Configure an input that reads events from a Filebeat forwarder and
-# an output that writes filtered TenXObjects back to Filebeat.
+# an output that writes regulated TenXObjects back to Filebeat.
+# When 'rateRegulatorOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/filebeat/regulate/#install
@@ -27,9 +28,10 @@ include:
 # ============================== Filebeat Options ==============================
 
 filebeat:
-  # 'encodeObjects' is false to designate the target output (Unix/stdout)
-  #  to emit filtered TenXObjects in their full-body form.
-  encodeObjects: false
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'rateRegulatorOptimize':
+  #  when optimize is enabled, events are encoded using encode() for volume reduction;
+  #  otherwise, events are emitted in their original form via the fullText field.
+  encodeObjects: $=TenXEnv.get("rateRegulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

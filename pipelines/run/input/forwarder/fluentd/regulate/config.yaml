@@ -3,7 +3,8 @@
 # 🔟❎ 'run' Fluentd regulator configuration
 
 # Configure an input that reads events from a Fluentd forwarder and
-# an output that writes filtered TenXObjects back to Fluentd.
+# an output that writes regulated TenXObjects back to Fluentd.
+# When 'rateRegulatorOptimize' is enabled, events are encoded for volume reduction.
 
 # This config runs in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/fluentd/regulate/#install
@@ -27,9 +28,10 @@ include:
 # ============================== Fluentd Options ==============================
 
 fluentd:
-  # 'encodeObjects' specifies the target output (Unix/stdout) will write filtered
-  #  TenXObjects in their original form via the intrinsic 'fullText' field.
-  encodeObjects: false
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'rateRegulatorOptimize':
+  #  when optimize is enabled, events are encoded using encode() for volume reduction;
+  #  otherwise, events are emitted in their original form via the fullText field.
+  encodeObjects: $=TenXEnv.get("rateRegulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

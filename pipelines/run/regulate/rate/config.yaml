@@ -17,6 +17,11 @@ include: run/modules/regulate/rate
 
 rateRegulator:
 
+  # 'optimize' enables optimization mode: encode emitted events using encode() for 50-80% volume reduction.
+  #  When false (default), emitted events are written in their original plain-text form.
+  #  To learn more see https://doc.log10x.com/run/regulate/rate/#rateregulatoroptimize
+  optimize: false
+
   # 'fieldNames' specifies the list of TenXObject fields to identify rate counter buckets
   #  The list usually contains the symbolMessage field from message enrichment
   #  Can include additional fields like container (k8s app), country (GeoIP), httpCode, etc.
