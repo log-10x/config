@@ -36,6 +36,18 @@ include:
   # - run/input/stdin    # https://doc.log10x.com/run/input/stdin
   # - run/input/forward  # https://doc.log10x.com/run/input/forward
 
+# ----------------------------- Analyzer Inputs --------------------------------
+
+  # Uncomment to read events from a remote log analyzer for reporting/analysis:
+
+  # - run/input/analyzer/splunk           # https://doc.log10x.com/run/input/analyzer/splunk
+  # - run/input/analyzer/elastic          # https://doc.log10x.com/run/input/analyzer/elastic
+  # - run/input/analyzer/logzio           # https://doc.log10x.com/run/input/analyzer/logzio
+  # - run/input/analyzer/coralogix        # https://doc.log10x.com/run/input/analyzer/coralogix
+  # - run/input/analyzer/cloudwatchLogs   # https://doc.log10x.com/run/input/analyzer/cloudwatchLogs
+  # - run/input/analyzer/datadogLogs      # https://doc.log10x.com/run/input/analyzer/datadogLogs
+  # - run/input/analyzer/s3Logs           # https://doc.log10x.com/run/input/analyzer/s3Logs
+
 # --------------------------- Enrich TenXObjects ------------------------------
 
   # Uncomment and edit config files to enrich TenXObjects with calculated fields:
@@ -61,3 +73,17 @@ include:
   # - run/output/event/http        # https://doc.log10x.com/run/output/event/http
   # - run/output/event/unix        # https://doc.log10x.com/run/output/event/unix
   # - run/output/event/forward     # https://doc.log10x.com/run/output/event/forward
+
+# -------------------------- Metric Outputs ----------------------------
+
+  #  Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+
+  # - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
+  # - run/output/metric/prometheus/scrape          # https://doc.log10x.com/run/output/metric/prometheus/scrape
+  # - run/output/metric/prometheus/push-gateway    # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
+  # - run/output/metric/prometheus/remote-write    # https://doc.log10x.com/run/output/metric/prometheus/remote-write
+  # - run/output/metric/cloudwatch                 # https://doc.log10x.com/run/output/metric/cloudwatch
+  # - run/output/metric/datadog                    # https://doc.log10x.com/run/output/metric/datadog
+  # - run/output/metric/elastic                    # https://doc.log10x.com/run/output/metric/elastic
+  # - run/output/metric/signalFx                   # https://doc.log10x.com/run/output/metric/signalFx
+  # - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log

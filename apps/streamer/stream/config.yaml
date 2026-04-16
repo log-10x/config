@@ -20,7 +20,7 @@ include:
 # ------------------------------ App settings ---------------------------------
 
   # Load app settings:
-  - cloud/streamer/stream
+  - streamer/stream
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config

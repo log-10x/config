@@ -1,8 +1,8 @@
 #
-# 🔟❎  Cloud reporter app main config
+# 🔟❎  Object storage index upload config
 
-# Loads the required modules for a Cloud reporter app instance.
-# To learn more see https://doc.log10x.com/apps/cloud/reporter
+# Index the a log file upload to an object storage container (e.g., S3).
+# To learn more see https://doc.log10x.com/apps/cloud/analyzer/#index
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -10,18 +10,18 @@
 
 tenx: run
 
-runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myCloudReporter")
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myObjectStorageIndex")
 
 # ============================ Load App Modules ===============================
 
-# Uncomment and edit selected config.yaml files (e.g., run/input/analyzer/elastic/config.yaml)
-
 include:
+
+# Uncomment includes and edit their config.yaml files 
 
 # ------------------------------ App settings ---------------------------------
 
   # Load app settings:
-  - cloud/reporter
+  - streamer/index
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config
@@ -29,18 +29,10 @@ include:
   # For additional info see - https://doc.log10x.com/config/github
   - gitops
 
-# ------------------------------ Select Inputs --------------------------------
+# ---------------------------------- Input ------------------------------------
 
-  # This application supports multiple possible inputs, at least one of which should be enabled
-  #
-  # Uncomment and edit to read events from remote log analyzers input(s):
-  #
-  # - run/input/analyzer/elastic         # https://doc.log10x.com/run/input/analyzer/elasticsearch
-  # - run/input/analyzer/coralogix       # https://doc.log10x.com/run/input/analyzer/elasticsearch
-  # - run/input/analyzer/logzio          # https://doc.log10x.com/run/input/analyzer/elasticsearch
-  # - run/input/analyzer/datadogLogs     # https://doc.log10x.com/run/input/analyzer/datadogLogs
-  # - run/input/analyzer/splunk          # https://doc.log10x.com/run/input/analyzer/splunk
-  # - run/input/analyzer/cloudwatchLogs  # https://doc.log10x.com/run/input/analyzer/cloudwatchLogs
+# Read events from log blob storage:
+  - run/input/objectStorage/index
 
 # --------------------------- Enrich TenXObjects ------------------------------
 
@@ -58,7 +50,7 @@ include:
 
 # -------------------------- Select Metric Outputs ----------------------------
 
-  # Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+  # Publish aggregated TenXSummary instances to metric outputs:
   #
   # NOTE - in order to use the public Log10x grafana dashboards, log10x must be enabled
 

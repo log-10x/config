@@ -16,11 +16,11 @@
       "properties" : {
         "encodeObjects" : {
           "type" : [
-            "boolean",
-            "string"
+            "string",
+            "null"
           ],
-          "markdownDescription" : "Controls whether events written to a Logstash forwarder are encoded or written in raw form\n\nSets the format in which to serialize TenXObjects back to the Logstash forwarder. If true, write events using the [encode](https://doc.log10x.com/api/js/#TenXObject+encode) function. If false, write events in their original form as read from the Logstash forwarder using the [fullText](https://doc.log10x.com/api/js/#TenXBaseObject+fullText) field. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
-          "default" : false
+          "markdownDescription" : "Controls whether events written to a Logstash forwarder are encoded or written in raw form\n\nSets the format in which to serialize TenXObjects back to the Logstash forwarder. If true, write events using the [encode](https://doc.log10x.com/api/js/#TenXObject+encode) function. If false, write events in their original form as read from the Logstash forwarder using the [fullText](https://doc.log10x.com/api/js/#TenXBaseObject+fullText) field.  Defaults to the value of `regulatorOptimize` when used with the Regulator app. (Default: false)",
+          "default" : "false"
         },
         "outputFields" : {
           "type" : [

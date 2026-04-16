@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Edge Regulator config
+## 1️⃣0️⃣❎ Regulator config
 
-This is the edgeRegulator configuration for the Edge Regulator app.
+This is the regulator configuration for the Regulator app.
 
-To learn more see the [Edge Regulator](https://doc.log10x.com/apps/edge/regulator "Filter ‘noisy’ log/trace events _before_ they ship to output") app documentation
+To learn more see the [Regulator](https://doc.log10x.com/apps/regulator "Regulate and optionally optimize log/trace events _before_ they ship to output") app documentation
 
