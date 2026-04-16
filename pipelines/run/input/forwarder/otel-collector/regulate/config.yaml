@@ -3,16 +3,14 @@
 # 🔟❎ 'run' OpenTelemetry Collector regulator configuration
 #
 # Configure an input that reads events from OpenTelemetry Collector via syslog
-# and an output that writes filtered TenXObjects back via Forward protocol.
+# and an output that writes regulated TenXObjects back via Forward protocol.
+# When 'regulatorOptimize' is enabled, events are encoded for volume reduction.
 #
 # Architecture:
 #   OTel Collector --[syslog/unix]--> Log10x Regulator --[forward/unix]--> OTel Collector --> Final destinations
 #
-# Only events that pass the regulation filter are returned to OTel Collector.
-# Filtered (dropped) events are not sent to the final destination.
-#
 # Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate @apps/edge/regulator
+#   tenx run @run/input/forwarder/otel-collector/regulate @apps/regulator
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -21,7 +19,6 @@ tenx: run
 
 include:
 
-  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
   - run/modules/input/forwarder/otel-collector/regulate/module.yaml
 
   # Read events from OTel Collector via Unix socket with syslog parsing
@@ -33,8 +30,9 @@ include:
 # ========================= Configuration Options =============================
 
 otelCollector:
-  # Write filtered TenXObjects in their original form (plain-text)
-  encodeObjects: false
+
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
+  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

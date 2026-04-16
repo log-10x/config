@@ -1,0 +1,92 @@
+#
+# 🔟❎  Regulator app main config
+#
+# Loads the required modules for a Regulator app instance.
+# The regulator filters noisy events and optionally encodes them for volume reduction.
+#
+# To enable optimization (encode events for 50-80% volume reduction), set:
+#   regulatorOptimize: true
+# or pass regulatorOptimize true on the command line.
+#
+# To learn more see https://doc.log10x.com/apps/regulator
+
+# ============================ Bootstrap Runtime ==============================
+
+# Initialize the runtime. To learn more see https://doc.log10x.com/run/bootstrap
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myRegulator")
+
+# =========================== Load App Modules ================================
+
+# Uncomment and edit selected config.yaml files (e.g., run/input/forwarder/filebeat/report)
+
+include:
+
+# ----------------------------- App settings ----------------------------------
+
+  # Load app settings:
+  - regulator
+
+  # Load gitops settings for pulling additional assets from Github.
+  # Edit the gitops/config.yaml file with specific config
+  #
+  # For additional info see - https://doc.log10x.com/config/github
+  - gitops
+
+# ---------------------------- Forwarder Input --------------------------------
+
+  # Uncomment and edit to read events from a log forwarder process input:
+  #
+  # NOTE - When deploying via Helm, or using the provided forwarder configuration
+  # files, the activation of the correct forwarder input is handled automatically,
+  # keep all of the below options commented out.
+  #
+  # All forwarder configs support both regulation and optimization modes.
+  # Set rateRegulator.optimize: true in the rate regulator config to enable optimization.
+  #
+  # For additional info, see -
+  # https://doc.log10x.com/apps/regulator/run
+  # https://doc.log10x.com/apps/regulator/deploy
+  #
+  # - run/input/forwarder/filebeat/regulate
+  # - run/input/forwarder/fluentbit/regulate
+  # - run/input/forwarder/fluentd/regulate
+  # - run/input/forwarder/logstash/regulate
+  # - run/input/forwarder/otel-collector/regulate
+  # - run/input/forwarder/datadogAgent/regulate
+
+# --------------------------- Enrich TenXObjects ------------------------------
+
+  # Uncomment and edit config files to enrich TenXObjects with calculated fields:
+
+  - run/initialize/inputField   # https://doc.log10x.com/run/initialize/#inputfield
+  - run/initialize/level        # https://doc.log10x.com/run/initialize/level
+  - run/initialize/group        # https://doc.log10x.com/run/initialize/group
+  - run/initialize/message      # https://doc.log10x.com/run/initialize/message
+  - run/initialize/httpCode     # https://doc.log10x.com/run/initialize/httpCode
+  - run/initialize/lookup       # https://doc.log10x.com/run/initialize/lookup
+  - run/initialize/custom       # https://doc.log10x.com/run/transform/script/object
+  - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
+  # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
+
+# ---------------------------- Select Regulator ------------------------------
+
+  #  Regulate TenXObjects via per-node budget sampling or a field-set mute file:
+
+  - run/regulate/rate           # https://doc.log10x.com/run/regulate/rate
+
+# -------------------------- Select Metric Outputs ----------------------------
+
+  #  Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+
+  - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
+  # - run/output/metric/prometheus/scrape        # https://doc.log10x.com/run/output/metric/prometheus/scrape
+  # - run/output/metric/prometheus/push-gateway  # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
+  # - run/output/metric/prometheus/remote-write  # https://doc.log10x.com/run/output/metric/prometheus/remote-write
+  # - run/output/metric/cloudwatch               # https://doc.log10x.com/run/output/metric/cloudwatch
+  # - run/output/metric/datadog                  # https://doc.log10x.com/run/output/metric/datadog
+  # - run/output/metric/elastic                  # https://doc.log10x.com/run/output/metric/elastic
+  # - run/output/metric/signalFx                 # https://doc.log10x.com/run/output/metric/signalFx
+  # - run/output/metric/log                      # https://doc.log10x.com/run/output/metric/log

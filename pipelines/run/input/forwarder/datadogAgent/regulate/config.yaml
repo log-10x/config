@@ -27,6 +27,6 @@ include:
 # ============================= Fluent Bit Options ============================
 
 fluentbit:
-  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
-  #  TenXObjects in a plain-text format using the intrinsic 'fullText' field.
-  encodeObjects: false
+
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
+  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)

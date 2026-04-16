@@ -3,7 +3,8 @@
 # 🔟❎ 'run' Fluent Bit regulator configuration
 
 # Configure an input that reads events from a Fluent Bit forwarder and
-# an output that writes filtered TenXObjects back to Fluent Bit.
+# an output that writes regulated TenXObjects back to Fluent Bit.
+# When 'regulatorOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/fluentbit/regulate/#install
@@ -15,27 +16,26 @@ tenx: run
 
 include:
 
-  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
   - run/modules/input/forwarder/fluentbit/regulate/module.yaml
 
   # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/fluentbit/input
 
-  # Include Unix domain/TCP socket output to write events into the forwarder
-  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+  # Include forward output to write events into the forwarder
+  # Windows: Forward protocol over TCP (port 24224) - Unix: Forward protocol over Unix domain socket
+  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "forward" : "unix")'
 
 # ============================= Fluent Bit Options ============================
 
 fluentbit:
-  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
-  #  TenXObjects in a plain-text format using the intrinsic 'fullText' field.
-  encodeObjects: false
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
+  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
   #  Example: outputFields: [level, group, symbolMessage]
-  outputFields: [severity_level]
+  outputFields: []
 
   # 'outputEncodeType' controls the output format when outputFields is set.
   #  Possible values: 'json' or 'delimited'
-  outputEncodeType: json
+  outputEncodeType: delimited

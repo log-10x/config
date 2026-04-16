@@ -38,7 +38,7 @@ if errorlevel 1 (
 
 REM Start Log10x reporter
 echo Starting Log10x reporter...
-start "Log10x Reporter" /min %TENX_BIN% @run/input/forwarder/otel-collector/report @apps/edge/reporter > "%LOG_DIR%\tenx-reporter.log" 2>&1
+start "Log10x Reporter" /min %TENX_BIN% @run/input/forwarder/otel-collector/report @apps/reporter > "%LOG_DIR%\tenx-reporter.log" 2>&1
 echo Log file: %LOG_DIR%\tenx-reporter.log
 
 REM Wait for Log10x to be ready

@@ -15,7 +15,6 @@ tenx: run
 
 include:
 
-  # Include regulator output options (encodeObjects, outputFields, outputEncodeType)
   - run/modules/input/forwarder/logstash/regulate/module.yaml
 
     # Include the stdin input to read events from the forwarder
@@ -27,9 +26,9 @@ include:
 # ============================== Logstash Options ==============================
 
 logstash:
-  # 'encodeObjects' specifies the target output (Unix domain/TCP) will write
-  #  TenXObjects in their original form via the intrinsic 'fullText' field.
-  encodeObjects: false
+
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
+  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
