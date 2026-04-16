@@ -59,7 +59,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start Log10x reporter
 echo -e "${GREEN}Starting Log10x reporter...${NC}"
-$TENX_BIN @run/input/forwarder/otel-collector/report @apps/edge/reporter > "$LOG_DIR/tenx-reporter.log" 2>&1 &
+$TENX_BIN @run/input/forwarder/otel-collector/report @apps/reporter > "$LOG_DIR/tenx-reporter.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
 echo "Log file: $LOG_DIR/tenx-reporter.log"

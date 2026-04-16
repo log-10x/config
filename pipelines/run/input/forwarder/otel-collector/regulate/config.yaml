@@ -10,7 +10,7 @@
 #   OTel Collector --[syslog/unix]--> Log10x Regulator --[forward/unix]--> OTel Collector --> Final destinations
 #
 # Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate @apps/edge/regulator
+#   tenx run @run/input/forwarder/otel-collector/regulate @apps/regulator
 
 # Set the 10x pipeline to 'run'
 tenx: run

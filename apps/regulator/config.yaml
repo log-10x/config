@@ -1,14 +1,14 @@
 #
-# 🔟❎  Edge Regulator app main config
+# 🔟❎  Regulator app main config
 #
-# Loads the required modules for an Edge Regulator app instance.
+# Loads the required modules for a Regulator app instance.
 # The regulator filters noisy events and optionally encodes them for volume reduction.
 #
 # To enable optimization (encode events for 50-80% volume reduction), set:
-#   rateRegulator.optimize: true
-# in the rate regulator config, or pass -regulatorOptimize true on the command line.
+#   regulatorOptimize: true
+# or pass regulatorOptimize true on the command line.
 #
-# To learn more see https://doc.log10x.com/apps/edge/regulator
+# To learn more see https://doc.log10x.com/apps/regulator
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -16,7 +16,7 @@
 
 tenx: run
 
-runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myEdgeRegulator")
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myRegulator")
 
 # =========================== Load App Modules ================================
 
@@ -27,7 +27,7 @@ include:
 # ----------------------------- App settings ----------------------------------
 
   # Load app settings:
-  - edge/regulator
+  - regulator
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config
@@ -47,8 +47,8 @@ include:
   # Set rateRegulator.optimize: true in the rate regulator config to enable optimization.
   #
   # For additional info, see -
-  # https://doc.log10x.com/apps/edge/regulator/run
-  # https://doc.log10x.com/apps/edge/regulator/deploy
+  # https://doc.log10x.com/apps/regulator/run
+  # https://doc.log10x.com/apps/regulator/deploy
   #
   # - run/input/forwarder/filebeat/regulate
   # - run/input/forwarder/fluentbit/regulate

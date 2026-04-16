@@ -1,8 +1,8 @@
 #
-# 🔟❎  Edge reporter app main config
+# 🔟❎  Reporter app main config
 
-# Loads the required modules for an Edge reporter instance.
-# To learn more see https://doc.log10x.com/apps/edge/reporter
+# Loads the required modules for a Reporter instance.
+# To learn more see https://doc.log10x.com/apps/reporter
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -10,7 +10,7 @@
 
 tenx: run
 
-runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myEdgeReporter")
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReporter")
 
 # =========================== Load App Modules ================================
 
@@ -21,7 +21,7 @@ include:
 # ----------------------------- App settings ----------------------------------
 
   # Load app settings:
-  - edge/reporter
+  - reporter
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config
@@ -31,23 +31,14 @@ include:
 
 # ---------------------------- Forwarder Input --------------------------------
 
-  # Uncomment and edit to read events from a log forwarder process input:
-  #
-  # NOTE - When deploying via Helm, or using the provided forwarder configuration
-  # files, the activation of the correct forwarder input is handled automatically,
-  # keep all of the below options commented out.
+  # Read events via Fluent Forward protocol (port 24224 or Unix socket).
+  # The reporter runs as a sidecar container receiving events from any forwarder.
   #
   # For additional info, see -
-  # https://doc.log10x.com/apps/edge/reporter/run
-  # https://doc.log10x.com/apps/edge/reporter/deploy
+  # https://doc.log10x.com/apps/reporter/run
+  # https://doc.log10x.com/apps/reporter/deploy
   #
-  # - run/input/forward                          # https://doc.log10x.com/run/input/forward
-  # - run/input/forwarder/filebeat/report
-  # - run/input/forwarder/fluentbit/report
-  # - run/input/forwarder/fluentd/report
-  # - run/input/forwarder/logstash/report
-  # - run/input/forwarder/otel-collector/report
-  # - run/input/forwarder/datadogAgent/report
+  - run/input/forward                            # https://doc.log10x.com/run/input/forward
 
 # --------------------------- Enrich TenXObjects ------------------------------
 
