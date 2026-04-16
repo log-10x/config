@@ -6,7 +6,7 @@
 #
 # To enable optimization (encode events for 50-80% volume reduction), set:
 #   rateRegulator.optimize: true
-# in the rate regulator config, or pass -rateRegulatorOptimize true on the command line.
+# in the rate regulator config, or pass -regulatorOptimize true on the command line.
 #
 # To learn more see https://doc.log10x.com/apps/edge/regulator
 

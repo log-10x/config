@@ -27,7 +27,6 @@ include:
 # ============================= Fluent Bit Options ============================
 
 fluentbit:
-  # 'encodeObjects' controls output encoding. Defaults to the value of 'rateRegulatorOptimize':
-  #  when optimize is enabled, events are encoded using encode() for volume reduction;
-  #  otherwise, events are emitted in their original form via the fullText field.
-  encodeObjects: $=TenXEnv.get("rateRegulatorOptimize", false)
+
+  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
+  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
