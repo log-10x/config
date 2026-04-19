@@ -24,6 +24,11 @@ runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myMcp")
 
 include:
 
+  # ------------------------------ App settings ---------------------------------
+
+  # Load general app settings from modules/apps/mcp.
+  - mcp
+
   # ------------------------------ Input: stdin -------------------------------
 
   # Open stdin as the pipeline's only input. stdinEnabled defaults to true
