@@ -1,0 +1,26 @@
+#
+# 🔟❎ 'run' Edge Reporter settings
+#
+# OVERLAY of the image-baked apps/edge/reporter/config.yaml.
+#
+# The image ships this file without a `runtimeName` declaration, but
+# downstream modules (bootstrap + aggregators) reference `${runtimeName}`
+# at resolve time and fail with "could not resolve config variable:
+# 'runtimeName'". This overlay adds the declaration, reading
+# TENX_RUNTIME_NAME from the pod env (set by every forwarder chart's
+# templates) with a sensible default.
+#
+# Once pipeline-10x is rebuilt with runtimeName baked into its
+# apps/edge/reporter/config.yaml, this overlay can be removed.
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReporter")
+
+runtimeAttributes:
+  - app:reporter
+  - env:edge
+
+include:
+  - apps/shared
+  - run/aggregate/report

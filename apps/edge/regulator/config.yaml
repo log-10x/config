@@ -1,0 +1,19 @@
+#
+# 🔟❎ 'run' Edge Regulator settings
+#
+# OVERLAY of the image-baked apps/edge/regulator/config.yaml. Same
+# reason as the reporter overlay — the image's version lacks a
+# `runtimeName` declaration that downstream bootstrap + aggregator
+# modules reference at resolve time.
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myRegulator")
+
+runtimeAttributes:
+  - app:regulator
+  - env:edge
+
+include:
+  - apps/shared
+  - run/aggregate/regulate
