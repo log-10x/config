@@ -21,7 +21,11 @@ include:
 # ----------------------------- App settings ----------------------------------
 
   # Load app settings:
-  - reporter
+  # TEMPORARY: pointing at the image-baked apps/edge/reporter module until
+  # pipeline-10x is rebuilt with flat apps/reporter/. Flip back to
+  # `- reporter` as part of the regulator→reducer / streamer→offloader
+  # rename + image rebuild (scheduled).
+  - edge/reporter
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config
