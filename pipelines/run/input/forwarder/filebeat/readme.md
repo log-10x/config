@@ -2,5 +2,5 @@
 
 This is the forwarder Inputs+Filebeat configuration for the Edge Reporter module.
 
-To learn more see the [Edge Reporter module](https://doc.log10x.com/apps/edge/reporter "Edge Reporter module") documentation
+To learn more see the [Edge Reporter module](https://doc.log10x.com/apps/reporter "Edge Reporter module") documentation
 

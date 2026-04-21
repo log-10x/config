@@ -4,7 +4,7 @@
 # The compile app produces symbol library files which enable 10x apps to
 # transform log/trace events into well-defined TenXObjects at runtime.
 
-# To learn more see https://doc.log10x.com/apps/compiler
+# To learn more see https://doc.log10x.com/compile
 
 # =========================== Bootstrap Compiler ==============================
 
