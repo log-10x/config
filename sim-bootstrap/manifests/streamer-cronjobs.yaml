@@ -1,0 +1,660 @@
+apiVersion: v1
+items:
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-cloud-reporter
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T13:59:31Z"
+    generation: 4
+    labels:
+      app.kubernetes.io/instance: tenx-cloud-reporter
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cron-10x
+      app.kubernetes.io/version: 1.0.6
+      helm.sh/chart: cron-10x-1.0.6
+    name: tenx-cloud-reporter-cron-10x-cloud-reporter
+    namespace: demo
+    resourceVersion: "3111977"
+    uid: 3cb4a2cc-6bdd-438b-a021-d306a9ce23f8
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata: {}
+      spec:
+        activeDeadlineSeconds: 240
+        template:
+          metadata:
+            labels:
+              app: cron-10x
+              log10x-cron-name: tenx-cloud-reporter-cron-10x-cloud-reporter
+          spec:
+            containers:
+            - args:
+              - '@apps/cloud/reporter'
+              - '@run/modules/input/analyzer/s3Logs'
+              - s3LogsName
+              - S3LogsInput
+              - s3LogsBucket
+              - log10x-public-assets
+              - s3LogsKey
+              - samples/otel-k8s/large/input/otel-sample.log
+              - s3LogsTotalDuration
+              - $=parseDuration("4min")
+              - s3LogsTotalBytesLimit
+              - $=parseBytes("500MB")
+              - s3LogsTotalEventsLimit
+              - "500000"
+              - s3LogsPrintProgress
+              - "false"
+              env:
+              - name: TENX_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: api-key
+                    name: tenx-cloud-reporter-cron-10x-api-key
+              - name: TENX_RUNTIME_NAME
+                value: demo-cloud-reporter
+              - name: AWS_REGION
+                value: us-east-1
+              image: log10x/pipeline-10x:1.0.6
+              imagePullPolicy: IfNotPresent
+              name: cloud-reporter
+              resources:
+                limits:
+                  cpu: "1"
+                  memory: 4Gi
+                requests:
+                  cpu: 100m
+                  memory: 1Gi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: Never
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-cloud-reporter
+            serviceAccountName: tenx-cloud-reporter
+            terminationGracePeriodSeconds: 30
+    schedule: '*/5 * * * *'
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    active:
+    - apiVersion: batch/v1
+      kind: Job
+      name: tenx-cloud-reporter-cron-10x-cloud-reporter-29612145
+      namespace: demo
+      resourceVersion: "3111974"
+      uid: 8dafb961-a886-471f-a8d7-b9c625c81968
+    lastScheduleTime: "2026-04-20T23:45:00Z"
+    lastSuccessfulTime: "2026-04-20T23:40:46Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    creationTimestamp: "2026-04-14T14:01:06Z"
+    generation: 1
+    name: tenx-index-inducer
+    namespace: demo
+    resourceVersion: "3111975"
+    uid: be4a14ed-9aeb-453a-b376-296e206822dd
+  spec:
+    concurrencyPolicy: Replace
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata:
+        labels:
+          app: tenx-index-inducer
+      spec:
+        backoffLimit: 6
+        completions: 1
+        manualSelector: false
+        parallelism: 1
+        template:
+          metadata:
+            labels:
+              app: tenx-index-inducer
+          spec:
+            automountServiceAccountToken: true
+            containers:
+            - command:
+              - /bin/sh
+              - -c
+              - |-
+                set -e
+                pip install --quiet boto3
+                TIMESTAMP=$(date -u +%Y-%m-%d-%H-%M)
+                DEST_KEY="${INDEX_PREFIX}otel-sample-${TIMESTAMP}.log"
+                echo "Processing sample log with timestamp adjustment..."
+                echo "Source: s3://${SOURCE_BUCKET}/${SOURCE_KEY}"
+                echo "Destination: s3://${DEST_BUCKET}/${DEST_KEY}"
+                python /scripts/adjust_timestamps.py --source-bucket "${SOURCE_BUCKET}" --source-key "${SOURCE_KEY}" --dest-bucket "${DEST_BUCKET}" --dest-key "${DEST_KEY}"
+                echo "Successfully processed and uploaded file to trigger indexing"
+              env:
+              - name: SOURCE_BUCKET
+                value: log10x-public-assets
+              - name: SOURCE_KEY
+                value: samples/otel-k8s/medium/input/otel-sample.log
+              - name: DEST_BUCKET
+                value: tenx-demo-cloud-streamer-351939435334
+              - name: INDEX_PREFIX
+                value: app/
+              image: python:3.12-slim
+              imagePullPolicy: IfNotPresent
+              name: index-inducer
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+              volumeMounts:
+              - mountPath: /scripts
+                mountPropagation: None
+                name: script
+                readOnly: true
+            dnsPolicy: ClusterFirst
+            enableServiceLinks: true
+            nodeSelector:
+              workload: cron
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-demo-index-inducer
+            serviceAccountName: tenx-demo-index-inducer
+            shareProcessNamespace: false
+            terminationGracePeriodSeconds: 30
+            volumes:
+            - configMap:
+                defaultMode: 493
+                name: tenx-index-inducer-script
+                optional: false
+              name: script
+    schedule: '*/1 * * * *'
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    active:
+    - apiVersion: batch/v1
+      kind: Job
+      name: tenx-index-inducer-29612145
+      namespace: demo
+      resourceVersion: "3111973"
+      uid: 438f9065-288a-4230-8717-17514483f3a1
+    lastScheduleTime: "2026-04-20T23:45:00Z"
+    lastSuccessfulTime: "2026-04-20T23:44:16Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-policy-gen
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T13:59:31Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/instance: tenx-policy-gen
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cron-10x
+      app.kubernetes.io/version: 1.0.6
+      helm.sh/chart: cron-10x-1.0.6
+    name: tenx-policy-gen-cron-10x-policy-generator
+    namespace: demo
+    resourceVersion: "3110493"
+    uid: fb4c695e-3039-442c-a291-d83c204a14df
+  spec:
+    concurrencyPolicy: Allow
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: cron-10x
+              log10x-cron-name: tenx-policy-gen-cron-10x-policy-generator
+          spec:
+            containers:
+            - args:
+              - overrideKey
+              - policyOutputPath
+              - overrideValue
+              - lookups/policy.csv
+              - overrideKey
+              - policyOutputGithubRepo
+              - overrideValue
+              - log-10x/gitops-demo
+              - '@apps/edge/policy'
+              env:
+              - name: TENX_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    key: api-key
+                    name: tenx-policy-gen-cron-10x-api-key
+              - name: TENX_RUNTIME_NAME
+                value: demo-policy-generator
+              - name: GH_TOKEN
+                value: github_pat_REDACTED
+              image: log10x/pipeline-10x:1.0.6
+              imagePullPolicy: IfNotPresent
+              name: policy-generator
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: Never
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-policy-gen-cron-10x
+            serviceAccountName: tenx-policy-gen-cron-10x
+            terminationGracePeriodSeconds: 30
+    schedule: '*/10 * * * *'
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-04-20T23:40:00Z"
+    lastSuccessfulTime: "2026-04-20T23:40:33Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T14:00:27Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/version: 1.0.6
+      component: scheduled-query
+      helm.sh/chart: streamer-10x-1.0.6
+      query-job-name: container-filter
+    name: tenx-streamer-streamer-10x-container-filter
+    namespace: demo
+    resourceVersion: "3110684"
+    uid: c412b9ba-c158-4f00-8e89-79a55727e77d
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: streamer-10x
+              component: scheduled-query
+              query-job-name: container-filter
+          spec:
+            containers:
+            - args:
+              - -c
+              - |
+                set -e
+                QUERY_BODY=$(cat <<'QUERY_EOF'
+                {"from":"$=now(\"-5m\")","name":"frontend-errors","search":"k8s_container==\"frontend\" \u0026\u0026 severity_level==\"ERROR\"","to":"$=now()"}
+                QUERY_EOF
+                )
+
+                echo "Sending query: frontend-errors"
+
+                aws sqs send-message \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --message-body "$QUERY_BODY"
+
+                echo "Query sent successfully: frontend-errors"
+
+                echo "All queries sent successfully for job: container-filter"
+              command:
+              - /bin/bash
+              env:
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              image: amazon/aws-cli:2.15.17
+              imagePullPolicy: IfNotPresent
+              name: send-query
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-streamer
+            serviceAccountName: tenx-streamer
+            terminationGracePeriodSeconds: 30
+    schedule: 1,6,11,16,21,26,31,36,41,46,51,56 * * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-04-20T23:41:00Z"
+    lastSuccessfulTime: "2026-04-20T23:41:03Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T14:00:27Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/version: 1.0.6
+      component: scheduled-query
+      helm.sh/chart: streamer-10x-1.0.6
+      query-job-name: http-code-filter
+    name: tenx-streamer-streamer-10x-http-code-filter
+    namespace: demo
+    resourceVersion: "3111013"
+    uid: e2c488d4-f7f9-4983-a39b-1501503aec5c
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: streamer-10x
+              component: scheduled-query
+              query-job-name: http-code-filter
+          spec:
+            containers:
+            - args:
+              - -c
+              - |
+                set -e
+                QUERY_BODY=$(cat <<'QUERY_EOF'
+                {"from":"$=now(\"-5m\")","name":"server-errors-5xx","search":"http_code==\"500\" || http_code==\"502\" || http_code==\"503\" || http_code==\"504\"","to":"$=now()"}
+                QUERY_EOF
+                )
+
+                echo "Sending query: server-errors-5xx"
+
+                aws sqs send-message \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --message-body "$QUERY_BODY"
+
+                echo "Query sent successfully: server-errors-5xx"
+
+                echo "All queries sent successfully for job: http-code-filter"
+              command:
+              - /bin/bash
+              env:
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              image: amazon/aws-cli:2.15.17
+              imagePullPolicy: IfNotPresent
+              name: send-query
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-streamer
+            serviceAccountName: tenx-streamer
+            terminationGracePeriodSeconds: 30
+    schedule: 2,7,12,17,22,27,32,37,42,47,52,57 * * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-04-20T23:42:00Z"
+    lastSuccessfulTime: "2026-04-20T23:42:03Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T14:00:27Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/version: 1.0.6
+      component: scheduled-query
+      helm.sh/chart: streamer-10x-1.0.6
+      query-job-name: namespace-filter
+    name: tenx-streamer-streamer-10x-namespace-filter
+    namespace: demo
+    resourceVersion: "3111347"
+    uid: 959e2c41-141d-421a-8178-5d18266791c7
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: streamer-10x
+              component: scheduled-query
+              query-job-name: namespace-filter
+          spec:
+            containers:
+            - args:
+              - -c
+              - |
+                set -e
+                QUERY_BODY=$(cat <<'QUERY_EOF'
+                {"from":"$=now(\"-5m\")","name":"kube-system-errors","search":"k8s_namespace==\"kube-system\" \u0026\u0026 severity_level==\"ERROR\"","to":"$=now()"}
+                QUERY_EOF
+                )
+
+                echo "Sending query: kube-system-errors"
+
+                aws sqs send-message \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --message-body "$QUERY_BODY"
+
+                echo "Query sent successfully: kube-system-errors"
+
+                echo "All queries sent successfully for job: namespace-filter"
+              command:
+              - /bin/bash
+              env:
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              image: amazon/aws-cli:2.15.17
+              imagePullPolicy: IfNotPresent
+              name: send-query
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-streamer
+            serviceAccountName: tenx-streamer
+            terminationGracePeriodSeconds: 30
+    schedule: 3,8,13,18,23,28,33,38,43,48,53,58 * * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-04-20T23:43:00Z"
+    lastSuccessfulTime: "2026-04-20T23:43:03Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T14:00:27Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/version: 1.0.6
+      component: scheduled-query
+      helm.sh/chart: streamer-10x-1.0.6
+      query-job-name: severity-filter
+    name: tenx-streamer-streamer-10x-severity-filter
+    namespace: demo
+    resourceVersion: "3111976"
+    uid: a5c3104e-5db4-4c67-9da0-69a57cc8e9b2
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: streamer-10x
+              component: scheduled-query
+              query-job-name: severity-filter
+          spec:
+            containers:
+            - args:
+              - -c
+              - |
+                set -e
+                QUERY_BODY=$(cat <<'QUERY_EOF'
+                {"from":"$=now(\"-5m\")","name":"errors-and-critical","search":"severity_level==\"ERROR\" || severity_level==\"CRITICAL\"","to":"$=now()"}
+                QUERY_EOF
+                )
+
+                echo "Sending query: errors-and-critical"
+
+                aws sqs send-message \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --message-body "$QUERY_BODY"
+
+                echo "Query sent successfully: errors-and-critical"
+
+                echo "All queries sent successfully for job: severity-filter"
+              command:
+              - /bin/bash
+              env:
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              image: amazon/aws-cli:2.15.17
+              imagePullPolicy: IfNotPresent
+              name: send-query
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-streamer
+            serviceAccountName: tenx-streamer
+            terminationGracePeriodSeconds: 30
+    schedule: 0,5,10,15,20,25,30,35,40,45,50,55 * * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    active:
+    - apiVersion: batch/v1
+      kind: Job
+      name: tenx-streamer-streamer-10x-severity-filter-29612145
+      namespace: demo
+      resourceVersion: "3111972"
+      uid: a08e1cc3-2e10-4573-8684-f0f43c1aa90d
+    lastScheduleTime: "2026-04-20T23:45:00Z"
+    lastSuccessfulTime: "2026-04-20T23:40:04Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-namespace: demo
+    creationTimestamp: "2026-04-14T14:00:27Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/version: 1.0.6
+      component: scheduled-query
+      helm.sh/chart: streamer-10x-1.0.6
+      query-job-name: text-search
+    name: tenx-streamer-streamer-10x-text-search
+    namespace: demo
+    resourceVersion: "3111680"
+    uid: fbabf29e-6b3a-45ec-8402-1bc8900212f9
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    jobTemplate:
+      metadata: {}
+      spec:
+        template:
+          metadata:
+            labels:
+              app: streamer-10x
+              component: scheduled-query
+              query-job-name: text-search
+          spec:
+            containers:
+            - args:
+              - -c
+              - |
+                set -e
+                QUERY_BODY=$(cat <<'QUERY_EOF'
+                {"from":"$=now(\"-5m\")","name":"connection-failures","search":"severity_level==\"ERROR\" \u0026\u0026 includes(text, \"ECONNREFUSED\")","to":"$=now()"}
+                QUERY_EOF
+                )
+
+                echo "Sending query: connection-failures"
+
+                aws sqs send-message \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --message-body "$QUERY_BODY"
+
+                echo "Query sent successfully: connection-failures"
+
+                echo "All queries sent successfully for job: text-search"
+              command:
+              - /bin/bash
+              env:
+              - name: AWS_DEFAULT_REGION
+                value: us-east-1
+              image: amazon/aws-cli:2.15.17
+              imagePullPolicy: IfNotPresent
+              name: send-query
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            imagePullSecrets:
+            - name: ghcr-secret
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            serviceAccount: tenx-streamer
+            serviceAccountName: tenx-streamer
+            terminationGracePeriodSeconds: 30
+    schedule: 4,9,14,19,24,29,34,39,44,49,54,59 * * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-04-20T23:44:00Z"
+    lastSuccessfulTime: "2026-04-20T23:44:03Z"
+kind: List
+metadata:
+  resourceVersion: ""

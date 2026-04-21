@@ -82,9 +82,13 @@ query:
     #  results-writer overhead.
     writeResults: false
 
-    # 'filters' specify expressions TenXObjects transformed from matching events in storage must meet
+    # 'filters' specify expressions TenXObjects transformed from matching events in storage must meet.
+    # The `$?queryFilters` macro lets the CLI/REST `queryFilters` override
+    # plumb through to the worker pipeline. With ACCEPT_SINGLE_VALUE_AS_ARRAY
+    # in the engine's Jackson config, a single-string override value also
+    # hydrates into the List<String> queryFilters field correctly.
     #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
-    filters: []
+    filters: $?queryFilters
 
     # ----------------------------- Limit Options ------------------------------
 

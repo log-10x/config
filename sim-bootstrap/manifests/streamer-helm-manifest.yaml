@@ -1,0 +1,858 @@
+---
+# Source: streamer-10x/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tenx-streamer-streamer-10x-api-key
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  tenx-api-key: "ZDAyYWQyNDctMWUzMi00OWVlLTkxOGQtOTM0NjdiYThiMTM0"
+---
+# Source: streamer-10x/templates/configmap-fluent.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenx-streamer-streamer-10x-fluent-bit
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        5
+        Daemon       off
+        Log_Level    info
+        HTTP_Server  On
+        HTTP_Listen  0.0.0.0
+        HTTP_Port    2020
+
+    [INPUT]
+        Name     forward
+        Listen   0.0.0.0
+        Port     24224
+    # Auto-generated output configuration based on output type
+    # Default output: stdout (useful for debugging and log aggregation)
+    [OUTPUT]
+        Name   stdout
+        Match  *
+---
+# Source: streamer-10x/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenx-streamer-streamer-10x-indexer
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    cluster: indexer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: streamer-10x
+    cluster: indexer
+---
+# Source: streamer-10x/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenx-streamer-streamer-10x-query-handler
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    cluster: query-handler
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: streamer-10x
+    cluster: query-handler
+---
+# Source: streamer-10x/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenx-streamer-streamer-10x-stream-worker
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    cluster: stream-worker
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: streamer-10x
+    cluster: stream-worker
+---
+# Source: streamer-10x/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenx-streamer-streamer-10x-indexer
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    app: streamer-10x
+    cluster: indexer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: streamer-10x
+      cluster: indexer
+  template:
+    metadata:
+      labels:
+        app: streamer-10x
+        cluster: indexer
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      serviceAccountName: tenx-streamer
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: true
+      containers:
+        - name: streamer-10x-indexer
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "log10x/quarkus-10x:1.0.6"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TENX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenx-streamer-streamer-10x-api-key
+                  key: tenx-api-key
+            - name: TENX_QUARKUS_MAX_ASYNC
+              value: "5"
+            - name: TENX_QUARKUS_MAX_QUEUED
+              value: "500"
+            - name: TENX_QUARKUS_READINESS_THRESHOLD
+              value: "90"
+            - name: TENX_STREAMER_INPUT_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334"
+            - name: TENX_STREAMER_INDEX_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+            - name: TENX_QUARKUS_INDEX_WRITE_CONTAINER
+              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+            - name: TENX_QUERY_LOG_GROUP
+              value: "/tenx/demo-streamer/query"
+            
+            - name: TENX_QUARKUS_INDEX_QUEUE_URL
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue"
+            - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+            - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+            - name: JAVA_OPTS_APPEND
+              value: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heap-dumps/ -Dquarkus.http.host=0.0.0.0
+                -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djdk.httpclient.allowRestrictedHeaders=host
+                -Dfile.encoding=UTF-8
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 10
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /health/started
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1600m
+              memory: 3Gi
+            requests:
+              cpu: 500m
+              memory: 2Gi
+          volumeMounts:
+            - mountPath: /heap-dumps
+              name: heap-dumps
+      volumes:
+        - name: heap-dumps
+          persistentVolumeClaim:
+            claimName: indexer-heap-dumps
+      nodeSelector:
+        workload: streamer-general
+---
+# Source: streamer-10x/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenx-streamer-streamer-10x-query-handler
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    app: streamer-10x
+    cluster: query-handler
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: streamer-10x
+      cluster: query-handler
+  template:
+    metadata:
+      labels:
+        app: streamer-10x
+        cluster: query-handler
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      serviceAccountName: tenx-streamer
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: true
+      containers:
+        - name: streamer-10x-query-handler
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "log10x/quarkus-10x:1.0.6"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TENX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenx-streamer-streamer-10x-api-key
+                  key: tenx-api-key
+            - name: TENX_QUARKUS_MAX_ASYNC
+              value: "15"
+            - name: TENX_QUARKUS_MAX_QUEUED
+              value: "1000"
+            - name: TENX_QUARKUS_READINESS_THRESHOLD
+              value: "90"
+            - name: TENX_STREAMER_INPUT_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334"
+            - name: TENX_STREAMER_INDEX_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+            - name: TENX_QUERY_LOG_GROUP
+              value: "/tenx/demo-streamer/query"
+            
+            - name: TENX_QUARKUS_QUERY_QUEUE_URL
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue"
+            - name: TENX_QUARKUS_SUBQUERY_QUEUE_URL
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+            - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+            - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+            - name: TENX_STREAM_PARALLEL_OBJECTS
+              value: "20"
+            - name: JAVA_OPTS_APPEND
+              value: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heap-dumps/ -Dquarkus.http.host=0.0.0.0
+                -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djdk.httpclient.allowRestrictedHeaders=host
+                -Dfile.encoding=UTF-8
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 10
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /health/started
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1400m
+              memory: 2Gi
+            requests:
+              cpu: 400m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /heap-dumps
+              name: heap-dumps
+      volumes:
+        - name: heap-dumps
+          persistentVolumeClaim:
+            claimName: query-handler-heap-dumps
+      nodeSelector:
+        workload: streamer-general
+---
+# Source: streamer-10x/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenx-streamer-streamer-10x-stream-worker
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    app: streamer-10x
+    cluster: stream-worker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: streamer-10x
+      cluster: stream-worker
+  template:
+    metadata:
+      labels:
+        app: streamer-10x
+        cluster: stream-worker
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      serviceAccountName: tenx-streamer
+      securityContext:
+        fsGroup: 0
+        runAsNonRoot: true
+      containers:
+        - name: streamer-10x-stream-worker
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "log10x/quarkus-10x:1.0.6"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TENX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tenx-streamer-streamer-10x-api-key
+                  key: tenx-api-key
+            - name: TENX_QUARKUS_MAX_ASYNC
+              value: "10"
+            - name: TENX_QUARKUS_MAX_QUEUED
+              value: "1000"
+            - name: TENX_QUARKUS_READINESS_THRESHOLD
+              value: "90"
+            - name: TENX_STREAMER_INPUT_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334"
+            - name: TENX_STREAMER_INDEX_BUCKET
+              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+            - name: TENX_QUERY_LOG_GROUP
+              value: "/tenx/demo-streamer/query"
+            
+            - name: TENX_QUARKUS_STREAM_QUEUE_URL
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+            - name: TENX_REMOTE_FORWARD_HOST
+              value: "127.0.0.1"
+            - name: TENX_REMOTE_FORWARD_PORT
+              value: "24224"
+            - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+            - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+            - name: TENX_THREAD_POOL_SIZE
+              value: "4"
+            - name: JAVA_OPTS_APPEND
+              value: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heap-dumps/ -Dquarkus.http.host=0.0.0.0
+                -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djdk.httpclient.allowRestrictedHeaders=host
+                -Dfile.encoding=UTF-8
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 30
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 30
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /health/started
+              port: http
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 3500m
+              memory: 6Gi
+            requests:
+              cpu: 1500m
+              memory: 3Gi
+          volumeMounts:
+            - mountPath: /heap-dumps
+              name: heap-dumps
+        - name: fluent-bit
+          image: "fluent/fluent-bit:3.2.7"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: forward
+              containerPort: 24224
+              protocol: TCP
+            - name: metrics
+              containerPort: 2020
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: fluent-config
+              mountPath: /fluent-bit/etc/
+            - name: fluent-buffer
+              mountPath: /tmp/fluent-bit
+      volumes:
+        - name: fluent-config
+          configMap:
+            name: tenx-streamer-streamer-10x-fluent-bit
+        - name: fluent-buffer
+          emptyDir:
+            sizeLimit: 1Gi
+        - name: heap-dumps
+          persistentVolumeClaim:
+            claimName: stream-worker-heap-dumps
+      nodeSelector:
+        workload: streamer-compute
+---
+# Source: streamer-10x/templates/scheduled-queries.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tenx-streamer-streamer-10x-severity-filter
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    component: scheduled-query
+    query-job-name: severity-filter
+spec:
+  schedule: "0,5,10,15,20,25,30,35,40,45,50,55 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: streamer-10x
+            component: scheduled-query
+            query-job-name: severity-filter
+        spec:
+          serviceAccountName: tenx-streamer
+          restartPolicy: OnFailure
+          containers:
+            - name: send-query
+              image: "amazon/aws-cli:2.15.17"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash"]
+              args:
+                - -c
+                - |
+                  set -e
+                  QUERY_BODY=$(cat <<'QUERY_EOF'
+                  {"from":"$=now(\"-5m\")","name":"errors-and-critical","search":"severity_level==\"ERROR\" || severity_level==\"CRITICAL\"","to":"$=now()"}
+                  QUERY_EOF
+                  )
+
+                  echo "Sending query: errors-and-critical"
+
+                  aws sqs send-message \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --message-body "$QUERY_BODY"
+
+                  echo "Query sent successfully: errors-and-critical"
+
+                  echo "All queries sent successfully for job: severity-filter"
+              env:
+                - name: AWS_DEFAULT_REGION
+                  value: "us-east-1"
+          imagePullSecrets:
+            - name: ghcr-secret
+---
+# Source: streamer-10x/templates/scheduled-queries.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tenx-streamer-streamer-10x-container-filter
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    component: scheduled-query
+    query-job-name: container-filter
+spec:
+  schedule: "1,6,11,16,21,26,31,36,41,46,51,56 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: streamer-10x
+            component: scheduled-query
+            query-job-name: container-filter
+        spec:
+          serviceAccountName: tenx-streamer
+          restartPolicy: OnFailure
+          containers:
+            - name: send-query
+              image: "amazon/aws-cli:2.15.17"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash"]
+              args:
+                - -c
+                - |
+                  set -e
+                  QUERY_BODY=$(cat <<'QUERY_EOF'
+                  {"from":"$=now(\"-5m\")","name":"frontend-errors","search":"k8s_container==\"frontend\" \u0026\u0026 severity_level==\"ERROR\"","to":"$=now()"}
+                  QUERY_EOF
+                  )
+
+                  echo "Sending query: frontend-errors"
+
+                  aws sqs send-message \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --message-body "$QUERY_BODY"
+
+                  echo "Query sent successfully: frontend-errors"
+
+                  echo "All queries sent successfully for job: container-filter"
+              env:
+                - name: AWS_DEFAULT_REGION
+                  value: "us-east-1"
+          imagePullSecrets:
+            - name: ghcr-secret
+---
+# Source: streamer-10x/templates/scheduled-queries.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tenx-streamer-streamer-10x-http-code-filter
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    component: scheduled-query
+    query-job-name: http-code-filter
+spec:
+  schedule: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: streamer-10x
+            component: scheduled-query
+            query-job-name: http-code-filter
+        spec:
+          serviceAccountName: tenx-streamer
+          restartPolicy: OnFailure
+          containers:
+            - name: send-query
+              image: "amazon/aws-cli:2.15.17"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash"]
+              args:
+                - -c
+                - |
+                  set -e
+                  QUERY_BODY=$(cat <<'QUERY_EOF'
+                  {"from":"$=now(\"-5m\")","name":"server-errors-5xx","search":"http_code==\"500\" || http_code==\"502\" || http_code==\"503\" || http_code==\"504\"","to":"$=now()"}
+                  QUERY_EOF
+                  )
+
+                  echo "Sending query: server-errors-5xx"
+
+                  aws sqs send-message \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --message-body "$QUERY_BODY"
+
+                  echo "Query sent successfully: server-errors-5xx"
+
+                  echo "All queries sent successfully for job: http-code-filter"
+              env:
+                - name: AWS_DEFAULT_REGION
+                  value: "us-east-1"
+          imagePullSecrets:
+            - name: ghcr-secret
+---
+# Source: streamer-10x/templates/scheduled-queries.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tenx-streamer-streamer-10x-namespace-filter
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    component: scheduled-query
+    query-job-name: namespace-filter
+spec:
+  schedule: "3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: streamer-10x
+            component: scheduled-query
+            query-job-name: namespace-filter
+        spec:
+          serviceAccountName: tenx-streamer
+          restartPolicy: OnFailure
+          containers:
+            - name: send-query
+              image: "amazon/aws-cli:2.15.17"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash"]
+              args:
+                - -c
+                - |
+                  set -e
+                  QUERY_BODY=$(cat <<'QUERY_EOF'
+                  {"from":"$=now(\"-5m\")","name":"kube-system-errors","search":"k8s_namespace==\"kube-system\" \u0026\u0026 severity_level==\"ERROR\"","to":"$=now()"}
+                  QUERY_EOF
+                  )
+
+                  echo "Sending query: kube-system-errors"
+
+                  aws sqs send-message \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --message-body "$QUERY_BODY"
+
+                  echo "Query sent successfully: kube-system-errors"
+
+                  echo "All queries sent successfully for job: namespace-filter"
+              env:
+                - name: AWS_DEFAULT_REGION
+                  value: "us-east-1"
+          imagePullSecrets:
+            - name: ghcr-secret
+---
+# Source: streamer-10x/templates/scheduled-queries.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: tenx-streamer-streamer-10x-text-search
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    component: scheduled-query
+    query-job-name: text-search
+spec:
+  schedule: "4,9,14,19,24,29,34,39,44,49,54,59 * * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: streamer-10x
+            component: scheduled-query
+            query-job-name: text-search
+        spec:
+          serviceAccountName: tenx-streamer
+          restartPolicy: OnFailure
+          containers:
+            - name: send-query
+              image: "amazon/aws-cli:2.15.17"
+              imagePullPolicy: IfNotPresent
+              command: ["/bin/bash"]
+              args:
+                - -c
+                - |
+                  set -e
+                  QUERY_BODY=$(cat <<'QUERY_EOF'
+                  {"from":"$=now(\"-5m\")","name":"connection-failures","search":"severity_level==\"ERROR\" \u0026\u0026 includes(text, \"ECONNREFUSED\")","to":"$=now()"}
+                  QUERY_EOF
+                  )
+
+                  echo "Sending query: connection-failures"
+
+                  aws sqs send-message \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --message-body "$QUERY_BODY"
+
+                  echo "Query sent successfully: connection-failures"
+
+                  echo "All queries sent successfully for job: text-search"
+              env:
+                - name: AWS_DEFAULT_REGION
+                  value: "us-east-1"
+          imagePullSecrets:
+            - name: ghcr-secret
+---
+# Source: streamer-10x/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tenx-streamer-streamer-10x-indexer
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    cluster: indexer
+spec:
+
+  rules:
+    - host: "streamer.example.com"
+      http:
+        paths:
+          - path: /streamer/index
+            pathType: Prefix
+            backend:
+              service:
+                name: tenx-streamer-streamer-10x-indexer
+                port:
+                  number: 80
+          - path: /metrics/load
+            pathType: Prefix
+            backend:
+              service:
+                name: tenx-streamer-streamer-10x-indexer
+                port:
+                  number: 80
+---
+# Source: streamer-10x/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tenx-streamer-streamer-10x-query-handler
+  labels:
+    helm.sh/chart: streamer-10x-1.0.6
+    app.kubernetes.io/version: "1.0.6"
+    app.kubernetes.io/managed-by: Helm
+    cluster: query-handler
+spec:
+
+  rules:
+    - host: "streamer.example.com"
+      http:
+        paths:
+          - path: /streamer/query
+            pathType: Prefix
+            backend:
+              service:
+                name: tenx-streamer-streamer-10x-query-handler
+                port:
+                  number: 80
+          - path: /metrics/load
+            pathType: Prefix
+            backend:
+              service:
+                name: tenx-streamer-streamer-10x-query-handler
+                port:
+                  number: 80
+

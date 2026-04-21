@@ -1,0 +1,175 @@
+apiVersion: v1
+items:
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"indexer"},"name":"tenx-streamer-streamer-10x-indexer","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-indexer"}}}
+    creationTimestamp: "2026-04-19T16:47:03Z"
+    labels:
+      app.kubernetes.io/managed-by: manual-patch
+      cluster: indexer
+    name: tenx-streamer-streamer-10x-indexer
+    namespace: demo
+    resourceVersion: "3111948"
+    uid: 63d042c4-5358-400c-b674-eff795690c47
+  spec:
+    maxReplicas: 3
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: tenx-streamer-streamer-10x-indexer
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-19T16:47:18Z"
+      message: recent recommendations were higher than current one, applying the highest
+        recent recommendation
+      reason: ScaleDownStabilized
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-04-20T20:20:51Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-04-20T23:23:53Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 0
+          averageValue: 3m
+        name: cpu
+      type: Resource
+    currentReplicas: 3
+    desiredReplicas: 3
+    lastScaleTime: "2026-04-20T22:03:46Z"
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"query-handler"},"name":"tenx-streamer-streamer-10x-query-handler","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-query-handler"}}}
+    creationTimestamp: "2026-04-19T16:47:03Z"
+    labels:
+      app.kubernetes.io/managed-by: manual-patch
+      cluster: query-handler
+    name: tenx-streamer-streamer-10x-query-handler
+    namespace: demo
+    resourceVersion: "3111949"
+    uid: cf204a65-7656-44e6-9b7f-df010e2f65c4
+  spec:
+    maxReplicas: 3
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: tenx-streamer-streamer-10x-query-handler
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-19T16:47:18Z"
+      message: recommended size matches current size
+      reason: ReadyForNewScale
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-04-20T20:20:51Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-04-20T21:41:29Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 2
+          averageValue: 10m
+        name: cpu
+      type: Resource
+    currentReplicas: 1
+    desiredReplicas: 1
+    lastScaleTime: "2026-04-20T21:49:30Z"
+- apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"stream-worker"},"name":"tenx-streamer-streamer-10x-stream-worker","namespace":"demo"},"spec":{"maxReplicas":5,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-stream-worker"}}}
+    creationTimestamp: "2026-04-19T06:18:24Z"
+    labels:
+      app.kubernetes.io/managed-by: manual-patch
+      cluster: stream-worker
+    name: tenx-streamer-streamer-10x-stream-worker
+    namespace: demo
+    resourceVersion: "3111871"
+    uid: 4f04422a-8b5c-4a8e-b392-8e6388eda288
+  spec:
+    maxReplicas: 5
+    metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 70
+          type: Utilization
+      type: Resource
+    minReplicas: 1
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: tenx-streamer-streamer-10x-stream-worker
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-19T06:18:39Z"
+      message: recent recommendations were higher than current one, applying the highest
+        recent recommendation
+      reason: ScaleDownStabilized
+      status: "True"
+      type: AbleToScale
+    - lastTransitionTime: "2026-04-20T20:08:05Z"
+      message: the HPA was able to successfully calculate a replica count from cpu
+        resource utilization (percentage of request)
+      reason: ValidMetricFound
+      status: "True"
+      type: ScalingActive
+    - lastTransitionTime: "2026-04-20T20:36:07Z"
+      message: the desired count is within the acceptable range
+      reason: DesiredWithinRange
+      status: "False"
+      type: ScalingLimited
+    currentMetrics:
+    - resource:
+        current:
+          averageUtilization: 0
+          averageValue: 3m
+        name: cpu
+      type: Resource
+    currentReplicas: 3
+    desiredReplicas: 3
+    lastScaleTime: "2026-04-20T23:00:36Z"
+kind: List
+metadata:
+  resourceVersion: ""
