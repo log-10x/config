@@ -4,7 +4,7 @@
 # The compile app produces symbol library files which enable 10x apps to
 # transform log/trace events into well-defined TenXObjects at runtime.
 
-# To learn more see https://doc.log10x.com/apps/compiler
+# To learn more see https://doc.log10x.com/compile
 
 # =========================== Bootstrap Compiler ==============================
 
@@ -23,7 +23,11 @@ include:
 # ------------------------------ App settings ---------------------------------
 
   # Load general app settings:
-  - compiler
+  # TEMPORARY: pointing at the image-baked apps/edge/optimizer module (the
+  # old name — compiler is the new flat-topology name) until pipeline-10x
+  # is rebuilt with flat apps/compiler/. Flip back to `- compiler` when
+  # the image lands.
+  - edge/optimizer
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config

@@ -73,12 +73,12 @@ Application configs are entry points that include pipeline modules. Edit these t
 
 | Application | Config Path | Documentation |
 |-------------|-------------|---------------|
-| **Edge Optimizer** | `apps/edge/optimizer/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/optimizer/) \| [Run](https://doc.log10x.com/apps/edge/optimizer/run/) |
-| **Edge Regulator** | `apps/edge/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/regulator/) \| [Run](https://doc.log10x.com/apps/edge/regulator/run/) |
-| **Edge Reporter** | `apps/edge/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/edge/reporter/) \| [Run](https://doc.log10x.com/apps/edge/reporter/run/) |
-| **Cloud Reporter** | `apps/cloud/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/cloud/reporter/) \| [Run](https://doc.log10x.com/apps/cloud/reporter/run/) |
-| **Storage Streamer** | `apps/cloud/streamer/*/config.yaml` | [Overview](https://doc.log10x.com/apps/cloud/streamer/) \| [Run](https://doc.log10x.com/apps/cloud/streamer/run/) |
-| **Compiler** | `apps/compiler/config.yaml` | [Overview](https://doc.log10x.com/apps/compiler/) \| [Run](https://doc.log10x.com/apps/compiler/run/) |
+| **Edge Optimizer** | `apps/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/regulator/) \| [Run](https://doc.log10x.com/apps/regulator/run/) |
+| **Edge Regulator** | `apps/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/regulator/) \| [Run](https://doc.log10x.com/apps/regulator/run/) |
+| **Edge Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
+| **Cloud Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
+| **Storage Streamer** | `apps/streamer/*/config.yaml` | [Overview](https://doc.log10x.com/apps/streamer/) \| [Run](https://doc.log10x.com/apps/streamer/run/) |
+| **Compiler** | `apps/compiler/config.yaml` | [Overview](https://doc.log10x.com/compile/) \| [Run](https://doc.log10x.com/compile/test/) |
 | **Dev** | `apps/dev/config.yaml` | [Overview](https://doc.log10x.com/apps/dev/) \| [Run](https://doc.log10x.com/apps/dev/run/) |
 
 ## Pipeline Modules

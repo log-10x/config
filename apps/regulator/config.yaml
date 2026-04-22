@@ -27,7 +27,11 @@ include:
 # ----------------------------- App settings ----------------------------------
 
   # Load app settings:
-  - regulator
+  # TEMPORARY: pointing at the image-baked apps/edge/regulator module until
+  # pipeline-10x is rebuilt with flat apps/regulator/. Flip back to
+  # `- regulator` (or `- reducer` after the upcoming rename) when the
+  # image lands.
+  - edge/regulator
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config

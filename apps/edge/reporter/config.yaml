@@ -1,0 +1,77 @@
+#
+# 🔟❎  Edge reporter app main config
+
+# Loads the required modules for an Edge reporter instance.
+# To learn more see https://doc.log10x.com/apps/edge/reporter
+
+# ============================ Bootstrap Runtime ==============================
+
+# Initialize the runtime. To learn more see https://doc.log10x.com/run/bootstrap
+
+tenx: run
+
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myEdgeReporter")
+
+# =========================== Load App Modules ================================
+
+# Uncomment and edit selected config.yaml files (e.g., run/input/forwarder/filebeat/report)
+
+include:
+
+# ----------------------------- App settings ----------------------------------
+
+  # Load app settings:
+  - edge/reporter
+
+  # Load gitops settings for pulling additional assets from Github.
+  # Edit the gitops/config.yaml file with specific config
+  #
+  # For additional info see - https://doc.log10x.com/config/github
+  - gitops
+
+# ---------------------------- Forwarder Input --------------------------------
+
+  # Uncomment and edit to read events from a log forwarder process input:
+  #
+  # NOTE - When deploying via Helm, or using the provided forwarder configuration
+  # files, the activation of the correct forwarder input is handled automatically,
+  # keep all of the below options commented out.
+  #
+  # For additional info, see -
+  # https://doc.log10x.com/apps/edge/reporter/run
+  # https://doc.log10x.com/apps/edge/reporter/deploy
+  #
+  # - run/input/forwarder/filebeat/report
+  # - run/input/forwarder/fluentbit/report
+  # - run/input/forwarder/fluentd/report
+  # - run/input/forwarder/logstash/report
+  # - run/input/forwarder/otel-collector/report
+  # - run/input/forwarder/datadogAgent/report
+
+# --------------------------- Enrich TenXObjects ------------------------------
+
+  # Uncomment and edit config files to enrich TenXObjects with calculated fields:
+
+  - run/initialize/inputField   # https://doc.log10x.com/run/initialize/#inputfield
+  - run/initialize/level        # https://doc.log10x.com/run/initialize/level
+  - run/initialize/group        # https://doc.log10x.com/run/initialize/group
+  - run/initialize/message      # https://doc.log10x.com/run/initialize/message
+  - run/initialize/httpCode     # https://doc.log10x.com/run/initialize/httpCode
+  - run/initialize/lookup       # https://doc.log10x.com/run/initialize/lookup
+  - run/initialize/custom       # https://doc.log10x.com/run/transform/script/object
+  - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
+  # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
+
+# -------------------------- Select Metric Outputs ----------------------------
+
+  #  Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+
+  - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
+  # - run/output/metric/prometheus/scrape        # https://doc.log10x.com/run/output/metric/prometheus/scrape
+  # - run/output/metric/prometheus/push-gateway  # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
+  # - run/output/metric/prometheus/remote-write  # https://doc.log10x.com/run/output/metric/prometheus/remote-write
+  # - run/output/metric/cloudwatch               # https://doc.log10x.com/run/output/metric/cloudwatch
+  # - run/output/metric/datadog                  # https://doc.log10x.com/run/output/metric/datadog
+  # - run/output/metric/elastic                  # https://doc.log10x.com/run/output/metric/elastic
+  # - run/output/metric/signalFx                 # https://doc.log10x.com/run/output/metric/signalFx
+  # - run/output/metric/log                      # https://doc.log10x.com/run/output/metric/log

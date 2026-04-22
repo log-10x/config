@@ -21,7 +21,11 @@ include:
 # ----------------------------- App settings ----------------------------------
 
   # Load app settings:
-  - reporter
+  # TEMPORARY: pointing at the image-baked apps/edge/reporter module until
+  # pipeline-10x is rebuilt with flat apps/reporter/. Flip back to
+  # `- reporter` as part of the regulator→reducer / streamer→offloader
+  # rename + image rebuild (scheduled).
+  - edge/reporter
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config
@@ -38,7 +42,13 @@ include:
   # https://doc.log10x.com/apps/reporter/run
   # https://doc.log10x.com/apps/reporter/deploy
   #
-  - run/input/forward                            # https://doc.log10x.com/run/input/forward
+  # TEMPORARY: `run/input/forward` commented out until pipeline-10x is
+  # rebuilt with the forward-protocol input module present across all
+  # forwarder images (currently only fluentd-10x has it). The sidecar-mode
+  # forwarders load their input via the chart's first launch arg
+  # (@run/input/forwarder/<fw>/report/config.yaml) so this is redundant
+  # for the sidecar path anyway.
+  # - run/input/forward                            # https://doc.log10x.com/run/input/forward
 
 # --------------------------- Enrich TenXObjects ------------------------------
 

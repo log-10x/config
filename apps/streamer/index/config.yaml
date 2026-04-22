@@ -2,7 +2,7 @@
 # 🔟❎  Object storage index upload config
 
 # Index the a log file upload to an object storage container (e.g., S3).
-# To learn more see https://doc.log10x.com/apps/cloud/analyzer/#index
+# To learn more see https://doc.log10x.com/apps/streamer/#index
 
 # ============================ Bootstrap Runtime ==============================
 
