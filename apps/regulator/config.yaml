@@ -76,6 +76,7 @@ include:
   #  Regulate TenXObjects via per-node budget sampling or a field-set mute file:
 
   - run/regulate/rate           # https://doc.log10x.com/run/regulate/rate
+  - run/regulate/compact        # https://doc.log10x.com/run/regulate/compact
 
 # -------------------------- Select Metric Outputs ----------------------------
 

@@ -1,0 +1,36 @@
+# 🔟❎ 'run' compact regulator configuration
+
+# Per-event compaction decision via a declarative lookup file.
+# Each event is tagged with `_tenxEncode: "true"|"false"`; forwarder
+# output streams branch on that field to emit encode() vs fullText.
+# To learn more see https://doc.log10x.com/run/regulate/compact/
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include: run/modules/regulate/compact
+
+# ============================ Compact Options ================================
+
+compactRegulator:
+
+  # 'lookupFile' — path or URL to the compact-decisions file.
+  # Entry format: <fieldSet>=<encode>:<untilEpochSec>[:<reason>]
+  # Hot-reloaded every `lookupRetain` ms without engine restart.
+  # lookupFile: /etc/tenx/compact-lookup.csv
+
+  # 'fieldNames' — how each event's lookup key is built.
+  # Matches rate regulator's default so compact + rate entries
+  # address the same pattern identity.
+  fieldNames:
+    - $=yield TenXEnv.get("symbolMessageField")
+
+  # 'lookupRetain' — poll interval in milliseconds.
+  lookupRetain: $=parseDuration("5m")
+
+  # 'default' — fallback when no lookup entry applies.
+  #   false (default) — preserve fullText; entries opt IN to compaction
+  #   true            — compact via encode(); entries opt OUT
+  default: false
