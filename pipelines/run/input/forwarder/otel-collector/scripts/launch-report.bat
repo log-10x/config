@@ -10,7 +10,7 @@ REM Configuration
 if "%TENX_BIN%"=="" set TENX_BIN=tenx.exe
 if "%OTELCOL_BIN%"=="" set OTELCOL_BIN=otelcol.exe
 if "%TENX_MODULES%"=="" set TENX_MODULES=C:\Program Files\tenx\modules
-set OTEL_CONFIG=%TENX_MODULES%\pipelines\run\modules\input\forwarder\otel-collector\report\tenxWin.yaml
+set OTEL_CONFIG=%TENX_MODULES%\pipelines\run\modules\input\forwarder\otel-collector\regulate\tenxWin.yaml
 if "%LOG_DIR%"=="" set LOG_DIR=%TEMP%\tenx-otel
 
 REM Create log directory if it doesn't exist

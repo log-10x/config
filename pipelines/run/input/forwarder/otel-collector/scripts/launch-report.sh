@@ -10,7 +10,7 @@ set -e
 TENX_BIN="${TENX_BIN:-tenx}"
 OTELCOL_BIN="${OTELCOL_BIN:-otelcol}"
 TENX_MODULES="${TENX_MODULES:-/etc/tenx/modules}"
-OTEL_CONFIG="${TENX_MODULES}/pipelines/run/modules/input/forwarder/otel-collector/report/tenxNix.yaml"
+OTEL_CONFIG="${TENX_MODULES}/pipelines/run/modules/input/forwarder/otel-collector/regulate/tenxNix.yaml"
 LOG_DIR="${LOG_DIR:-/var/log/tenx-otel}"
 
 # Create log directory if it doesn't exist
