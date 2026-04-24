@@ -23,12 +23,16 @@ include:
     # Include Unix domain/TCP socket output to write events to the forwarder
   - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
 
-# ============================= Encode Options ===============================
+# =============================== Mode Options ================================
 
-# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
-# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
-# Regulator app. Gates whether each stream's Path 2 (encode) fires.
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+
+outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+
+outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+
+# Legacy flag retained for the Logstash input extractor name selector.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
 
 # ============================== Logstash Options ==============================
 

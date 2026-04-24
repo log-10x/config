@@ -25,12 +25,25 @@ include:
   # Windows: Forward protocol over TCP (port 24224) - Unix: Forward protocol over Unix domain socket
   - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "forward" : "unix")'
 
-# ============================= Encode Options ===============================
+# =============================== Mode Options ================================
 
-# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
-# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
-# Regulator app. Gates whether each stream's Path 2 (encode) fires.
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+# Mode is selected here by two user flags:
+# - `regulatorOptimize=true`        → compact-all: encoded=encode() for every event
+# - `compactRegulatorLookupFile=<p>` → compact-lookup: encoded=shouldEncode()?encode():fullText
+# - neither                          → regulate: plain fullText
+#
+# Substitution happens at config-load (`$=yield` defers until options are bound).
+# The transport stream.yaml then parses the resulting literal — shouldEncode() is
+# only in the parsed expression when compactRegulator is actually configured, so
+# CompactObject's body is never compiled in modes that don't need it.
+
+outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+
+outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+
+# Legacy flag retained for fluentd/stdio and logstash input extractor name.
+# For fluentbit/unix + fluentbit/forward the mode is driven by outputEncodeField above.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
 
 # ============================= Fluent Bit Options ============================
 

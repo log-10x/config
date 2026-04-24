@@ -24,12 +24,16 @@ include:
   # Output module to write filtered events from 10x pipeline into Filebeat
   - run/modules/input/forwarder/filebeat/output
 
-# ============================= Encode Options ===============================
+# =============================== Mode Options ================================
 
-# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
-# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
-# Regulator app. Gates whether each stream's Path 2 (encode) fires.
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+
+outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+
+outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+
+# Legacy flag retained for compat. Filebeat transport reads outputWriteTemplates directly.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
 
 # ============================== Filebeat Options ==============================
 
