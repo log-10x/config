@@ -23,12 +23,16 @@ include:
     # Include Unix domain/TCP socket output to write events to the forwarder
   - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
 
+# ============================= Encode Options ===============================
+
+# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
+# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
+# Regulator app. Gates whether each stream's Path 2 (encode) fires.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+
 # ============================== Logstash Options ==============================
 
 logstash:
-
-  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
-  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

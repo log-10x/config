@@ -24,9 +24,9 @@ include:
   # Include Unix domain/TCP socket output to write events into the forwarder
   - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
 
-# ============================= Fluent Bit Options ============================
+# ============================= Encode Options ===============================
 
-fluentbit:
-
-  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
-  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
+# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
+# Regulator app. Gates whether each stream's Path 2 (encode) fires.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)

@@ -24,12 +24,16 @@ include:
   # Include Unix domain socket/stdout to write events into the forwarder
   - '$="run/modules/input/forwarder/fluentd/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "stdio" : "unix")'
 
+# ============================= Encode Options ===============================
+
+# 'encodeObjects' is a shared forwarder option (declared in the parent forwarder
+# module.yaml). Defaults to the value of 'regulatorOptimize' when used with the
+# Regulator app. Gates whether each stream's Path 2 (encode) fires.
+encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
+
 # ============================== Fluentd Options ==============================
 
 fluentd:
-
-  # 'encodeObjects' controls output encoding. Defaults to the value of 'regulatorOptimize'.
-  encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false)
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
