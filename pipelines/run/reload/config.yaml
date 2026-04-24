@@ -15,5 +15,10 @@ reload:
   # 'pollInterval' defines the interval for checking changes to files
   pollInterval: 10s
 
-  # 'resourceFiles' defines whether to restart pipeline when config files are changed on disk.
-  restartPipeline: true
+  # 'restartPipeline' controls whether a change to a pipeline config file
+  # (.yaml / .js) triggers a full pipeline restart. Resource files (e.g. the
+  # compact regulator's lookup CSV) always hot-reload via FileResourceLookup
+  # regardless of this setting — this flag only affects pipeline-config-file
+  # changes. Default false so routine resource-file edits don't take the
+  # whole pipeline down.
+  restartPipeline: false
