@@ -32,8 +32,10 @@ include:
       branch: $=TenXEnv.get("GH_BRANCH", "main")
 
       # 'paths' specifies Glob patterns within 'repo' to pull and extract to a temp folder.
+      # (List items don't honor $= expressions; hardcoded here. Override repo+branch
+      # to target a different repo layout; the lookup file must live at this path.)
       paths:
-        - $=TenXEnv.get("GH_PATH", "test/compact-lookup.csv")
+        - test/compact-lookup.csv
 
       # 'syncInterval' specifies an interval by which check to check the remote branch for updates (null to disable).
       # This interval works in conjunction with: https://doc.log10x.com/run/reload
