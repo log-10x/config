@@ -16,27 +16,25 @@ include:
   - source: github
 
     options:
-      # 'enabled' controls whether to enable this pull config
-      enabled: false # (REQUIRED)
+      # Env-var overrides: GH_ENABLED, GH_REPO, GH_BRANCH, GH_PATH, GH_SYNC_INTERVAL.
+      # Defaults below are for the compact-regulator GitOps reload test —
+      # they pull test/compact-lookup.csv from talwgx/test every 30s.
+      # For a real deployment, set GH_ENABLED=false OR override the repo.
+      enabled: $=TenXEnv.get("GH_ENABLED", false)
 
       # 'token' specifies an access token for accessing the Github repo.
-      #  To learn more see https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
       token: $=TenXEnv.get("GH_TOKEN")
 
       # 'repo' specifies the GitHub user/repo from which to pull
-      repo: null # (REQUIRED)
+      repo: $=TenXEnv.get("GH_REPO", "talwgx/test")
 
       # 'branch' on 'repo' (if null, uses default repo default branch)
-      branch: main
+      branch: $=TenXEnv.get("GH_BRANCH", "main")
 
-       # 'paths' specifies Glob patterns within 'repo' to pull and extract to a temp folder.
+      # 'paths' specifies Glob patterns within 'repo' to pull and extract to a temp folder.
       paths:
-        - test
-        # - config/*.yaml      # https://doc.log10x.com/config/yaml
-        # - symbols/*.10x.tar  # https://doc.log10x.com/run/symbol
-        # - lookups/*.csv      # https://doc.log10x.com/api/js/#TenXLookup
-        # - scripts/*.js       # https://doc.log10x.com/api/js
+        - $=TenXEnv.get("GH_PATH", "test/compact-lookup.csv")
 
-      # 'syncInterval' specifies an interval by which check to check the remote branch for updates (null to disable)
-      #  This interval works in conjunction with: https://doc.log10x.com/run/reload
-      syncInterval: 5min
+      # 'syncInterval' specifies an interval by which check to check the remote branch for updates (null to disable).
+      # This interval works in conjunction with: https://doc.log10x.com/run/reload
+      syncInterval: $=TenXEnv.get("GH_SYNC_INTERVAL", "30s")
