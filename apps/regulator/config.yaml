@@ -78,6 +78,11 @@ include:
   - run/regulate/rate           # https://doc.log10x.com/run/regulate/rate
   - run/regulate/compact        # https://doc.log10x.com/run/regulate/compact
 
+  #  Watch resource files (e.g. compact lookup CSV) and hot-reload on change.
+  #  Required for GitOps flows where an external puller (e.g. @github) rewrites
+  #  the lookup file in place. See https://doc.log10x.com/run/reload/
+  - run/reload                  # https://doc.log10x.com/run/reload
+
 # -------------------------- Select Metric Outputs ----------------------------
 
   #  Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
