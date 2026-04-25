@@ -1,16 +1,16 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/regulate/schema.json
 
-# 🔟❎ 'run' OpenTelemetry Collector regulator configuration
+# 🔟❎ 'run' OpenTelemetry Collector reducer configuration
 #
 # Configure an input that reads events from OpenTelemetry Collector via syslog
 # and an output that writes regulated TenXObjects back via Forward protocol.
-# When 'regulatorOptimize' is enabled, events are encoded for volume reduction.
+# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
 #
 # Architecture:
-#   OTel Collector --[syslog/unix]--> Log10x Regulator --[forward/unix]--> OTel Collector --> Final destinations
+#   OTel Collector --[syslog/unix]--> Log10x Reducer --[forward/unix]--> OTel Collector --> Final destinations
 #
 # Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate @apps/regulator
+#   tenx run @run/input/forwarder/otel-collector/regulate __SAVE_APPS_REDUCER__
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -31,11 +31,11 @@ include:
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
 
-outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
 # ========================= Configuration Options =============================
 

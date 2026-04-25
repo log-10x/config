@@ -2,11 +2,11 @@
 
 import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsole, TenXDate, TenXString } from '@tenx/tenx'
 
-// Declarative, field-set keyed mute regulator.
+// Declarative, field-set keyed mute reducer.
 //
 // Loads a lookup file where each line declares a mute for a specific field-set
 // value. The field-set is the same joined list of fields used by the local
-// regulator (via `rateRegulatorFieldNames`), so mute keys read like
+// reducer (via `rateReducerFieldNames`), so mute keys read like
 // `Error_syncing_pod`, `heartbeat_debug_frontend`, `timeout_payment-service`,
 // etc. — the same identity the Reporter attributes cost to.
 //
@@ -14,7 +14,7 @@ import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsol
 //
 //     <fieldSet>=<sampleRate>:<untilEpochSec>[:<reason>]
 //
-// Example (with rateRegulatorFieldNames: [symbolMessage]):
+// Example (with rateReducerFieldNames: [symbolMessage]):
 //     Error_syncing_pod=0.10:1744848000:pod error spam OPS-4821
 //     heartbeat_debug=0.00:1744416000:k8s liveness 200s
 //
@@ -27,66 +27,66 @@ import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsol
 // that high-severity events (ERROR, FATAL) are never fully suppressed even by a
 // 0.0 mute.
 
-export class GlobalRegulatorInput extends TenXInput {
+export class GlobalReducerInput extends TenXInput {
 
     // only load class if a mute file is configured
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
-       return TenXEnv.get("rateRegulatorLookupFile");
+       return TenXEnv.get("rateReducerLookupFile");
     }
 
     constructor() {
 
         if (!TenXEnv.get("quiet")) {
-            TenXConsole.log("🚦 Applying mute-file rate regulator to: " + this.inputName + " using: " + TenXEnv.get("rateRegulatorLookupFile"));
+            TenXConsole.log("🚦 Applying mute-file rate reducer to: " + this.inputName + " using: " + TenXEnv.get("rateReducerLookupFile"));
         }
 
         if (!TenXEnv.get("levelField")) {
-            throw new Error("the rate regulator module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
+            throw new Error("the rate reducer module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
         }
 
-        if (!TenXEnv.get("rateRegulatorFieldNames")) {
-            throw new Error("the 'rateRegulatorFieldNames' argument must be set to identify mute-file entries");
+        if (!TenXEnv.get("rateReducerFieldNames")) {
+            throw new Error("the 'rateReducerFieldNames' argument must be set to identify mute-file entries");
         }
 
-        var minSampleRate = TenXEnv.get("rateRegulatorMinRetentionThreshold", 0.1);
+        var minSampleRate = TenXEnv.get("rateReducerMinRetentionThreshold", 0.1);
 
         if (!(minSampleRate >= 0.01)) {
-            throw new Error("the 'rateRegulatorMinRetentionThreshold' argument must be greater than 0.01, received: " + minSampleRate);
+            throw new Error("the 'rateReducerMinRetentionThreshold' argument must be greater than 0.01, received: " + minSampleRate);
         }
 
-        var lastModified = TenXLookup.load(TenXEnv.get("rateRegulatorLookupFile"), true);
+        var lastModified = TenXLookup.load(TenXEnv.get("rateReducerLookupFile"), true);
 
-        var rateRegulatorLookupRetain = TenXEnv.get("rateRegulatorLookupRetain", 300000);
+        var rateReducerLookupRetain = TenXEnv.get("rateReducerLookupRetain", 300000);
 
-        if (TenXDate.now() - lastModified > rateRegulatorLookupRetain) {
+        if (TenXDate.now() - lastModified > rateReducerLookupRetain) {
 
             if (!TenXEnv.get("quiet")) {
-                TenXConsole.log("⚠️ Rate regulator mute file is stale, lastModified: {}, retainInterval: {}",
-                    lastModified, rateRegulatorLookupRetain);
+                TenXConsole.log("⚠️ Rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
+                    lastModified, rateReducerLookupRetain);
             }
 
-            TenXLog.info("Rate regulator mute file is stale, lastModified: {}, retainInterval: {}",
-                lastModified, rateRegulatorLookupRetain);
+            TenXLog.info("Rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
+                lastModified, rateReducerLookupRetain);
         }
     }
 }
 
-export class GlobalRegulatorObject extends TenXObject {
+export class GlobalReducerObject extends TenXObject {
 
     get shouldRetainEventWithLookup() {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        // Build the field-set key the same way the local regulator does, so mute
+        // Build the field-set key the same way the local reducer does, so mute
         // entries are keyed by human-readable field values (e.g. symbolMessage,
         // container) rather than an internal hash.
-        var fieldSetKey = this.joinFields("_", TenXEnv.get("rateRegulatorFieldNames"));
+        var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReducerFieldNames"));
         if (!fieldSetKey) return true;
 
         // Look up the mute entry for this field-set.
         // Entry format: "<sampleRate>:<untilEpochSec>[:<reason>]"
-        var entry = TenXLookup.get("rateRegulatorLookupFile", fieldSetKey);
+        var entry = TenXLookup.get("rateReducerLookupFile", fieldSetKey);
         if (!entry) return true;
 
         var parts = TenXString.split(entry, ":");
@@ -105,8 +105,8 @@ export class GlobalRegulatorObject extends TenXObject {
 
         // Apply severity floor: a 0.0 mute on INFO drops everything, but an
         // ERROR/FATAL event under the same mute still gets minRetentionThreshold * boost.
-        var minRetentionThreshold = TenXEnv.get("rateRegulatorMinRetentionThreshold", 0.1);
-        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateRegulatorLevelBoost"));
+        var minRetentionThreshold = TenXEnv.get("rateReducerMinRetentionThreshold", 0.1);
+        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReducerLevelBoost"));
         var level = this.get(TenXEnv.get("levelField"));
         var boost = TenXMap.get(boostMap, level, 1);
 

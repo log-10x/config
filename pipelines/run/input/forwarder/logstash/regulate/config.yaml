@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/logstash/regulate/schema.json
 
-# 🔟❎ 'run' Logstash regulator configuration
+# 🔟❎ 'run' Logstash reducer configuration
 
 # Configure an input that reads events from a Logstash forwarder and
 # an output that writes filtered TenXObjects back to Logstash.
@@ -27,12 +27,12 @@ include:
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
 
-outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
 # Legacy flag retained for the Logstash input extractor name selector.
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
 # ============================== Logstash Options ==============================
 

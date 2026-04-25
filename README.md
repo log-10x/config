@@ -34,7 +34,7 @@ config/
 ├── apps/                      # Application entry points
 │   ├── edge/                  # Edge applications
 │   │   ├── optimizer/         # Log volume reduction
-│   │   ├── regulator/         # Rate regulation & mute files
+│   │   ├── reducer/           # Rate reduction & mute files
 │   │   └── reporter/          # Cost attribution
 │   ├── cloud/                 # Cloud applications
 │   │   ├── reporter/          # Analyzer cost analysis
@@ -73,8 +73,8 @@ Application configs are entry points that include pipeline modules. Edit these t
 
 | Application | Config Path | Documentation |
 |-------------|-------------|---------------|
-| **Edge Optimizer** | `apps/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/regulator/) \| [Run](https://doc.log10x.com/apps/regulator/run/) |
-| **Edge Regulator** | `apps/regulator/config.yaml` | [Overview](https://doc.log10x.com/apps/regulator/) \| [Run](https://doc.log10x.com/apps/regulator/run/) |
+| **Edge Optimizer** | `apps/reducer/config.yaml` | [Overview](https://doc.log10x.com/apps/reducer/) \| [Run](https://doc.log10x.com/apps/reducer/run/) |
+| **Edge Reducer** | `apps/reducer/config.yaml` | [Overview](https://doc.log10x.com/apps/reducer/) \| [Run](https://doc.log10x.com/apps/reducer/run/) |
 | **Edge Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Cloud Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Retriever** | `apps/retriever/*/config.yaml` | [Overview](https://doc.log10x.com/apps/retriever/) \| [Run](https://doc.log10x.com/apps/retriever/run/) |

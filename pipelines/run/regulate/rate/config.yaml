@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/regulate/rate/schema.json
 
-# 🔟❎ 'run' rate regulator configuration
+# 🔟❎ 'run' rate reducer configuration
 
-# Rate regulators utilize cost-based sampling to filter noisy telemetry from event outputs (e.g., Splunk)
+# Rate reducers utilize cost-based sampling to filter noisy telemetry from event outputs (e.g., Splunk)
 # Enforces spending limits by tracking byte volume and ingestion costs per event type
 # To learn more see https://doc.log10x.com/run/regulate/rate/
 
@@ -15,7 +15,7 @@ include: run/modules/regulate/rate
 
 # ============================== Rate Options =================================
 
-rateRegulator:
+rateReducer:
 
   # 'fieldNames' specifies the list of TenXObject fields to identify rate counter buckets
   #  The list usually contains the symbolMessage field from message enrichment
@@ -66,7 +66,7 @@ rateRegulator:
   # ---------------------------- Mute File Options ----------------------------
 
   # Declarative mute file keyed by the joined field-set defined in 'fieldNames'.
-  # When 'file' is set, the regulator switches from per-node budget sampling to
+  # When 'file' is set, the reducer switches from per-node budget sampling to
   # mute-file mode: per-event decisions are driven entirely by entries in the file.
   #
   # File format (one entry per line):

@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/regulate/schema.json
 
-# 🔟❎ 'run' Fluentd regulator configuration
+# 🔟❎ 'run' Fluentd reducer configuration
 
 # Configure an input that reads events from a Fluentd forwarder and
 # an output that writes regulated TenXObjects back to Fluentd.
-# When 'regulatorOptimize' is enabled, events are encoded for volume reduction.
+# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
 
 # This config runs in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/fluentd/regulate/#install
@@ -27,15 +27,15 @@ include:
 # =============================== Mode Options ================================
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
-# Summary: regulatorOptimize=true → compact-all; compactRegulatorLookupFile=<p> → compact-lookup.
+# Summary: reducerOptimize=true → compact-all; compactReducerLookupFile=<p> → compact-lookup.
 
-outputEncodeField: '$=yield TenXEnv.get("compactRegulatorLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("regulatorOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
 # Legacy flag retained for fluentd/stdio (which emits TSV with joinFields and
 # can't cleanly use outputEncodeField). fluentd/unix uses outputEncodeField.
-encodeObjects: $=yield TenXEnv.get("regulatorOptimize", false) || TenXEnv.get("compactRegulatorLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
 # ============================== Fluentd Options ==============================
 
