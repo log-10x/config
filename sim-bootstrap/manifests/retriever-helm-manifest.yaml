@@ -1,24 +1,24 @@
 ---
-# Source: streamer-10x/templates/secret.yaml
+# Source: retriever-10x/templates/secret.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tenx-streamer-streamer-10x-api-key
+  name: tenx-retriever-retriever-10x-api-key
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
 type: Opaque
 data:
   tenx-api-key: "ZDAyYWQyNDctMWUzMi00OWVlLTkxOGQtOTM0NjdiYThiMTM0"
 ---
-# Source: streamer-10x/templates/configmap-fluent.yaml
+# Source: retriever-10x/templates/configmap-fluent.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tenx-streamer-streamer-10x-fluent-bit
+  name: tenx-retriever-retriever-10x-fluent-bit
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
 data:
@@ -41,13 +41,13 @@ data:
         Name   stdout
         Match  *
 ---
-# Source: streamer-10x/templates/service.yaml
+# Source: retriever-10x/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: tenx-streamer-streamer-10x-indexer
+  name: tenx-retriever-retriever-10x-indexer
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     cluster: indexer
@@ -59,16 +59,16 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: streamer-10x
+    app: retriever-10x
     cluster: indexer
 ---
-# Source: streamer-10x/templates/service.yaml
+# Source: retriever-10x/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: tenx-streamer-streamer-10x-query-handler
+  name: tenx-retriever-retriever-10x-query-handler
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     cluster: query-handler
@@ -80,16 +80,16 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: streamer-10x
+    app: retriever-10x
     cluster: query-handler
 ---
-# Source: streamer-10x/templates/service.yaml
+# Source: retriever-10x/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: tenx-streamer-streamer-10x-stream-worker
+  name: tenx-retriever-retriever-10x-stream-worker
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     cluster: stream-worker
@@ -101,19 +101,19 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: streamer-10x
+    app: retriever-10x
     cluster: stream-worker
 ---
-# Source: streamer-10x/templates/deployment.yaml
+# Source: retriever-10x/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tenx-streamer-streamer-10x-indexer
+  name: tenx-retriever-retriever-10x-indexer
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
-    app: streamer-10x
+    app: retriever-10x
     cluster: indexer
 spec:
   replicas: 1
@@ -121,22 +121,22 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: streamer-10x
+      app: retriever-10x
       cluster: indexer
   template:
     metadata:
       labels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: indexer
     spec:
       imagePullSecrets:
         - name: ghcr-secret
-      serviceAccountName: tenx-streamer
+      serviceAccountName: tenx-retriever
       securityContext:
         fsGroup: 0
         runAsNonRoot: true
       containers:
-        - name: streamer-10x-indexer
+        - name: retriever-10x-indexer
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -148,7 +148,7 @@ spec:
             - name: TENX_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: tenx-streamer-streamer-10x-api-key
+                  name: tenx-retriever-retriever-10x-api-key
                   key: tenx-api-key
             - name: TENX_QUARKUS_MAX_ASYNC
               value: "5"
@@ -157,20 +157,20 @@ spec:
             - name: TENX_QUARKUS_READINESS_THRESHOLD
               value: "90"
             - name: TENX_STREAMER_INPUT_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334"
+              value: "tenx-demo-cloud-retriever-351939435334"
             - name: TENX_STREAMER_INDEX_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+              value: "tenx-demo-cloud-retriever-351939435334/indexing-results/"
             - name: TENX_QUARKUS_INDEX_WRITE_CONTAINER
-              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+              value: "tenx-demo-cloud-retriever-351939435334/indexing-results/"
             - name: TENX_QUERY_LOG_GROUP
-              value: "/tenx/demo-streamer/query"
+              value: "/tenx/demo-retriever/query"
             
             - name: TENX_QUARKUS_INDEX_QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue"
             - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue"
             - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue"
             - name: JAVA_OPTS_APPEND
               value: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heap-dumps/ -Dquarkus.http.host=0.0.0.0
                 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djdk.httpclient.allowRestrictedHeaders=host
@@ -218,18 +218,18 @@ spec:
           persistentVolumeClaim:
             claimName: indexer-heap-dumps
       nodeSelector:
-        workload: streamer-general
+        workload: retriever-general
 ---
-# Source: streamer-10x/templates/deployment.yaml
+# Source: retriever-10x/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tenx-streamer-streamer-10x-query-handler
+  name: tenx-retriever-retriever-10x-query-handler
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
-    app: streamer-10x
+    app: retriever-10x
     cluster: query-handler
 spec:
   replicas: 1
@@ -237,22 +237,22 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: streamer-10x
+      app: retriever-10x
       cluster: query-handler
   template:
     metadata:
       labels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: query-handler
     spec:
       imagePullSecrets:
         - name: ghcr-secret
-      serviceAccountName: tenx-streamer
+      serviceAccountName: tenx-retriever
       securityContext:
         fsGroup: 0
         runAsNonRoot: true
       containers:
-        - name: streamer-10x-query-handler
+        - name: retriever-10x-query-handler
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -264,7 +264,7 @@ spec:
             - name: TENX_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: tenx-streamer-streamer-10x-api-key
+                  name: tenx-retriever-retriever-10x-api-key
                   key: tenx-api-key
             - name: TENX_QUARKUS_MAX_ASYNC
               value: "15"
@@ -273,20 +273,20 @@ spec:
             - name: TENX_QUARKUS_READINESS_THRESHOLD
               value: "90"
             - name: TENX_STREAMER_INPUT_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334"
+              value: "tenx-demo-cloud-retriever-351939435334"
             - name: TENX_STREAMER_INDEX_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+              value: "tenx-demo-cloud-retriever-351939435334/indexing-results/"
             - name: TENX_QUERY_LOG_GROUP
-              value: "/tenx/demo-streamer/query"
+              value: "/tenx/demo-retriever/query"
             
             - name: TENX_QUARKUS_QUERY_QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue"
             - name: TENX_QUARKUS_SUBQUERY_QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue"
             - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue"
             - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue"
             - name: TENX_STREAM_PARALLEL_OBJECTS
               value: "20"
             - name: JAVA_OPTS_APPEND
@@ -336,18 +336,18 @@ spec:
           persistentVolumeClaim:
             claimName: query-handler-heap-dumps
       nodeSelector:
-        workload: streamer-general
+        workload: retriever-general
 ---
-# Source: streamer-10x/templates/deployment.yaml
+# Source: retriever-10x/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tenx-streamer-streamer-10x-stream-worker
+  name: tenx-retriever-retriever-10x-stream-worker
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
-    app: streamer-10x
+    app: retriever-10x
     cluster: stream-worker
 spec:
   replicas: 1
@@ -355,22 +355,22 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: streamer-10x
+      app: retriever-10x
       cluster: stream-worker
   template:
     metadata:
       labels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: stream-worker
     spec:
       imagePullSecrets:
         - name: ghcr-secret
-      serviceAccountName: tenx-streamer
+      serviceAccountName: tenx-retriever
       securityContext:
         fsGroup: 0
         runAsNonRoot: true
       containers:
-        - name: streamer-10x-stream-worker
+        - name: retriever-10x-stream-worker
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -382,7 +382,7 @@ spec:
             - name: TENX_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: tenx-streamer-streamer-10x-api-key
+                  name: tenx-retriever-retriever-10x-api-key
                   key: tenx-api-key
             - name: TENX_QUARKUS_MAX_ASYNC
               value: "10"
@@ -391,22 +391,22 @@ spec:
             - name: TENX_QUARKUS_READINESS_THRESHOLD
               value: "90"
             - name: TENX_STREAMER_INPUT_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334"
+              value: "tenx-demo-cloud-retriever-351939435334"
             - name: TENX_STREAMER_INDEX_BUCKET
-              value: "tenx-demo-cloud-streamer-351939435334/indexing-results/"
+              value: "tenx-demo-cloud-retriever-351939435334/indexing-results/"
             - name: TENX_QUERY_LOG_GROUP
-              value: "/tenx/demo-streamer/query"
+              value: "/tenx/demo-retriever/query"
             
             - name: TENX_QUARKUS_STREAM_QUEUE_URL
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue"
             - name: TENX_REMOTE_FORWARD_HOST
               value: "127.0.0.1"
             - name: TENX_REMOTE_FORWARD_PORT
               value: "24224"
             - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue"
             - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+              value: "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue"
             - name: TENX_THREAD_POOL_SIZE
               value: "4"
             - name: JAVA_OPTS_APPEND
@@ -499,7 +499,7 @@ spec:
       volumes:
         - name: fluent-config
           configMap:
-            name: tenx-streamer-streamer-10x-fluent-bit
+            name: tenx-retriever-retriever-10x-fluent-bit
         - name: fluent-buffer
           emptyDir:
             sizeLimit: 1Gi
@@ -507,15 +507,15 @@ spec:
           persistentVolumeClaim:
             claimName: stream-worker-heap-dumps
       nodeSelector:
-        workload: streamer-compute
+        workload: retriever-compute
 ---
-# Source: streamer-10x/templates/scheduled-queries.yaml
+# Source: retriever-10x/templates/scheduled-queries.yaml
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tenx-streamer-streamer-10x-severity-filter
+  name: tenx-retriever-retriever-10x-severity-filter
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     component: scheduled-query
@@ -531,11 +531,11 @@ spec:
       template:
         metadata:
           labels:
-            app: streamer-10x
+            app: retriever-10x
             component: scheduled-query
             query-job-name: severity-filter
         spec:
-          serviceAccountName: tenx-streamer
+          serviceAccountName: tenx-retriever
           restartPolicy: OnFailure
           containers:
             - name: send-query
@@ -554,7 +554,7 @@ spec:
                   echo "Sending query: errors-and-critical"
 
                   aws sqs send-message \
-                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                     --message-body "$QUERY_BODY"
 
                   echo "Query sent successfully: errors-and-critical"
@@ -566,13 +566,13 @@ spec:
           imagePullSecrets:
             - name: ghcr-secret
 ---
-# Source: streamer-10x/templates/scheduled-queries.yaml
+# Source: retriever-10x/templates/scheduled-queries.yaml
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tenx-streamer-streamer-10x-container-filter
+  name: tenx-retriever-retriever-10x-container-filter
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     component: scheduled-query
@@ -588,11 +588,11 @@ spec:
       template:
         metadata:
           labels:
-            app: streamer-10x
+            app: retriever-10x
             component: scheduled-query
             query-job-name: container-filter
         spec:
-          serviceAccountName: tenx-streamer
+          serviceAccountName: tenx-retriever
           restartPolicy: OnFailure
           containers:
             - name: send-query
@@ -611,7 +611,7 @@ spec:
                   echo "Sending query: frontend-errors"
 
                   aws sqs send-message \
-                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                     --message-body "$QUERY_BODY"
 
                   echo "Query sent successfully: frontend-errors"
@@ -623,13 +623,13 @@ spec:
           imagePullSecrets:
             - name: ghcr-secret
 ---
-# Source: streamer-10x/templates/scheduled-queries.yaml
+# Source: retriever-10x/templates/scheduled-queries.yaml
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tenx-streamer-streamer-10x-http-code-filter
+  name: tenx-retriever-retriever-10x-http-code-filter
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     component: scheduled-query
@@ -645,11 +645,11 @@ spec:
       template:
         metadata:
           labels:
-            app: streamer-10x
+            app: retriever-10x
             component: scheduled-query
             query-job-name: http-code-filter
         spec:
-          serviceAccountName: tenx-streamer
+          serviceAccountName: tenx-retriever
           restartPolicy: OnFailure
           containers:
             - name: send-query
@@ -668,7 +668,7 @@ spec:
                   echo "Sending query: server-errors-5xx"
 
                   aws sqs send-message \
-                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                     --message-body "$QUERY_BODY"
 
                   echo "Query sent successfully: server-errors-5xx"
@@ -680,13 +680,13 @@ spec:
           imagePullSecrets:
             - name: ghcr-secret
 ---
-# Source: streamer-10x/templates/scheduled-queries.yaml
+# Source: retriever-10x/templates/scheduled-queries.yaml
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tenx-streamer-streamer-10x-namespace-filter
+  name: tenx-retriever-retriever-10x-namespace-filter
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     component: scheduled-query
@@ -702,11 +702,11 @@ spec:
       template:
         metadata:
           labels:
-            app: streamer-10x
+            app: retriever-10x
             component: scheduled-query
             query-job-name: namespace-filter
         spec:
-          serviceAccountName: tenx-streamer
+          serviceAccountName: tenx-retriever
           restartPolicy: OnFailure
           containers:
             - name: send-query
@@ -725,7 +725,7 @@ spec:
                   echo "Sending query: kube-system-errors"
 
                   aws sqs send-message \
-                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                     --message-body "$QUERY_BODY"
 
                   echo "Query sent successfully: kube-system-errors"
@@ -737,13 +737,13 @@ spec:
           imagePullSecrets:
             - name: ghcr-secret
 ---
-# Source: streamer-10x/templates/scheduled-queries.yaml
+# Source: retriever-10x/templates/scheduled-queries.yaml
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: tenx-streamer-streamer-10x-text-search
+  name: tenx-retriever-retriever-10x-text-search
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     component: scheduled-query
@@ -759,11 +759,11 @@ spec:
       template:
         metadata:
           labels:
-            app: streamer-10x
+            app: retriever-10x
             component: scheduled-query
             query-job-name: text-search
         spec:
-          serviceAccountName: tenx-streamer
+          serviceAccountName: tenx-retriever
           restartPolicy: OnFailure
           containers:
             - name: send-query
@@ -782,7 +782,7 @@ spec:
                   echo "Sending query: connection-failures"
 
                   aws sqs send-message \
-                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                    --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                     --message-body "$QUERY_BODY"
 
                   echo "Query sent successfully: connection-failures"
@@ -794,65 +794,65 @@ spec:
           imagePullSecrets:
             - name: ghcr-secret
 ---
-# Source: streamer-10x/templates/ingress.yaml
+# Source: retriever-10x/templates/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: tenx-streamer-streamer-10x-indexer
+  name: tenx-retriever-retriever-10x-indexer
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     cluster: indexer
 spec:
 
   rules:
-    - host: "streamer.example.com"
+    - host: "retriever.example.com"
       http:
         paths:
-          - path: /streamer/index
+          - path: /retriever/index
             pathType: Prefix
             backend:
               service:
-                name: tenx-streamer-streamer-10x-indexer
+                name: tenx-retriever-retriever-10x-indexer
                 port:
                   number: 80
           - path: /metrics/load
             pathType: Prefix
             backend:
               service:
-                name: tenx-streamer-streamer-10x-indexer
+                name: tenx-retriever-retriever-10x-indexer
                 port:
                   number: 80
 ---
-# Source: streamer-10x/templates/ingress.yaml
+# Source: retriever-10x/templates/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: tenx-streamer-streamer-10x-query-handler
+  name: tenx-retriever-retriever-10x-query-handler
   labels:
-    helm.sh/chart: streamer-10x-1.0.6
+    helm.sh/chart: retriever-10x-1.0.6
     app.kubernetes.io/version: "1.0.6"
     app.kubernetes.io/managed-by: Helm
     cluster: query-handler
 spec:
 
   rules:
-    - host: "streamer.example.com"
+    - host: "retriever.example.com"
       http:
         paths:
-          - path: /streamer/query
+          - path: /retriever/query
             pathType: Prefix
             backend:
               service:
-                name: tenx-streamer-streamer-10x-query-handler
+                name: tenx-retriever-retriever-10x-query-handler
                 port:
                   number: 80
           - path: /metrics/load
             pathType: Prefix
             backend:
               service:
-                name: tenx-streamer-streamer-10x-query-handler
+                name: tenx-retriever-retriever-10x-query-handler
                 port:
                   number: 80
 

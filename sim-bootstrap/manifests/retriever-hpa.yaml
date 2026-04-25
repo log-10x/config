@@ -5,12 +5,12 @@ items:
   metadata:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"indexer"},"name":"tenx-streamer-streamer-10x-indexer","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-indexer"}}}
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"indexer"},"name":"tenx-retriever-retriever-10x-indexer","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-retriever-retriever-10x-indexer"}}}
     creationTimestamp: "2026-04-19T16:47:03Z"
     labels:
       app.kubernetes.io/managed-by: manual-patch
       cluster: indexer
-    name: tenx-streamer-streamer-10x-indexer
+    name: tenx-retriever-retriever-10x-indexer
     namespace: demo
     resourceVersion: "3111948"
     uid: 63d042c4-5358-400c-b674-eff795690c47
@@ -27,7 +27,7 @@ items:
     scaleTargetRef:
       apiVersion: apps/v1
       kind: Deployment
-      name: tenx-streamer-streamer-10x-indexer
+      name: tenx-retriever-retriever-10x-indexer
   status:
     conditions:
     - lastTransitionTime: "2026-04-19T16:47:18Z"
@@ -62,12 +62,12 @@ items:
   metadata:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"query-handler"},"name":"tenx-streamer-streamer-10x-query-handler","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-query-handler"}}}
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"query-handler"},"name":"tenx-retriever-retriever-10x-query-handler","namespace":"demo"},"spec":{"maxReplicas":3,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-retriever-retriever-10x-query-handler"}}}
     creationTimestamp: "2026-04-19T16:47:03Z"
     labels:
       app.kubernetes.io/managed-by: manual-patch
       cluster: query-handler
-    name: tenx-streamer-streamer-10x-query-handler
+    name: tenx-retriever-retriever-10x-query-handler
     namespace: demo
     resourceVersion: "3111949"
     uid: cf204a65-7656-44e6-9b7f-df010e2f65c4
@@ -84,7 +84,7 @@ items:
     scaleTargetRef:
       apiVersion: apps/v1
       kind: Deployment
-      name: tenx-streamer-streamer-10x-query-handler
+      name: tenx-retriever-retriever-10x-query-handler
   status:
     conditions:
     - lastTransitionTime: "2026-04-19T16:47:18Z"
@@ -118,12 +118,12 @@ items:
   metadata:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
-        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"stream-worker"},"name":"tenx-streamer-streamer-10x-stream-worker","namespace":"demo"},"spec":{"maxReplicas":5,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-streamer-streamer-10x-stream-worker"}}}
+        {"apiVersion":"autoscaling/v2","kind":"HorizontalPodAutoscaler","metadata":{"annotations":{},"labels":{"app.kubernetes.io/managed-by":"manual-patch","cluster":"stream-worker"},"name":"tenx-retriever-retriever-10x-stream-worker","namespace":"demo"},"spec":{"maxReplicas":5,"metrics":[{"resource":{"name":"cpu","target":{"averageUtilization":70,"type":"Utilization"}},"type":"Resource"}],"minReplicas":1,"scaleTargetRef":{"apiVersion":"apps/v1","kind":"Deployment","name":"tenx-retriever-retriever-10x-stream-worker"}}}
     creationTimestamp: "2026-04-19T06:18:24Z"
     labels:
       app.kubernetes.io/managed-by: manual-patch
       cluster: stream-worker
-    name: tenx-streamer-streamer-10x-stream-worker
+    name: tenx-retriever-retriever-10x-stream-worker
     namespace: demo
     resourceVersion: "3111871"
     uid: 4f04422a-8b5c-4a8e-b392-8e6388eda288
@@ -140,7 +140,7 @@ items:
     scaleTargetRef:
       apiVersion: apps/v1
       kind: Deployment
-      name: tenx-streamer-streamer-10x-stream-worker
+      name: tenx-retriever-retriever-10x-stream-worker
   status:
     conditions:
     - lastTransitionTime: "2026-04-19T06:18:39Z"

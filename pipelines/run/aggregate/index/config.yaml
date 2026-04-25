@@ -2,7 +2,7 @@
 
 # 🔟❎ 'run' index aggregator config
 
-# This file configures the aggregators for the Storage Streamer app Index component.
+# This file configures the aggregators for the Retriever app Index component.
 # To learn more see https://doc.log10x.com/run/aggregate
 
 # Set the 10x pipeline to 'run'

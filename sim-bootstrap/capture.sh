@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Capture a fresh snapshot of the live streamer demo env into this directory.
+# Capture a fresh snapshot of the live retriever demo env into this directory.
 # Run this against the live cluster BEFORE decommissioning it, or any time
 # you want to refresh the reference data here.
 #
@@ -29,31 +29,31 @@ MANIFESTS="$HERE/manifests"
 SCHEMAS="$HERE/schema-samples"
 SNAPSHOTS="$HERE/snapshots"
 
-BUCKET="${STREAMER_BUCKET:-tenx-demo-cloud-streamer-351939435334}"
-NAMESPACE="${STREAMER_NAMESPACE:-demo}"
-RELEASE="${STREAMER_HELM_RELEASE:-tenx-streamer}"
-TARGET_PREFIX="${STREAMER_TARGET:-app}"   # main log app prefix under the bucket
+BUCKET="${RETRIEVER_BUCKET:-tenx-demo-cloud-retriever-351939435334}"
+NAMESPACE="${RETRIEVER_NAMESPACE:-demo}"
+RELEASE="${RETRIEVER_HELM_RELEASE:-tenx-retriever}"
+TARGET_PREFIX="${RETRIEVER_TARGET:-app}"   # main log app prefix under the bucket
 
 mkdir -p "$MANIFESTS" "$SCHEMAS" "$SNAPSHOTS"
 
 echo "=== manifests ==="
 helm -n "$NAMESPACE" get manifest "$RELEASE" \
-    > "$MANIFESTS/streamer-helm-manifest.yaml"
+    > "$MANIFESTS/retriever-helm-manifest.yaml"
 kubectl -n "$NAMESPACE" get deploy -o yaml \
-    > "$MANIFESTS/streamer-deployments.yaml"
+    > "$MANIFESTS/retriever-deployments.yaml"
 kubectl -n "$NAMESPACE" get cronjob -o yaml \
-    > "$MANIFESTS/streamer-cronjobs.yaml"
+    > "$MANIFESTS/retriever-cronjobs.yaml"
 kubectl -n "$NAMESPACE" get hpa -o yaml \
-    > "$MANIFESTS/streamer-hpa.yaml"
+    > "$MANIFESTS/retriever-hpa.yaml"
 kubectl -n "$NAMESPACE" get configmap -o yaml \
-    > "$MANIFESTS/streamer-configmap.yaml"
+    > "$MANIFESTS/retriever-configmap.yaml"
 
 echo "=== sqs queues ==="
 python3 - <<PY
 import json, subprocess, os
 r = subprocess.run(
     ['aws','sqs','list-queues','--queue-name-prefix',
-     '${BUCKET%%-[0-9]*}-'.replace('${BUCKET%%-[0-9]*}','tenx-demo-cloud-streamer'),
+     '${BUCKET%%-[0-9]*}-'.replace('${BUCKET%%-[0-9]*}','tenx-demo-cloud-retriever'),
      '--output','json'], capture_output=True, text=True, check=True)
 urls = json.loads(r.stdout).get('QueueUrls', [])
 out = {}

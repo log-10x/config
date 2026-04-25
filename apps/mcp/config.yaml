@@ -68,6 +68,6 @@ stdinEnabled: true
 stdoutTarget: SYSTEM_OUT
 stdoutWriteObjects: true
 
-# Do NOT set `quiet: true` here (unlike @apps/streamer/*). The whole
+# Do NOT set `quiet: true` here (unlike @apps/retriever/*). The whole
 # point of @apps/mcp is surfacing TenXConsole.log / TenXLog.info output so
 # validation can inspect runtime-side assertions.

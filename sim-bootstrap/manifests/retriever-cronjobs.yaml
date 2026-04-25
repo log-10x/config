@@ -140,7 +140,7 @@ items:
               - name: SOURCE_KEY
                 value: samples/otel-k8s/medium/input/otel-sample.log
               - name: DEST_BUCKET
-                value: tenx-demo-cloud-streamer-351939435334
+                value: tenx-demo-cloud-retriever-351939435334
               - name: INDEX_PREFIX
                 value: app/
               image: python:3.12-slim
@@ -272,7 +272,7 @@ items:
   kind: CronJob
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 1
@@ -280,9 +280,9 @@ items:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       component: scheduled-query
-      helm.sh/chart: streamer-10x-1.0.6
+      helm.sh/chart: retriever-10x-1.0.6
       query-job-name: container-filter
-    name: tenx-streamer-streamer-10x-container-filter
+    name: tenx-retriever-retriever-10x-container-filter
     namespace: demo
     resourceVersion: "3110684"
     uid: c412b9ba-c158-4f00-8e89-79a55727e77d
@@ -295,7 +295,7 @@ items:
         template:
           metadata:
             labels:
-              app: streamer-10x
+              app: retriever-10x
               component: scheduled-query
               query-job-name: container-filter
           spec:
@@ -312,7 +312,7 @@ items:
                 echo "Sending query: frontend-errors"
 
                 aws sqs send-message \
-                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                   --message-body "$QUERY_BODY"
 
                 echo "Query sent successfully: frontend-errors"
@@ -335,8 +335,8 @@ items:
             restartPolicy: OnFailure
             schedulerName: default-scheduler
             securityContext: {}
-            serviceAccount: tenx-streamer
-            serviceAccountName: tenx-streamer
+            serviceAccount: tenx-retriever
+            serviceAccountName: tenx-retriever
             terminationGracePeriodSeconds: 30
     schedule: 1,6,11,16,21,26,31,36,41,46,51,56 * * * *
     successfulJobsHistoryLimit: 3
@@ -348,7 +348,7 @@ items:
   kind: CronJob
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 1
@@ -356,9 +356,9 @@ items:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       component: scheduled-query
-      helm.sh/chart: streamer-10x-1.0.6
+      helm.sh/chart: retriever-10x-1.0.6
       query-job-name: http-code-filter
-    name: tenx-streamer-streamer-10x-http-code-filter
+    name: tenx-retriever-retriever-10x-http-code-filter
     namespace: demo
     resourceVersion: "3111013"
     uid: e2c488d4-f7f9-4983-a39b-1501503aec5c
@@ -371,7 +371,7 @@ items:
         template:
           metadata:
             labels:
-              app: streamer-10x
+              app: retriever-10x
               component: scheduled-query
               query-job-name: http-code-filter
           spec:
@@ -388,7 +388,7 @@ items:
                 echo "Sending query: server-errors-5xx"
 
                 aws sqs send-message \
-                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                   --message-body "$QUERY_BODY"
 
                 echo "Query sent successfully: server-errors-5xx"
@@ -411,8 +411,8 @@ items:
             restartPolicy: OnFailure
             schedulerName: default-scheduler
             securityContext: {}
-            serviceAccount: tenx-streamer
-            serviceAccountName: tenx-streamer
+            serviceAccount: tenx-retriever
+            serviceAccountName: tenx-retriever
             terminationGracePeriodSeconds: 30
     schedule: 2,7,12,17,22,27,32,37,42,47,52,57 * * * *
     successfulJobsHistoryLimit: 3
@@ -424,7 +424,7 @@ items:
   kind: CronJob
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 1
@@ -432,9 +432,9 @@ items:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       component: scheduled-query
-      helm.sh/chart: streamer-10x-1.0.6
+      helm.sh/chart: retriever-10x-1.0.6
       query-job-name: namespace-filter
-    name: tenx-streamer-streamer-10x-namespace-filter
+    name: tenx-retriever-retriever-10x-namespace-filter
     namespace: demo
     resourceVersion: "3111347"
     uid: 959e2c41-141d-421a-8178-5d18266791c7
@@ -447,7 +447,7 @@ items:
         template:
           metadata:
             labels:
-              app: streamer-10x
+              app: retriever-10x
               component: scheduled-query
               query-job-name: namespace-filter
           spec:
@@ -464,7 +464,7 @@ items:
                 echo "Sending query: kube-system-errors"
 
                 aws sqs send-message \
-                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                   --message-body "$QUERY_BODY"
 
                 echo "Query sent successfully: kube-system-errors"
@@ -487,8 +487,8 @@ items:
             restartPolicy: OnFailure
             schedulerName: default-scheduler
             securityContext: {}
-            serviceAccount: tenx-streamer
-            serviceAccountName: tenx-streamer
+            serviceAccount: tenx-retriever
+            serviceAccountName: tenx-retriever
             terminationGracePeriodSeconds: 30
     schedule: 3,8,13,18,23,28,33,38,43,48,53,58 * * * *
     successfulJobsHistoryLimit: 3
@@ -500,7 +500,7 @@ items:
   kind: CronJob
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 1
@@ -508,9 +508,9 @@ items:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       component: scheduled-query
-      helm.sh/chart: streamer-10x-1.0.6
+      helm.sh/chart: retriever-10x-1.0.6
       query-job-name: severity-filter
-    name: tenx-streamer-streamer-10x-severity-filter
+    name: tenx-retriever-retriever-10x-severity-filter
     namespace: demo
     resourceVersion: "3111976"
     uid: a5c3104e-5db4-4c67-9da0-69a57cc8e9b2
@@ -523,7 +523,7 @@ items:
         template:
           metadata:
             labels:
-              app: streamer-10x
+              app: retriever-10x
               component: scheduled-query
               query-job-name: severity-filter
           spec:
@@ -540,7 +540,7 @@ items:
                 echo "Sending query: errors-and-critical"
 
                 aws sqs send-message \
-                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                   --message-body "$QUERY_BODY"
 
                 echo "Query sent successfully: errors-and-critical"
@@ -563,8 +563,8 @@ items:
             restartPolicy: OnFailure
             schedulerName: default-scheduler
             securityContext: {}
-            serviceAccount: tenx-streamer
-            serviceAccountName: tenx-streamer
+            serviceAccount: tenx-retriever
+            serviceAccountName: tenx-retriever
             terminationGracePeriodSeconds: 30
     schedule: 0,5,10,15,20,25,30,35,40,45,50,55 * * * *
     successfulJobsHistoryLimit: 3
@@ -573,7 +573,7 @@ items:
     active:
     - apiVersion: batch/v1
       kind: Job
-      name: tenx-streamer-streamer-10x-severity-filter-29612145
+      name: tenx-retriever-retriever-10x-severity-filter-29612145
       namespace: demo
       resourceVersion: "3111972"
       uid: a08e1cc3-2e10-4573-8684-f0f43c1aa90d
@@ -583,7 +583,7 @@ items:
   kind: CronJob
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 1
@@ -591,9 +591,9 @@ items:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       component: scheduled-query
-      helm.sh/chart: streamer-10x-1.0.6
+      helm.sh/chart: retriever-10x-1.0.6
       query-job-name: text-search
-    name: tenx-streamer-streamer-10x-text-search
+    name: tenx-retriever-retriever-10x-text-search
     namespace: demo
     resourceVersion: "3111680"
     uid: fbabf29e-6b3a-45ec-8402-1bc8900212f9
@@ -606,7 +606,7 @@ items:
         template:
           metadata:
             labels:
-              app: streamer-10x
+              app: retriever-10x
               component: scheduled-query
               query-job-name: text-search
           spec:
@@ -623,7 +623,7 @@ items:
                 echo "Sending query: connection-failures"
 
                 aws sqs send-message \
-                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue" \
+                  --queue-url "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue" \
                   --message-body "$QUERY_BODY"
 
                 echo "Query sent successfully: connection-failures"
@@ -646,8 +646,8 @@ items:
             restartPolicy: OnFailure
             schedulerName: default-scheduler
             securityContext: {}
-            serviceAccount: tenx-streamer
-            serviceAccountName: tenx-streamer
+            serviceAccount: tenx-retriever
+            serviceAccountName: tenx-retriever
             terminationGracePeriodSeconds: 30
     schedule: 4,9,14,19,24,29,34,39,44,49,54,59 * * * *
     successfulJobsHistoryLimit: 3
