@@ -58,7 +58,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start Log10x reducer
 echo -e "${GREEN}Starting Log10x reducer...${NC}"
-$TENX_BIN @run/input/forwarder/otel-collector/regulate __SAVE_APPS_REDUCER__ > "$LOG_DIR/tenx-reducer.log" 2>&1 &
+$TENX_BIN @run/input/forwarder/otel-collector/regulate @apps/reducer > "$LOG_DIR/tenx-reducer.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
 echo "Log file: $LOG_DIR/tenx-reducer.log"

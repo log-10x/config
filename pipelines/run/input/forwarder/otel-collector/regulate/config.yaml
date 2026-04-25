@@ -10,7 +10,7 @@
 #   OTel Collector --[syslog/unix]--> Log10x Reducer --[forward/unix]--> OTel Collector --> Final destinations
 #
 # Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate __SAVE_APPS_REDUCER__
+#   tenx run @run/input/forwarder/otel-collector/regulate @apps/reducer
 
 # Set the 10x pipeline to 'run'
 tenx: run
