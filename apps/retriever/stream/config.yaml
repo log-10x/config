@@ -1,7 +1,7 @@
 #
 # 🔟❎ Object storage query app config
 
-# Launch object storage queries. To learn more see https://doc.log10x.com/apps/streamer/#query
+# Launch object storage queries. To learn more see https://doc.log10x.com/apps/retriever/#query
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -20,7 +20,7 @@ include:
 # ------------------------------ App settings ---------------------------------
 
   # Load app settings:
-  - streamer/stream
+  - retriever/stream
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config

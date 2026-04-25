@@ -89,17 +89,17 @@ items:
   metadata:
     annotations:
       deployment.kubernetes.io/revision: "17"
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 98
     labels:
-      app: streamer-10x
+      app: retriever-10x
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       cluster: indexer
-      helm.sh/chart: streamer-10x-1.0.6
-    name: tenx-streamer-streamer-10x-indexer
+      helm.sh/chart: retriever-10x-1.0.6
+    name: tenx-retriever-retriever-10x-indexer
     namespace: demo
     resourceVersion: "3073284"
     uid: dd76bcc6-ac5f-4490-8130-a0cd04c50d8b
@@ -109,7 +109,7 @@ items:
     revisionHistoryLimit: 10
     selector:
       matchLabels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: indexer
     strategy:
       type: Recreate
@@ -118,7 +118,7 @@ items:
         annotations:
           kubectl.kubernetes.io/restartedAt: "2026-04-17T16:26:05-07:00"
         labels:
-          app: streamer-10x
+          app: retriever-10x
           cluster: indexer
       spec:
         containers:
@@ -127,7 +127,7 @@ items:
             valueFrom:
               secretKeyRef:
                 key: tenx-api-key
-                name: tenx-streamer-streamer-10x-api-key
+                name: tenx-retriever-retriever-10x-api-key
           - name: TENX_QUARKUS_MAX_ASYNC
             value: "5"
           - name: TENX_QUARKUS_MAX_QUEUED
@@ -135,19 +135,19 @@ items:
           - name: TENX_QUARKUS_READINESS_THRESHOLD
             value: "90"
           - name: TENX_STREAMER_INPUT_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334
+            value: tenx-demo-cloud-retriever-351939435334
           - name: TENX_STREAMER_INDEX_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334/indexing-results/
+            value: tenx-demo-cloud-retriever-351939435334/indexing-results/
           - name: TENX_QUARKUS_INDEX_WRITE_CONTAINER
-            value: tenx-demo-cloud-streamer-351939435334/indexing-results/
+            value: tenx-demo-cloud-retriever-351939435334/indexing-results/
           - name: TENX_QUERY_LOG_GROUP
-            value: /tenx/demo-streamer/query
+            value: /tenx/demo-retriever/query
           - name: TENX_QUARKUS_INDEX_QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue
           - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue
           - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue
           - name: JAVA_OPTS_APPEND
             value: -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heap-dumps/ -Dquarkus.http.host=0.0.0.0
               -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djdk.httpclient.allowRestrictedHeaders=host
@@ -164,7 +164,7 @@ items:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
-          name: streamer-10x-indexer
+          name: retriever-10x-indexer
           ports:
           - containerPort: 8080
             name: http
@@ -209,14 +209,14 @@ items:
         imagePullSecrets:
         - name: ghcr-secret
         nodeSelector:
-          workload: streamer-general
+          workload: retriever-general
         restartPolicy: Always
         schedulerName: default-scheduler
         securityContext:
           fsGroup: 0
           runAsNonRoot: true
-        serviceAccount: tenx-streamer
-        serviceAccountName: tenx-streamer
+        serviceAccount: tenx-retriever
+        serviceAccountName: tenx-retriever
         terminationGracePeriodSeconds: 30
         volumes:
         - name: heap-dumps
@@ -227,7 +227,7 @@ items:
     conditions:
     - lastTransitionTime: "2026-04-17T23:26:05Z"
       lastUpdateTime: "2026-04-20T14:33:17Z"
-      message: ReplicaSet "tenx-streamer-streamer-10x-indexer-7ff4678659" has successfully
+      message: ReplicaSet "tenx-retriever-retriever-10x-indexer-7ff4678659" has successfully
         progressed.
       reason: NewReplicaSetAvailable
       status: "True"
@@ -247,17 +247,17 @@ items:
   metadata:
     annotations:
       deployment.kubernetes.io/revision: "50"
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 105
     labels:
-      app: streamer-10x
+      app: retriever-10x
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       cluster: query-handler
-      helm.sh/chart: streamer-10x-1.0.6
-    name: tenx-streamer-streamer-10x-query-handler
+      helm.sh/chart: retriever-10x-1.0.6
+    name: tenx-retriever-retriever-10x-query-handler
     namespace: demo
     resourceVersion: "3067235"
     uid: 5c7759d2-a4da-498c-abc6-9062cb9d1a3c
@@ -267,7 +267,7 @@ items:
     revisionHistoryLimit: 10
     selector:
       matchLabels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: query-handler
     strategy:
       type: Recreate
@@ -276,7 +276,7 @@ items:
         annotations:
           kubectl.kubernetes.io/restartedAt: "2026-04-17T16:26:02-07:00"
         labels:
-          app: streamer-10x
+          app: retriever-10x
           cluster: query-handler
       spec:
         containers:
@@ -285,7 +285,7 @@ items:
             valueFrom:
               secretKeyRef:
                 key: tenx-api-key
-                name: tenx-streamer-streamer-10x-api-key
+                name: tenx-retriever-retriever-10x-api-key
           - name: TENX_QUARKUS_MAX_ASYNC
             value: "15"
           - name: TENX_QUARKUS_MAX_QUEUED
@@ -293,19 +293,19 @@ items:
           - name: TENX_QUARKUS_READINESS_THRESHOLD
             value: "90"
           - name: TENX_STREAMER_INPUT_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334
+            value: tenx-demo-cloud-retriever-351939435334
           - name: TENX_STREAMER_INDEX_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334/indexing-results/
+            value: tenx-demo-cloud-retriever-351939435334/indexing-results/
           - name: TENX_QUERY_LOG_GROUP
-            value: /tenx/demo-streamer/query
+            value: /tenx/demo-retriever/query
           - name: TENX_QUARKUS_QUERY_QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue
           - name: TENX_QUARKUS_SUBQUERY_QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue
           - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue
           - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue
           - name: TENX_STREAM_PARALLEL_OBJECTS
             value: "20"
           - name: JAVA_OPTS_APPEND
@@ -327,7 +327,7 @@ items:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
-          name: streamer-10x-query-handler
+          name: retriever-10x-query-handler
           ports:
           - containerPort: 8080
             name: http
@@ -372,14 +372,14 @@ items:
         imagePullSecrets:
         - name: ghcr-secret
         nodeSelector:
-          workload: streamer-general
+          workload: retriever-general
         restartPolicy: Always
         schedulerName: default-scheduler
         securityContext:
           fsGroup: 0
           runAsNonRoot: true
-        serviceAccount: tenx-streamer
-        serviceAccountName: tenx-streamer
+        serviceAccount: tenx-retriever
+        serviceAccountName: tenx-retriever
         terminationGracePeriodSeconds: 30
         volumes:
         - name: heap-dumps
@@ -390,7 +390,7 @@ items:
     conditions:
     - lastTransitionTime: "2026-04-20T15:10:10Z"
       lastUpdateTime: "2026-04-20T15:12:15Z"
-      message: ReplicaSet "tenx-streamer-streamer-10x-query-handler-77f7685bf5" has
+      message: ReplicaSet "tenx-retriever-retriever-10x-query-handler-77f7685bf5" has
         successfully progressed.
       reason: NewReplicaSetAvailable
       status: "True"
@@ -410,17 +410,17 @@ items:
   metadata:
     annotations:
       deployment.kubernetes.io/revision: "60"
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     generation: 201
     labels:
-      app: streamer-10x
+      app: retriever-10x
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
       cluster: stream-worker
-      helm.sh/chart: streamer-10x-1.0.6
-    name: tenx-streamer-streamer-10x-stream-worker
+      helm.sh/chart: retriever-10x-1.0.6
+    name: tenx-retriever-retriever-10x-stream-worker
     namespace: demo
     resourceVersion: "3096380"
     uid: 3576d942-e474-44c1-a0cc-605c655d0a4e
@@ -430,7 +430,7 @@ items:
     revisionHistoryLimit: 10
     selector:
       matchLabels:
-        app: streamer-10x
+        app: retriever-10x
         cluster: stream-worker
     strategy:
       type: Recreate
@@ -439,7 +439,7 @@ items:
         annotations:
           kubectl.kubernetes.io/restartedAt: "2026-04-17T16:26:04-07:00"
         labels:
-          app: streamer-10x
+          app: retriever-10x
           cluster: stream-worker
       spec:
         containers:
@@ -448,7 +448,7 @@ items:
             valueFrom:
               secretKeyRef:
                 key: tenx-api-key
-                name: tenx-streamer-streamer-10x-api-key
+                name: tenx-retriever-retriever-10x-api-key
           - name: TENX_QUARKUS_MAX_ASYNC
             value: "10"
           - name: TENX_QUARKUS_MAX_QUEUED
@@ -456,21 +456,21 @@ items:
           - name: TENX_QUARKUS_READINESS_THRESHOLD
             value: "90"
           - name: TENX_STREAMER_INPUT_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334
+            value: tenx-demo-cloud-retriever-351939435334
           - name: TENX_STREAMER_INDEX_BUCKET
-            value: tenx-demo-cloud-streamer-351939435334/indexing-results/
+            value: tenx-demo-cloud-retriever-351939435334/indexing-results/
           - name: TENX_QUERY_LOG_GROUP
-            value: /tenx/demo-streamer/query
+            value: /tenx/demo-retriever/query
           - name: TENX_QUARKUS_STREAM_QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue
           - name: TENX_REMOTE_FORWARD_HOST
             value: 127.0.0.1
           - name: TENX_REMOTE_FORWARD_PORT
             value: "24224"
           - name: TENX_INVOKE_PIPELINE_SCAN_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue
           - name: TENX_INVOKE_PIPELINE_STREAM_ENDPOINT
-            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue
+            value: https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue
           - name: TENX_THREAD_POOL_SIZE
             value: "4"
           - name: JAVA_OPTS_APPEND
@@ -492,7 +492,7 @@ items:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 30
-          name: streamer-10x-stream-worker
+          name: retriever-10x-stream-worker
           ports:
           - containerPort: 8080
             name: http
@@ -592,19 +592,19 @@ items:
         imagePullSecrets:
         - name: ghcr-secret
         nodeSelector:
-          workload: streamer-compute
+          workload: retriever-compute
         restartPolicy: Always
         schedulerName: default-scheduler
         securityContext:
           fsGroup: 0
           runAsNonRoot: true
-        serviceAccount: tenx-streamer
-        serviceAccountName: tenx-streamer
+        serviceAccount: tenx-retriever
+        serviceAccountName: tenx-retriever
         terminationGracePeriodSeconds: 30
         volumes:
         - configMap:
             defaultMode: 420
-            name: tenx-streamer-streamer-10x-fluent-bit
+            name: tenx-retriever-retriever-10x-fluent-bit
           name: fluent-config
         - emptyDir:
             sizeLimit: 1Gi
@@ -617,7 +617,7 @@ items:
     conditions:
     - lastTransitionTime: "2026-04-19T18:43:28Z"
       lastUpdateTime: "2026-04-20T14:33:06Z"
-      message: ReplicaSet "tenx-streamer-streamer-10x-stream-worker-7f86bb647c" has
+      message: ReplicaSet "tenx-retriever-retriever-10x-stream-worker-7f86bb647c" has
         successfully progressed.
       reason: NewReplicaSetAvailable
       status: "True"

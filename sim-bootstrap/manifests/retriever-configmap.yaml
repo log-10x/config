@@ -3865,14 +3865,14 @@ items:
   kind: ConfigMap
   metadata:
     annotations:
-      meta.helm.sh/release-name: tenx-streamer
+      meta.helm.sh/release-name: tenx-retriever
       meta.helm.sh/release-namespace: demo
     creationTimestamp: "2026-04-14T14:00:27Z"
     labels:
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/version: 1.0.6
-      helm.sh/chart: streamer-10x-1.0.6
-    name: tenx-streamer-streamer-10x-fluent-bit
+      helm.sh/chart: retriever-10x-1.0.6
+    name: tenx-retriever-retriever-10x-fluent-bit
     namespace: demo
     resourceVersion: "2745"
     uid: 497d3c36-48b7-4dd3-b92c-09d7abe19aaf

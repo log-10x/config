@@ -2,7 +2,7 @@
 # 🔟❎  Object storage index upload config
 
 # Index the a log file upload to an object storage container (e.g., S3).
-# To learn more see https://doc.log10x.com/apps/streamer/#index
+# To learn more see https://doc.log10x.com/apps/retriever/#index
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -21,7 +21,7 @@ include:
 # ------------------------------ App settings ---------------------------------
 
   # Load app settings:
-  - streamer/index
+  - retriever/index
 
   # Load gitops settings for pulling additional assets from Github.
   # Edit the gitops/config.yaml file with specific config

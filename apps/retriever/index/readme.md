@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Streamer config
+## 1️⃣0️⃣❎ Retriever config
 
-This is the index Config configuration for the Streamer app.
+This is the index Config configuration for the Retriever app.
 
-To learn more see the [Streamer](https://doc.log10x.com/apps/streamer "Stream events from object storage to log analyzers and metrics on-demand") app documentation
+To learn more see the [Retriever](https://doc.log10x.com/apps/retriever "Stream events from object storage to log analyzers and metrics on-demand") app documentation
 

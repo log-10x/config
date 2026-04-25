@@ -1,11 +1,11 @@
-# Streamer simulation bootstrap
+# Retriever simulation bootstrap
 
-Captured reference material for building a simulated streamer environment
+Captured reference material for building a simulated retriever environment
 that can serve the demo experience without the full EKS cluster (AWS bill).
 
 Companion to the working `backend/lambdas/demo-metrics-replay` lambda —
 that one handles Prometheus metrics. This directory covers everything
-else the streamer exposes (S3 archive, index schemas, SQS flow, CW
+else the retriever exposes (S3 archive, index schemas, SQS flow, CW
 structured logs, helm/k8s topology).
 
 ## Contents
@@ -14,11 +14,11 @@ structured logs, helm/k8s topology).
 .
 ├── capture.sh                           # Re-run to refresh from live env
 ├── manifests/
-│   ├── streamer-helm-manifest.yaml      # helm get manifest tenx-streamer
-│   ├── streamer-deployments.yaml        # kubectl get deploy
-│   ├── streamer-cronjobs.yaml           # 5 streamer CronJobs + index-inducer
-│   ├── streamer-hpa.yaml                # chart + manual HPAs
-│   ├── streamer-configmap.yaml          # fluent-bit config + scheduledQueries
+│   ├── retriever-helm-manifest.yaml      # helm get manifest tenx-retriever
+│   ├── retriever-deployments.yaml        # kubectl get deploy
+│   ├── retriever-cronjobs.yaml           # 5 retriever CronJobs + index-inducer
+│   ├── retriever-hpa.yaml                # chart + manual HPAs
+│   ├── retriever-configmap.yaml          # fluent-bit config + scheduledQueries
 │   ├── sqs-queues.json                  # 4 queues + 4 DLQs, attributes
 │   └── sqs-queues-list.json             # raw ListQueues output
 ├── schema-samples/
@@ -45,8 +45,8 @@ before committing or sharing.
 ## What the live cluster exposes — the surface the sim must match
 
 ### REST entry
-- `POST http://{elb}/streamer/query` — JSON body: `{id, name, from, to, search, filters, writeResults, processingTime, resultSize, logLevels}`. Returns `{queryId}`. See `log10x-mcp/src/lib/streamer-api.ts` for the full request shape.
-- `GET http://{elb}/streamer/query/{qid}/status` — returns `{queryId, logGroup, logStreamPrefix, resultsBucket, resultsPrefix, summary:{queryStarted, queryComplete, streamDispatch, streamWorkerComplete, streamWorkerSkipped, resultsWriterComplete, eventsWrittenTotal, stackOverflowError}, state}`. State transitions: `not_found → running → partially_complete → complete | complete_no_events | deadline_exceeded | crashed`. See `l1x-inc/pipeline/run-quarkus/src/main/java/com/log10x/ext/quarkus/endpoints/app/streamer/StreamerQueryStatus.java` for the exact impl (post-v16: backed by `DescribeLogStreams` + `GetLogEvents`, not Insights).
+- `POST http://{elb}/retriever/query` — JSON body: `{id, name, from, to, search, filters, writeResults, processingTime, resultSize, logLevels}`. Returns `{queryId}`. See `log10x-mcp/src/lib/retriever-api.ts` for the full request shape.
+- `GET http://{elb}/retriever/query/{qid}/status` — returns `{queryId, logGroup, logStreamPrefix, resultsBucket, resultsPrefix, summary:{queryStarted, queryComplete, streamDispatch, streamWorkerComplete, streamWorkerSkipped, resultsWriterComplete, eventsWrittenTotal, stackOverflowError}, state}`. State transitions: `not_found → running → partially_complete → complete | complete_no_events | deadline_exceeded | crashed`. See `l1x-inc/pipeline/run-quarkus/src/main/java/com/log10x/ext/quarkus/endpoints/app/retriever/RetrieverQueryStatus.java` for the exact impl (post-v16: backed by `DescribeLogStreams` + `GetLogEvents`, not Insights).
 - `GET http://{elb}/q/health` — Quarkus health (Kubernetes liveness/readiness). Responds `200` with a JSON payload containing `pipeline-executor-capacity`.
 
 ### S3 layout
@@ -82,32 +82,32 @@ trigger S3-event → SQS index-queue → indexer pod → writes the above
 index artifacts.
 
 ### SQS queues
-- `tenx-demo-cloud-streamer-index-queue` — raw-log-file-added events from S3, consumed by indexer pods.
-- `tenx-demo-cloud-streamer-query-queue` — query submissions from scheduled CronJobs (cluster-internal source).
-- `tenx-demo-cloud-streamer-subquery-queue` — coordinator-dispatched scan sub-queries to query-handler pods. Trace context rides on `MessageAttributes.traceparent`.
-- `tenx-demo-cloud-streamer-stream-queue` — scan-dispatched stream requests to stream-worker pods. Trace context on MessageAttributes.
+- `tenx-demo-cloud-retriever-index-queue` — raw-log-file-added events from S3, consumed by indexer pods.
+- `tenx-demo-cloud-retriever-query-queue` — query submissions from scheduled CronJobs (cluster-internal source).
+- `tenx-demo-cloud-retriever-subquery-queue` — coordinator-dispatched scan sub-queries to query-handler pods. Trace context rides on `MessageAttributes.traceparent`.
+- `tenx-demo-cloud-retriever-stream-queue` — scan-dispatched stream requests to stream-worker pods. Trace context on MessageAttributes.
 - Each has a `-dlq` sibling (14 d retention, redrive `maxReceiveCount=3`).
 
 All attribute details (receive-wait-time, visibility-timeout, DLQ redrive
 policy, depth-at-capture-time) in `manifests/sqs-queues.json`.
 
 ### CloudWatch
-- **Log group**: `/tenx/demo-streamer/query` — all query-side pods write
+- **Log group**: `/tenx/demo-retriever/query` — all query-side pods write
   structured JSON here. The R18 `/status` endpoint reads it directly via
   `DescribeLogStreams` + `GetLogEvents`. Emits marker substrings: `query started:`, `query complete:`, `stream dispatch:`, `stream worker complete:`, `stream worker skipped:`, `results writer complete: N events`, `StackOverflowError`. All messages include a `data` JSON block with `queryId`, `traceparent`, etc.
-- **Metrics**: `Log10x/Streamer` namespace — 8 filter-derived metrics
+- **Metrics**: `Log10x/Retriever` namespace — 8 filter-derived metrics
   (`StackOverflowCount`, `ScanCompleteCount`, `WorkerCompleteCount`,
   `ResultsWriterCompleteCount`, `ScannedBlobsCount`, `MatchedBlobsCount`,
-  `LaunchFailedCount`, `WorkerSkippedCount`). See `backend/terraform/demo/streamer-observability.tf`.
-- **Alarms**: 3 on streamer metrics + 4 on DLQ depth.
-- **Dashboard**: `tenx-demo-streamer`.
+  `LaunchFailedCount`, `WorkerSkippedCount`). See `backend/terraform/demo/retriever-observability.tf`.
+- **Alarms**: 3 on retriever metrics + 4 on DLQ depth.
+- **Dashboard**: `tenx-demo-retriever`.
 
 ## Minimum viable sim (design notes)
 
 1. **One S3 bucket** (small; a few GB total) with the layout above.
 2. **One lambda + one schedule**: every minute, copy `{bucket}/app/otel-sample-...log` → `{bucket}/app/otel-sample-{now}.log`, REWRITING the per-event timestamps inside the JSONL payload to `now - {original-offset}`. If you don't rewrite event timestamps inside the file, queries over `now-1h` return empty-range (exact bug the demo's own cron-inducer hits when it stalls).
-3. **One mini-streamer pod** (not EKS) running the standard streamer image (`dev-obs-v16`). Connect to the simulated bucket + 4 SQS queues + CW log group. Scales linearly with S3 write volume.
-4. **One ALB/NLB or ngrok** exposing the streamer's `POST /streamer/query` + `GET /streamer/query/{qid}/status`.
+3. **One mini-retriever pod** (not EKS) running the standard retriever image (`dev-obs-v16`). Connect to the simulated bucket + 4 SQS queues + CW log group. Scales linearly with S3 write volume.
+4. **One ALB/NLB or ngrok** exposing the retriever's `POST /retriever/query` + `GET /retriever/query/{qid}/status`.
 5. **`demo-metrics-replay` lambda** continues as-is for Grafana dashboards.
 
 What you DO NOT need to reproduce:
@@ -120,9 +120,9 @@ Expected cost: ~$20–40/mo (one EC2 + minor S3 + minor SQS) vs. ~$240/mo for th
 ## How to use this bootstrap
 
 **To rebuild the sim from scratch:**
-1. Read `manifests/streamer-helm-manifest.yaml` — shows the full container spec (env vars, probes, volumes) the streamer pods need. Boil it down to a single `docker run` or a 3-service compose.
-2. Read `manifests/streamer-configmap.yaml` scheduledQueries block — the 5 CronJob queries the demo runs for dashboards. Replicate as either cron-on-the-sim-host, or a lambda.
-3. Read `schema-samples/` to understand the S3 index formats the streamer will produce in the sim (useful for assertions / verifying the mini-streamer indexed correctly).
+1. Read `manifests/retriever-helm-manifest.yaml` — shows the full container spec (env vars, probes, volumes) the retriever pods need. Boil it down to a single `docker run` or a 3-service compose.
+2. Read `manifests/retriever-configmap.yaml` scheduledQueries block — the 5 CronJob queries the demo runs for dashboards. Replicate as either cron-on-the-sim-host, or a lambda.
+3. Read `schema-samples/` to understand the S3 index formats the retriever will produce in the sim (useful for assertions / verifying the mini-retriever indexed correctly).
 4. Use `snapshots/raw-log-sample-head-1mb.gz` as the seed replay data.
 5. Follow the mini-sim design notes above.
 
@@ -142,14 +142,14 @@ captures in place. Safe to re-run — all `sed` redaction is idempotent.
   thousands per time bucket). The 20 samples are enough to infer the
   pattern but the full corpus would be needed for a high-fidelity replay.
 - `CloudWatch log group contents` — not captured. For a sim, the mini-
-  streamer will generate its own CW logs live, so a historical snapshot
+  retriever will generate its own CW logs live, so a historical snapshot
   isn't needed. If you want historical context, use
-  `aws logs create-export-task` against `/tenx/demo-streamer/query`.
+  `aws logs create-export-task` against `/tenx/demo-retriever/query`.
 - No prometheus metrics snapshot here — `backend/lambdas/demo-metrics-replay`
   already owns that.
 
 ## Related
 
-- **Streamer handoff deep guide**: `~/.claude/projects/-Users-talweiss-eclipse-workspace-l1x-co-config/memory/project_streamer_handoff_guide.md` — architecture + verified facts + fix catalog + perf measurements.
-- **Test harnesses**: `log10x-mcp` branch `test/streamer-harnesses` (PR #42) — 15 live-deploy harnesses that exercise every surface documented here.
+- **Retriever handoff deep guide**: `~/.claude/projects/-Users-talweiss-eclipse-workspace-l1x-co-config/memory/project_retriever_handoff_guide.md` — architecture + verified facts + fix catalog + perf measurements.
+- **Test harnesses**: `log10x-mcp` branch `test/retriever-harnesses` (PR #42) — 15 live-deploy harnesses that exercise every surface documented here.
 - **Metrics replay**: `backend/lambdas/demo-metrics-replay/` — working template for the sim's lambda pattern.

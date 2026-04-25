@@ -1,12 +1,12 @@
 {
     "QueueUrls": [
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue-dlq",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue-dlq",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue-dlq",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue",
-        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue-dlq"
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue-dlq",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue-dlq",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue-dlq",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue",
+        "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue-dlq"
     ]
 }

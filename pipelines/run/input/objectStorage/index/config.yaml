@@ -37,15 +37,15 @@ index:
     read:
 
       # 'readContainer' points to the AWS S3 bucket in which the object to index resides.
-      # When the 10x Storage Streamer is deployed as a Quarkus server, the server will automatically
+      # When the 10x Retriever is deployed as a Quarkus server, the server will automatically
       # set this value based on the Rest endpoint input params.
-      # For more info, see https://doc.log10x.com/apps/streamer/deploy
+      # For more info, see https://doc.log10x.com/apps/retriever/deploy
       container: $=TenXEnv.get("TENX_STREAMER_INPUT_BUCKET", "")  # (REQUIRED)
 
       # 'readObject' points to the blob (e.g., log file) within 'readContainer' to index
-      # When the 10x Storage Streamer is deployed as a Quarkus server, the server will automatically
+      # When the 10x Retriever is deployed as a Quarkus server, the server will automatically
       # set this value based on the Rest endpoint input params.
-      # For more info, see https://doc.log10x.com/apps/streamer/deploy
+      # For more info, see https://doc.log10x.com/apps/retriever/deploy
       object: ""  # (REQUIRED)
 
       # 'printProgress' controls whether to print a progress gage to the console

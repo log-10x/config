@@ -1,6 +1,6 @@
 {
-  "tenx-demo-cloud-streamer-index-queue": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-index-queue",
+  "tenx-demo-cloud-retriever-index-queue": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-index-queue",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -10,14 +10,14 @@
     "MaximumMessageSize": "262144",
     "MessageRetentionPeriod": "345600",
     "DelaySeconds": "0",
-    "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowS3ToSendMessage\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Action\":\"sqs:SendMessage\",\"Resource\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-index-queue\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::tenx-demo-cloud-streamer-351939435334\"}}}]}",
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-index-queue-dlq\",\"maxReceiveCount\":3}",
+    "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowS3ToSendMessage\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Action\":\"sqs:SendMessage\",\"Resource\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-index-queue\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::tenx-demo-cloud-retriever-351939435334\"}}}]}",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-index-queue-dlq\",\"maxReceiveCount\":3}",
     "ReceiveMessageWaitTimeSeconds": "20",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue"
   },
-  "tenx-demo-cloud-streamer-index-queue-dlq": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-index-queue-dlq",
+  "tenx-demo-cloud-retriever-index-queue-dlq": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-index-queue-dlq",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -29,10 +29,10 @@
     "DelaySeconds": "0",
     "ReceiveMessageWaitTimeSeconds": "0",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-index-queue-dlq"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-index-queue-dlq"
   },
-  "tenx-demo-cloud-streamer-query-queue": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-query-queue",
+  "tenx-demo-cloud-retriever-query-queue": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-query-queue",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -42,13 +42,13 @@
     "MaximumMessageSize": "262144",
     "MessageRetentionPeriod": "345600",
     "DelaySeconds": "0",
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-query-queue-dlq\",\"maxReceiveCount\":3}",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-query-queue-dlq\",\"maxReceiveCount\":3}",
     "ReceiveMessageWaitTimeSeconds": "20",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue"
   },
-  "tenx-demo-cloud-streamer-query-queue-dlq": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-query-queue-dlq",
+  "tenx-demo-cloud-retriever-query-queue-dlq": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-query-queue-dlq",
     "ApproximateNumberOfMessages": "2",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -60,10 +60,10 @@
     "DelaySeconds": "0",
     "ReceiveMessageWaitTimeSeconds": "0",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-query-queue-dlq"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-query-queue-dlq"
   },
-  "tenx-demo-cloud-streamer-stream-queue": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-stream-queue",
+  "tenx-demo-cloud-retriever-stream-queue": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-stream-queue",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -73,13 +73,13 @@
     "MaximumMessageSize": "262144",
     "MessageRetentionPeriod": "345600",
     "DelaySeconds": "0",
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-stream-queue-dlq\",\"maxReceiveCount\":3}",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-stream-queue-dlq\",\"maxReceiveCount\":3}",
     "ReceiveMessageWaitTimeSeconds": "20",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue"
   },
-  "tenx-demo-cloud-streamer-stream-queue-dlq": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-stream-queue-dlq",
+  "tenx-demo-cloud-retriever-stream-queue-dlq": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-stream-queue-dlq",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -91,10 +91,10 @@
     "DelaySeconds": "0",
     "ReceiveMessageWaitTimeSeconds": "0",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-stream-queue-dlq"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-stream-queue-dlq"
   },
-  "tenx-demo-cloud-streamer-subquery-queue": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-subquery-queue",
+  "tenx-demo-cloud-retriever-subquery-queue": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-subquery-queue",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -104,13 +104,13 @@
     "MaximumMessageSize": "262144",
     "MessageRetentionPeriod": "345600",
     "DelaySeconds": "0",
-    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-subquery-queue-dlq\",\"maxReceiveCount\":3}",
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-subquery-queue-dlq\",\"maxReceiveCount\":3}",
     "ReceiveMessageWaitTimeSeconds": "20",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue"
   },
-  "tenx-demo-cloud-streamer-subquery-queue-dlq": {
-    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-streamer-subquery-queue-dlq",
+  "tenx-demo-cloud-retriever-subquery-queue-dlq": {
+    "QueueArn": "arn:aws:sqs:us-east-1:351939435334:tenx-demo-cloud-retriever-subquery-queue-dlq",
     "ApproximateNumberOfMessages": "0",
     "ApproximateNumberOfMessagesNotVisible": "0",
     "ApproximateNumberOfMessagesDelayed": "0",
@@ -122,6 +122,6 @@
     "DelaySeconds": "0",
     "ReceiveMessageWaitTimeSeconds": "0",
     "SqsManagedSseEnabled": "true",
-    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-streamer-subquery-queue-dlq"
+    "_url": "https://sqs.us-east-1.amazonaws.com/351939435334/tenx-demo-cloud-retriever-subquery-queue-dlq"
   }
 }
