@@ -6,7 +6,7 @@ Helper script to launch Log10x and OpenTelemetry Collector together for local se
 
 `launch-regulate.sh` automates the startup sequence:
 
-1. Starts Log10x in regulate mode (`tenx @run/input/forwarder/otel-collector/regulate @apps/regulator`)
+1. Starts Log10x in regulate mode (`tenx @run/input/forwarder/otel-collector/regulate __SAVE_APPS_REDUCER__`)
 2. Waits for Log10x to be ready
 3. Starts OpenTelemetry Collector with the matching config (`regulate/tenxNix.yaml`)
 4. Prints status + log file locations
@@ -21,10 +21,10 @@ chmod +x launch-regulate.sh
 ./launch-regulate.sh
 ```
 
-To enable compact encoding (regulator with optimize flag), set the `regulatorOptimize=true` env var before launching:
+To enable compact encoding (reducer with optimize flag), set the `reducerOptimize=true` env var before launching:
 
 ```bash
-regulatorOptimize=true ./launch-regulate.sh
+reducerOptimize=true ./launch-regulate.sh
 ```
 
 ## Environment Variables
@@ -48,7 +48,7 @@ LOG_DIR=/var/log/my-logs \
 ## Log Files
 
 ```bash
-tail -f /var/log/tenx-otel/tenx-regulator.log
+tail -f /var/log/tenx-otel/tenx-reducer.log
 tail -f /var/log/tenx-otel/otelcol.log
 ```
 
@@ -91,7 +91,7 @@ ps aux | grep -E "tenx|otelcol"
 Check the logs for errors:
 
 ```bash
-cat /var/log/tenx-otel/tenx-regulator.log
+cat /var/log/tenx-otel/tenx-reducer.log
 cat /var/log/tenx-otel/otelcol.log
 ```
 

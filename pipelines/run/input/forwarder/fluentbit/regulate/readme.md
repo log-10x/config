@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Fluent Bit regulator config
+## 1️⃣0️⃣❎ Fluent Bit reducer config
 
-This is the default configuration for the Fluent Bit regulator module.
+This is the default configuration for the Fluent Bit reducer module.
 
-To learn more see the [Fluent Bit regulator](https://doc.log10x.com/run/input/forwarder/fluentbit/regulate "Read events from Fluent Bit forwarders to regulate which events to ship") module documentation
+To learn more see the [Fluent Bit reducer](https://doc.log10x.com/run/input/forwarder/fluentbit/regulate "Read events from Fluent Bit forwarders to regulate which events to ship") module documentation
 

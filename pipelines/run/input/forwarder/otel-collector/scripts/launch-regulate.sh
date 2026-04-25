@@ -1,7 +1,7 @@
 #!/bin/bash
-# Launch script for OpenTelemetry Collector + Log10x Regulator (Linux)
+# Launch script for OpenTelemetry Collector + Log10x Reducer (Linux)
 #
-# This script starts both Log10x regulator and OpenTelemetry Collector
+# This script starts both Log10x reducer and OpenTelemetry Collector
 # in the correct order for event filtering and regulation.
 
 set -e
@@ -23,7 +23,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}OpenTelemetry Collector + Log10x Regulator${NC}"
+echo -e "${GREEN}OpenTelemetry Collector + Log10x Reducer${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
@@ -56,12 +56,12 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Start Log10x regulator
-echo -e "${GREEN}Starting Log10x regulator...${NC}"
-$TENX_BIN @run/input/forwarder/otel-collector/regulate @apps/regulator > "$LOG_DIR/tenx-regulator.log" 2>&1 &
+# Start Log10x reducer
+echo -e "${GREEN}Starting Log10x reducer...${NC}"
+$TENX_BIN @run/input/forwarder/otel-collector/regulate __SAVE_APPS_REDUCER__ > "$LOG_DIR/tenx-reducer.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
-echo "Log file: $LOG_DIR/tenx-regulator.log"
+echo "Log file: $LOG_DIR/tenx-reducer.log"
 
 # Wait for Log10x to be ready
 echo "Waiting for Log10x to start (listening on port 4318)..."
@@ -72,7 +72,7 @@ for i in {1..30}; do
     fi
     if [ $i -eq 30 ]; then
         echo -e "${RED}Error: Log10x failed to start within 30 seconds${NC}"
-        echo "Check log file: $LOG_DIR/tenx-regulator.log"
+        echo "Check log file: $LOG_DIR/tenx-reducer.log"
         cleanup
     fi
     sleep 1
@@ -106,14 +106,14 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Services are running!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo "Log10x Regulator:          PID $TENX_PID"
+echo "Log10x Reducer:          PID $TENX_PID"
 echo "OpenTelemetry Collector:   PID $OTELCOL_PID"
 echo ""
 echo "Event Flow:"
 echo "  OTel Collector → TCP (4318) → Log10x → TCP (4319) → OTel Collector → Destinations"
 echo ""
 echo "Logs:"
-echo "  Log10x:    $LOG_DIR/tenx-regulator.log"
+echo "  Log10x:    $LOG_DIR/tenx-reducer.log"
 echo "  OTel Col:  $LOG_DIR/otelcol.log"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"

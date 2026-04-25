@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Filebeat regulator config
+## 1️⃣0️⃣❎ Filebeat reducer config
 
-This is the default configuration for the Filebeat regulator module.
+This is the default configuration for the Filebeat reducer module.
 
-To learn more see the [Filebeat regulator](https://doc.log10x.com/run/input/forwarder/filebeat/regulate "Read events from Filebeat forwarders to regulate which events to ship") module documentation
+To learn more see the [Filebeat reducer](https://doc.log10x.com/run/input/forwarder/filebeat/regulate "Read events from Filebeat forwarders to regulate which events to ship") module documentation
 

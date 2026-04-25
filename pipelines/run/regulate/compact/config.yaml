@@ -1,4 +1,4 @@
-# 🔟❎ 'run' compact regulator configuration
+# 🔟❎ 'run' compact reducer configuration
 
 # Per-event compaction decision via a declarative lookup file.
 # Each event is tagged with `_tenxEncode: "true"|"false"`; forwarder
@@ -14,7 +14,7 @@ include: run/modules/regulate/compact
 
 # ============================ Compact Options ================================
 
-compactRegulator:
+compactReducer:
 
   # 'lookupFile' — path or URL to the compact-decisions file.
   # Entry format: <fieldSet>=<encode>:<untilEpochSec>[:<reason>]
@@ -22,7 +22,7 @@ compactRegulator:
   # lookupFile: /etc/tenx/compact-lookup.csv
 
   # 'fieldNames' — how each event's lookup key is built.
-  # Matches rate regulator's default so compact + rate entries
+  # Matches rate reducer's default so compact + rate entries
   # address the same pattern identity.
   fieldNames:
     - $=yield TenXEnv.get("symbolMessageField")
