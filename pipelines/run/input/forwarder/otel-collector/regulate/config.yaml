@@ -19,6 +19,9 @@ tenx: run
 
 include:
 
+  # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
+  - run/modules/input/forwarder/module.yaml
+
   - run/modules/input/forwarder/otel-collector/regulate/module.yaml
 
   # Read events from OTel Collector via Unix socket with syslog parsing
