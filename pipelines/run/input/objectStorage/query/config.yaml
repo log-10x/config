@@ -73,14 +73,24 @@ query:
 
     # 'writeResults' gates the stream pipeline's JSONL results writer, which
     #  buffers matched TenXObjects to object storage under
-    #  `{indexObjectPath(queryResults)}/{queryId}/*.jsonl` alongside the
-    #  byte-count marker backstop used by the query coordinator. Defaults to
-    #  false so the extra JSONL upload only runs when a caller explicitly
-    #  opts in. Out-of-band consumers like the Log10x MCP server pass
-    #  `writeResults=true` on their query request to retrieve full event
+    #  `{indexObjectPath(queryResults)}/{queryId}/{sliceFrom}_{sliceTo}/*.jsonl`
+    #  alongside the byte-count marker backstop used by the query coordinator.
+    #  Defaults to false so the extra JSONL upload only runs when a caller
+    #  explicitly opts in. Out-of-band consumers like the Log10x MCP server
+    #  pass `writeResults=true` on their query request to retrieve full event
     #  payloads from S3; other deployments leave this off to avoid the
     #  results-writer overhead.
     writeResults: false
+
+    # 'writeSummaries' gates the stream pipeline's JSONL summaries writer
+    #  (TenXSummary records produced by run/aggregate/stream). Defaults to
+    #  false. When true, per-slice summaries are buffered to object storage
+    #  under `{indexObjectPath(querySummaries)}/{queryId}/{sliceFrom}_{sliceTo}/*.jsonl`
+    #  so consumers can fetch a low-volume per-slice rollup (count, bytesum,
+    #  grouping fields) for high-cardinality patterns instead of pulling
+    #  raw events. Independent of `writeResults`; either can be on in
+    #  isolation or both together.
+    writeSummaries: false
 
     # 'filters' specify expressions TenXObjects transformed from matching events in storage must meet.
     # The `$?queryFilters` macro lets the CLI/REST `queryFilters` override
