@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Compiler config
+## 1️⃣0️⃣❎ Pipeline Bootstrapper config
 
-This is the bootstrap configuration for the Compiler app.
+This is the compile configuration for the Pipeline Bootstrapper unit.
 
-To learn more see the [Compiler](https://doc.log10x.com/apps/compiler "Generate symbol libraries to enable structured event processing at runtime") app documentation
+To learn more see the [Pipeline Bootstrapper](https://doc.log10x.com/compile/bootstrap "Authenticate the log10x account and launch a target pipeline") unit documentation
 
