@@ -1,0 +1,53 @@
+{
+  "type" : "object",
+  "properties" : {
+    "include" : {
+      "type" : "string"
+    },
+    "tenx" : {
+      "type" : "string"
+    },
+    "compactReducer" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "lookupFile" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Path or URL to a compact decisions lookup file\n\nPoints the engine at a lookup file whose entries express per-pattern compaction decisions. **Entry format**:      <fieldSet>=<encode>:<untilEpochSec>[:<reason>]  `encode` is `true` (compact via `encode()`) or `false` (preserve `fullText`). `untilEpochSec` is a Unix epoch timestamp after which the entry self-heals to `compactReducerDefault`.  **Example** (with `compactReducerFieldNames: [symbolMessage]`):      payment_retry_gateway_timeout=true:1745856000:OPS-5123 spike mitigation     auth_audit_trail=false:1745856000:compliance — keep verbose  Entries express deviations from `compactReducerDefault`. An expired entry falls back to the default exactly like a rate-reducer mute does.  The engine polls the file on the interval set by `compactReducerLookupRetain` — changes take effect without a restart, so this plays cleanly with a GitOps workflow where the MCP authors entries via PR."
+        },
+        "fieldNames" : {
+          "type" : [
+            "array",
+            "null"
+          ],
+          "markdownDescription" : "List of TenXObject fields used to key compact lookup entries\n\nDefines the list of TenXObject field names joined with underscores to form each event's lookup key. The key format matches the rate reducer's `rateReducerFieldNames`, so an entry in the compact lookup targets the same pattern identity the Reporter attributes cost to. **Default**: `[symbolMessage]` (same as the rate reducer's default).  **Multi-dimensional compaction** (e.g., \"compact this pattern only for tenants X, Y\"):  ```yaml compactReducerFieldNames:   - symbolMessage   - tenantId ```  Changing this field set currently requires an engine restart — a future enhancement will allow hot-swapping via a bootstrap key inside the lookup file. (Default: [\"symbolMessage\"])",
+          "items" : {
+            "type" : "string"
+          },
+          "default" : [
+            "symbolMessage"
+          ]
+        },
+        "lookupRetain" : {
+          "type" : [
+            "number",
+            "string"
+          ],
+          "markdownDescription" : "Lookup file poll interval in milliseconds\n\nDefines how often the engine re-reads `compactReducerLookupFile` to pick up new/changed entries. Default of 5 minutes (300000ms) aligns with the rate reducer's `rateReducerLookupRetain`. Shorter values make GitOps changes take effect faster at the cost of more file I/O. Longer values reduce I/O but delay effect.  **Validation**: must be at least 60000ms (1 minute). (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
+          "default" : 300000
+        },
+        "default" : {
+          "type" : [
+            "boolean",
+            "string"
+          ],
+          "markdownDescription" : "Default compaction decision when no lookup entry applies\n\nControls the fallback decision when no lookup file is loaded, no entry matches an event's field-set, or a matching entry has expired. - `false` (default) — preserve `fullText`. Lookup entries opt specific patterns INTO compaction. - `true` — compact via `encode()`. Lookup entries opt specific patterns OUT (e.g., audit/compliance patterns that must stay verbose).  Flipping this value is a policy-level decision (affects every event), not a lookup edit. Changing it requires a pod rollout. The lookup handles pattern-level overrides without restart. (Accepts boolean or string with $= prefix for runtime evaluation)"
+        }
+      }
+    }
+  },
+  "additionalProperties" : false
+}

@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/regulate/compact/schema.json
+
 # 🔟❎ 'run' compact reducer configuration
 
 # Per-event compaction decision via a declarative lookup file.
