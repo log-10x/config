@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/vector/regulate/schema.json
+
+# 🔟❎ 'run' Vector reducer configuration
+#
+# Configure an input that reads events from Vector via a Unix socket and an
+# output that writes regulated TenXObjects back via the Fluent Forward
+# protocol. When 'reducerOptimize' is enabled, events are encoded for
+# volume reduction.
+#
+# Architecture:
+#   Vector --[socket/unix]--> Log10x Reducer --[fluent/unix]--> Vector --> Final destinations
+#
+# Usage:
+#   tenx run @run/input/forwarder/vector/regulate @apps/reducer
+
+# Set the 10x pipeline to 'run'
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
+  - run/modules/input/forwarder/module.yaml
+
+  - run/modules/input/forwarder/vector/regulate/module.yaml
+
+  # Read events from Vector via Unix socket (newline-delimited records)
+  - run/modules/input/forwarder/vector/input
+
+  # Write filtered events back to Vector via Fluent Forward protocol
+  - run/modules/input/forwarder/vector/output/unix
+
+# =============================== Mode Options ================================
+
+# Mirrors the otel-collector / fluentbit dispatch — see fluentbit/regulate/config.yaml
+# for the full explanation.
+
+outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
+
+outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+
+encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+
+# ========================= Configuration Options =============================
+
+vector:
+
+  # 'outputFields' specifies TenXObject field names to emit alongside the main event.
+  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
+  #  Example: outputFields: [level, group, symbolMessage]
+  outputFields: []
+
+  # 'outputEncodeType' controls the output format when outputFields is set.
+  #  Possible values: 'json' or 'delimited'
+  outputEncodeType: delimited

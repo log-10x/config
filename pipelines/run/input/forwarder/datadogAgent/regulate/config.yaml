@@ -24,8 +24,9 @@ include:
   # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/fluentbit/input
 
-  # Include Unix domain/TCP socket output to write events into the forwarder
-  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+  # Include Unix domain socket / Fluent Forward (TCP) output to write events into Fluent Bit,
+  # which relays them to the Datadog Agent. Mirrors the fluentbit/regulate selection.
+  - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "forward" : "unix")'
 
 # =============================== Mode Options ================================
 
