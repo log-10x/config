@@ -19,7 +19,7 @@ configuration:
         value: "${env:TENX_LOG_PATH:-/var/log/tenx/}"
 
       - name: log-layout
-        value: "${env:TENX_LOG_LAYOUT:-[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n}"
+        value: "[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"
 
       - name: plain-layout
         value: "%msg%n"
