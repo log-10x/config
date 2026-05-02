@@ -2,11 +2,11 @@
 
 import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsole, TenXDate, TenXString } from '@tenx/tenx'
 
-// Declarative, field-set keyed mute reducer.
+// Declarative, field-set keyed mute receiver.
 //
 // Loads a lookup file where each line declares a mute for a specific field-set
 // value. The field-set is the same joined list of fields used by the local
-// reducer (via `rateReducerFieldNames`), so mute keys read like
+// receiver (via `rateReceiverFieldNames`), so mute keys read like
 // `Error_syncing_pod`, `heartbeat_debug_frontend`, `timeout_payment-service`,
 // etc. — the same identity the Reporter attributes cost to.
 //
@@ -14,7 +14,7 @@ import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsol
 //
 //     <fieldSet>=<sampleRate>:<untilEpochSec>[:<reason>]
 //
-// Example (with rateReducerFieldNames: [symbolMessage]):
+// Example (with rateReceiverFieldNames: [symbolMessage]):
 //     Error_syncing_pod=0.10:1744848000:pod error spam OPS-4821
 //     heartbeat_debug=0.00:1744416000:k8s liveness 200s
 //
@@ -32,42 +32,42 @@ export class GlobalReducerInput extends TenXInput {
     // only load class if a mute file is configured
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
-       return TenXEnv.get("rateReducerLookupFile");
+       return TenXEnv.get("rateReceiverLookupFile");
     }
 
     constructor() {
 
         if (!TenXEnv.get("quiet")) {
-            TenXConsole.log("🚦 Applying mute-file rate reducer to: " + this.inputName + " using: " + TenXEnv.get("rateReducerLookupFile"));
+            TenXConsole.log("🚦 Applying mute-file rate receiver to: " + this.inputName + " using: " + TenXEnv.get("rateReceiverLookupFile"));
         }
 
         if (!TenXEnv.get("levelField")) {
-            throw new Error("the rate reducer module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
+            throw new Error("the rate receiver module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
         }
 
-        if (!TenXEnv.get("rateReducerFieldNames")) {
-            throw new Error("the 'rateReducerFieldNames' argument must be set to identify mute-file entries");
+        if (!TenXEnv.get("rateReceiverFieldNames")) {
+            throw new Error("the 'rateReceiverFieldNames' argument must be set to identify mute-file entries");
         }
 
-        var minSampleRate = TenXEnv.get("rateReducerMinRetentionThreshold", 0.1);
+        var minSampleRate = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
         if (!(minSampleRate >= 0.01)) {
-            throw new Error("the 'rateReducerMinRetentionThreshold' argument must be greater than 0.01, received: " + minSampleRate);
+            throw new Error("the 'rateReceiverMinRetentionThreshold' argument must be greater than 0.01, received: " + minSampleRate);
         }
 
-        var lastModified = TenXLookup.load(TenXEnv.get("rateReducerLookupFile"), true);
+        var lastModified = TenXLookup.load(TenXEnv.get("rateReceiverLookupFile"), true);
 
-        var rateReducerLookupRetain = TenXEnv.get("rateReducerLookupRetain", 300000);
+        var rateReceiverLookupRetain = TenXEnv.get("rateReceiverLookupRetain", 300000);
 
-        if (TenXDate.now() - lastModified > rateReducerLookupRetain) {
+        if (TenXDate.now() - lastModified > rateReceiverLookupRetain) {
 
             if (!TenXEnv.get("quiet")) {
-                TenXConsole.log("⚠️ rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
-                    lastModified, rateReducerLookupRetain);
+                TenXConsole.log("⚠️ rate receiver mute file is stale, lastModified: {}, retainInterval: {}",
+                    lastModified, rateReceiverLookupRetain);
             }
 
-            TenXLog.info("rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
-                lastModified, rateReducerLookupRetain);
+            TenXLog.info("rate receiver mute file is stale, lastModified: {}, retainInterval: {}",
+                lastModified, rateReceiverLookupRetain);
         }
     }
 }
@@ -78,15 +78,15 @@ export class GlobalReducerObject extends TenXObject {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        // Build the field-set key the same way the local reducer does, so mute
+        // Build the field-set key the same way the local receiver does, so mute
         // entries are keyed by human-readable field values (e.g. symbolMessage,
         // container) rather than an internal hash.
-        var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReducerFieldNames"));
+        var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return true;
 
         // Look up the mute entry for this field-set.
         // Entry format: "<sampleRate>:<untilEpochSec>[:<reason>]"
-        var entry = TenXLookup.get("rateReducerLookupFile", fieldSetKey);
+        var entry = TenXLookup.get("rateReceiverLookupFile", fieldSetKey);
         if (!entry) return true;
 
         var parts = TenXString.split(entry, ":");
@@ -105,8 +105,8 @@ export class GlobalReducerObject extends TenXObject {
 
         // Apply severity floor: a 0.0 mute on INFO drops everything, but an
         // ERROR/FATAL event under the same mute still gets minRetentionThreshold * boost.
-        var minRetentionThreshold = TenXEnv.get("rateReducerMinRetentionThreshold", 0.1);
-        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReducerLevelBoost"));
+        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverLevelBoost"));
         var level = this.get(TenXEnv.get("levelField"));
         var boost = TenXMap.get(boostMap, level, 1);
 

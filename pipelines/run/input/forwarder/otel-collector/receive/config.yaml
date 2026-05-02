@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/regulate/schema.json
 
-# 🔟❎ 'run' OpenTelemetry Collector reducer configuration
+# 🔟❎ 'run' OpenTelemetry Collector receiver configuration
 #
 # Configure an input that reads events from OpenTelemetry Collector via syslog
 # and an output that writes regulated TenXObjects back via Forward protocol.
-# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
+# When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 #
 # Architecture:
 #   OTel Collector --[syslog/unix]--> Log10x Receiver --[forward/unix]--> OTel Collector --> Final destinations
@@ -34,11 +34,11 @@ include:
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
-encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # ========================= Configuration Options =============================
 

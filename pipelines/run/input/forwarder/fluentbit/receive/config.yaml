@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentbit/receive/schema.json
 
-# 🔟❎ 'run' Fluent Bit reducer configuration
+# 🔟❎ 'run' Fluent Bit receiver configuration
 
 # Configure an input that reads events from a Fluent Bit forwarder and
 # an output that writes regulated TenXObjects back to Fluent Bit.
-# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
+# When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/fluentbit/receive/#install
@@ -31,22 +31,22 @@ include:
 # =============================== Mode Options ================================
 
 # Mode is selected here by two user flags:
-# - `reducerOptimize=true`        → compact-all: encoded=encode() for every event
-# - `compactReducerLookupFile=<p>` → compact-lookup: encoded=shouldEncode()?encode():fullText
+# - `receiverOptimize=true`        → compact-all: encoded=encode() for every event
+# - `compactReceiverLookupFile=<p>` → compact-lookup: encoded=shouldEncode()?encode():fullText
 # - neither                          → regulate: plain fullText
 #
 # Substitution happens at config-load (`$=yield` defers until options are bound).
 # The transport stream.yaml then parses the resulting literal — shouldEncode() is
-# only in the parsed expression when compactReducer is actually configured, so
+# only in the parsed expression when compactReceiver is actually configured, so
 # CompactObject's body is never compiled in modes that don't need it.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # Legacy flag retained for fluentd/stdio and logstash input extractor name.
 # For fluentbit/unix + fluentbit/forward the mode is driven by outputEncodeField above.
-encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # ============================= Fluent Bit Options ============================
 

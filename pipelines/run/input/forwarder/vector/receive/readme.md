@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Vector reducer config
+## 1️⃣0️⃣❎ Vector receiver config
 
-This is the default configuration for the Vector reducer module.
+This is the default configuration for the Vector receiver module.
 
-To learn more see the [Vector reducer](https://doc.log10x.com/run/input/forwarder/vector/receive "Read events from Vector forwarders to regulate which events to ship") module documentation
+To learn more see the [Vector receiver](https://doc.log10x.com/run/input/forwarder/vector/receive "Read events from Vector forwarders to regulate which events to ship") module documentation
 

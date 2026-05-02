@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/filebeat/receive/schema.json
 
-# 🔟❎ 'run' Filebeat reducer configuration
+# 🔟❎ 'run' Filebeat receiver configuration
 
 # Configure an input that reads events from a Filebeat forwarder and
 # an output that writes regulated TenXObjects back to Filebeat.
-# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
+# When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/filebeat/receive/#install
@@ -31,12 +31,12 @@ include:
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # Legacy flag retained for compat. Filebeat transport reads outputWriteTemplates directly.
-encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # ============================== Filebeat Options ==============================
 

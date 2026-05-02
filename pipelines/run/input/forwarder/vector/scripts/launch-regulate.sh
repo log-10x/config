@@ -1,7 +1,7 @@
 #!/bin/bash
-# Launch script for Vector + Log10x Reducer (Linux/macOS)
+# Launch script for Vector + Log10x Receiver (Linux/macOS)
 #
-# Starts both Log10x reducer and Vector in the correct order, with Log10x
+# Starts both Log10x receiver and Vector in the correct order, with Log10x
 # coming up first so its Unix sockets exist before Vector tries to connect.
 
 set -e
@@ -21,7 +21,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Vector + Log10x Reducer${NC}"
+echo -e "${GREEN}Vector + Log10x Receiver${NC}"
 echo -e "${GREEN}========================================${NC}"
 
 if ! command -v "$TENX_BIN" &> /dev/null; then
@@ -43,8 +43,8 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM
 
-echo -e "${GREEN}Starting Log10x reducer...${NC}"
-$TENX_BIN @run/input/forwarder/vector/regulate @apps/reducer > "$LOG_DIR/tenx-reducer.log" 2>&1 &
+echo -e "${GREEN}Starting Log10x receiver...${NC}"
+$TENX_BIN @run/input/forwarder/vector/regulate @apps/receiver > "$LOG_DIR/tenx-receiver.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
 
@@ -62,7 +62,7 @@ echo "Vector PID: $VECTOR_PID"
 
 echo ""
 echo -e "${GREEN}Services are running!${NC}"
-echo "Log10x:  PID $TENX_PID  ($LOG_DIR/tenx-reducer.log)"
+echo "Log10x:  PID $TENX_PID  ($LOG_DIR/tenx-receiver.log)"
 echo "Vector:  PID $VECTOR_PID ($LOG_DIR/vector.log)"
 echo ""
 echo "Event Flow:"

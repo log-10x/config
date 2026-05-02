@@ -5,7 +5,7 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString } fr
 // Declarative, field-set keyed compaction predicate.
 //
 // Reads a lookup file where each row declares a compaction decision for a
-// specific field-set value. Same identity semantics as the rate reducer's
+// specific field-set value. Same identity semantics as the rate receiver's
 // mute file, so users can target the same patterns the Reporter attributes
 // cost to.
 //
@@ -16,40 +16,40 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString } fr
 // `true`  → compact via encode()
 // `false` → preserve fullText
 //
-// Example (with compactReducerFieldNames: [symbolMessage]):
+// Example (with compactReceiverFieldNames: [symbolMessage]):
 //     payment_retry_gateway_timeout,true
 //     auth_audit_trail,false
 //
 // For time-bounded overrides, users remove the entry (e.g. via GitOps PR) to
-// fall back to compactReducerDefault. An earlier design embedded an
+// fall back to compactReceiverDefault. An earlier design embedded an
 // `untilEpochSec` in the value string (`true:1745856000:reason`), but the
 // tenx DSL doesn't support local-array access — `parts[1]` translates to a
 // field lookup that returns empty. Keeping the format to a single bare value
-// sidesteps that quirk and matches the rate reducer's mute-file shape.
+// sidesteps that quirk and matches the rate receiver's mute-file shape.
 //
 // Exposes a `shouldEncode` getter on every TenXObject (when loaded) that
 // returns:
-//   - No entry for the event's field-set → `compactReducerDefault` (env)
+//   - No entry for the event's field-set → `compactReceiverDefault` (env)
 //   - Entry is "true"                    → true
 //   - Entry is anything else             → false
 
 export class CompactInput extends TenXInput {
 
     static shouldLoad(config) {
-       return TenXEnv.get("compactReducerLookupFile");
+       return TenXEnv.get("compactReceiverLookupFile");
     }
 
     constructor() {
 
         if (!TenXEnv.get("quiet")) {
-            TenXConsole.log("🗜️ Applying compaction predicate to: " + this.inputName + " using: " + TenXEnv.get("compactReducerLookupFile"));
+            TenXConsole.log("🗜️ Applying compaction predicate to: " + this.inputName + " using: " + TenXEnv.get("compactReceiverLookupFile"));
         }
 
-        if (!TenXEnv.get("compactReducerFieldNames")) {
-            throw new Error("the 'compactReducerFieldNames' argument must be set to identify compact-lookup entries");
+        if (!TenXEnv.get("compactReceiverFieldNames")) {
+            throw new Error("the 'compactReceiverFieldNames' argument must be set to identify compact-lookup entries");
         }
 
-        TenXLookup.load(TenXEnv.get("compactReducerLookupFile"), true);
+        TenXLookup.load(TenXEnv.get("compactReceiverLookupFile"), true);
     }
 }
 
@@ -60,7 +60,7 @@ export class CompactObject extends TenXObject {
     // registered the lookup by the time shouldEncode's body is parsed —
     // no parse-time name-resolution failure.
     static shouldLoad(config) {
-       return TenXEnv.get("compactReducerLookupFile");
+       return TenXEnv.get("compactReceiverLookupFile");
     }
 
     // Per-event compact decision. Pure — returns the bool, doesn't mutate
@@ -72,13 +72,13 @@ export class CompactObject extends TenXObject {
 
         if ((!this.isObject) || (this.isDropped)) return false;
 
-        var defaultEncodeRaw = TenXEnv.get("compactReducerDefault", false);
+        var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
         var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
 
-        var fieldSetKey = this.joinFields("_", TenXEnv.get("compactReducerFieldNames"));
+        var fieldSetKey = this.joinFields("_", TenXEnv.get("compactReceiverFieldNames"));
         if (!fieldSetKey) return defaultEncode;
 
-        var entry = TenXLookup.get("compactReducerLookupFile", fieldSetKey);
+        var entry = TenXLookup.get("compactReceiverLookupFile", fieldSetKey);
         if (!entry) return defaultEncode;
 
         return TenXString.startsWith(entry, "true");

@@ -7,29 +7,29 @@ export class LocalReducerInput extends TenXInput {
     // only load class if a global lookup file is not available
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
-       return !TenXEnv.get("rateReducerLookupFile");
+       return !TenXEnv.get("rateReceiverLookupFile");
     }
 
     constructor() {
 
         if (!TenXEnv.get("quiet")) {
-            TenXConsole.log("🚦 Applying local rate reducer to: " + this.inputName);
+            TenXConsole.log("🚦 Applying local rate receiver to: " + this.inputName);
         }
 
         if (!TenXEnv.get("levelField")) {
-            throw new Error("the rate reducer module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
+            throw new Error("the rate receiver module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
         }
 
-        var resetIntervalMs = TenXEnv.get("rateReducerResetIntervalMs", 300000);
+        var resetIntervalMs = TenXEnv.get("rateReceiverResetIntervalMs", 300000);
 
         if (!(resetIntervalMs >= 60000)) {
-            throw new Error("the 'rateReducerResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
+            throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var minSampleRate = TenXEnv.get("rateReducerMinRetentionThreshold", 0.01);
+        var minSampleRate = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.01);
 
         if (!(minSampleRate >= 0.01)) {
-            throw new Error("the 'rateReducerLookupRetain' argument must be greater than  0.01, received: " + minSampleRate);
+            throw new Error("the 'rateReceiverLookupRetain' argument must be greater than  0.01, received: " + minSampleRate);
         }
     }
 }
@@ -40,9 +40,9 @@ export class LocalReducerObject extends TenXObject {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        var ingestionCostPerGB = TenXEnv.get("rateReducerIngestionCostPerGB", 1.5);
-        var maxSharePerFieldSet = TenXEnv.get("rateReducerMaxSharePerFieldSet", 0.2);
-        var budgetPerHour = TenXEnv.get("rateReducerBudgetPerHour", 1);
+        var ingestionCostPerGB = TenXEnv.get("rateReceiverIngestionCostPerGB", 1.5);
+        var maxSharePerFieldSet = TenXEnv.get("rateReceiverMaxSharePerFieldSet", 0.2);
+        var budgetPerHour = TenXEnv.get("rateReceiverBudgetPerHour", 1);
 
         // Calculate event cost based on byte size and ingestion cost per GB
         var utf8Size = this.utf8Size();
@@ -53,9 +53,9 @@ export class LocalReducerObject extends TenXObject {
         }
 
         var retentionThreshold = 1;
-        var localFieldSetSuffix = this.joinFields("_", TenXEnv.get("rateReducerFieldNames"));
+        var localFieldSetSuffix = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
 
-        var resetIntervalMs = TenXEnv.get("rateReducerResetIntervalMs", 300000); // 5min default
+        var resetIntervalMs = TenXEnv.get("rateReceiverResetIntervalMs", 300000); // 5min default
 
         // Track spending per field set (e.g., per event type identified by symbolMessage)
         // fieldSetSpend = -1 indicates no field set tracking (fieldNames not configured, or event lacks values for them)
@@ -109,8 +109,8 @@ export class LocalReducerObject extends TenXObject {
         // Apply minimum retention threshold to ensure critical events are always retained
         // Boost multiplier only applies to the minimum threshold, not the entire threshold
         // This prevents boost values < 1.0 from reducing retention when under budget
-        var minRetentionThreshold = TenXEnv.get("rateReducerMinRetentionThreshold", 0.1);
-        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReducerLevelBoost"));
+        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverLevelBoost"));
         var level = this.get(TenXEnv.get("levelField"));
         var boost = TenXMap.get(boostMap, level, 1);
         
