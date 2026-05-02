@@ -6,7 +6,7 @@
 # an output that writes filtered TenXObjects to a file relay for Datadog Agent.
 
 # This config file operates in conjunction with the instructions provided in:
-# https://doc.log10x.com/run/input/forwarder/datadogAgent/regulate/#install
+# https://doc.log10x.com/run/input/forwarder/datadogAgent/receive/#install
 
 # Set the 10x pipeline to 'run'
 tenx: run

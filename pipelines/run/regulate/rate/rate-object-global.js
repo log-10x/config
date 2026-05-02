@@ -62,11 +62,11 @@ export class GlobalReducerInput extends TenXInput {
         if (TenXDate.now() - lastModified > rateReducerLookupRetain) {
 
             if (!TenXEnv.get("quiet")) {
-                TenXConsole.log("⚠️ Rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
+                TenXConsole.log("⚠️ rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
                     lastModified, rateReducerLookupRetain);
             }
 
-            TenXLog.info("Rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
+            TenXLog.info("rate reducer mute file is stale, lastModified: {}, retainInterval: {}",
                 lastModified, rateReducerLookupRetain);
         }
     }

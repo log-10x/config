@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Reducer config
+## 1️⃣0️⃣❎ Receiver config
 
-This is the reducer configuration for the Reducer app.
+This is the reducer configuration for the Receiver app.
 
-To learn more see the [Reducer](https://doc.log10x.com/apps/reducer "Regulate and optionally optimize log/trace events _before_ they ship to output") app documentation
+To learn more see the [Receiver](https://doc.log10x.com/apps/receiver "Regulate and optionally optimize log/trace events _before_ they ship to output") app documentation
 

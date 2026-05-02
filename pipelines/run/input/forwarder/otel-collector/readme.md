@@ -13,7 +13,7 @@ The OpenTelemetry Collector integration provides three deployment modes:
 ## Configuration Files
 
 - `report/config.yaml` - Reporter configuration
-- `regulate/config.yaml` - Reducer configuration
+- `regulate/config.yaml` - Receiver configuration
 - `optimize/config.yaml` - Optimizer configuration
 
 ## Architecture

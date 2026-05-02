@@ -73,8 +73,8 @@ Application configs are entry points that include pipeline modules. Edit these t
 
 | Application | Config Path | Documentation |
 |-------------|-------------|---------------|
-| **Edge Optimizer** | `apps/reducer/config.yaml` | [Overview](https://doc.log10x.com/apps/reducer/) \| [Run](https://doc.log10x.com/apps/reducer/run/) |
-| **Edge Reducer** | `apps/reducer/config.yaml` | [Overview](https://doc.log10x.com/apps/reducer/) \| [Run](https://doc.log10x.com/apps/reducer/run/) |
+| **Edge Optimizer** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
+| **Edge Receiver** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
 | **Edge Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Cloud Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Retriever** | `apps/retriever/*/config.yaml` | [Overview](https://doc.log10x.com/apps/retriever/) \| [Run](https://doc.log10x.com/apps/retriever/run/) |

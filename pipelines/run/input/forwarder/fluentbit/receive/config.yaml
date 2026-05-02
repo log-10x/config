@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentbit/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentbit/receive/schema.json
 
 # 🔟❎ 'run' Fluent Bit reducer configuration
 
@@ -7,7 +7,7 @@
 # When 'reducerOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
-# https://doc.log10x.com/run/input/forwarder/fluentbit/regulate/#install
+# https://doc.log10x.com/run/input/forwarder/fluentbit/receive/#install
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -19,7 +19,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/fluentbit/regulate/module.yaml
+  - run/modules/input/forwarder/fluentbit/receive/module.yaml
 
   # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/fluentbit/input
