@@ -18,7 +18,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/logstash/receive/module.yaml
+  - run/modules/input/forwarder/logstash/regulate/module.yaml
 
     # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/logstash/input

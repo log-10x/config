@@ -19,7 +19,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/fluentbit/receive/module.yaml
+  - run/modules/input/forwarder/fluentbit/regulate/module.yaml
 
   # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/fluentbit/input
