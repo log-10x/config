@@ -1,15 +1,14 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/filebeat/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/logstash/receive/schema.json
 
-# 🔟❎ 'run' Filebeat reducer configuration
+# 🔟❎ 'run' Logstash reducer configuration
 
-# Configure an input that reads events from a Filebeat forwarder and
-# an output that writes regulated TenXObjects back to Filebeat.
-# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
+# Configure an input that reads events from a Logstash forwarder and
+# an output that writes filtered TenXObjects back to Logstash.
 
-# This config file operates in conjunction with the instructions provided in:
-# https://doc.log10x.com/run/input/forwarder/filebeat/regulate/#install
+# This config operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/logstash/receive/#install
 
-# Set the 10x pipeline to 'run' 
+# Set the 10x pipeline to 'run'
 tenx: run
 
 # =============================== Dependencies ================================
@@ -19,13 +18,13 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/filebeat/regulate/module.yaml
+  - run/modules/input/forwarder/logstash/receive/module.yaml
 
-  # Input module to read events from Filebeat into 10x pipeline
-  - run/modules/input/forwarder/filebeat/input
+    # Include the stdin input to read events from the forwarder
+  - run/modules/input/forwarder/logstash/input
 
-  # Output module to write filtered events from 10x pipeline into Filebeat
-  - run/modules/input/forwarder/filebeat/output
+    # Include Unix domain/TCP socket output to write events to the forwarder
+  - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
 
 # =============================== Mode Options ================================
 
@@ -35,12 +34,12 @@ outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=s
 
 outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-# Legacy flag retained for compat. Filebeat transport reads outputWriteTemplates directly.
+# Legacy flag retained for the Logstash input extractor name selector.
 encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-# ============================== Filebeat Options ==============================
+# ============================== Logstash Options ==============================
 
-filebeat:
+logstash:
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

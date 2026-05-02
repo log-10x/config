@@ -1,18 +1,15 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/filebeat/receive/schema.json
 
-# 🔟❎ 'run' OpenTelemetry Collector reducer configuration
-#
-# Configure an input that reads events from OpenTelemetry Collector via syslog
-# and an output that writes regulated TenXObjects back via Forward protocol.
+# 🔟❎ 'run' Filebeat reducer configuration
+
+# Configure an input that reads events from a Filebeat forwarder and
+# an output that writes regulated TenXObjects back to Filebeat.
 # When 'reducerOptimize' is enabled, events are encoded for volume reduction.
-#
-# Architecture:
-#   OTel Collector --[syslog/unix]--> Log10x Reducer --[forward/unix]--> OTel Collector --> Final destinations
-#
-# Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate @apps/reducer
 
-# Set the 10x pipeline to 'run'
+# This config file operates in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/filebeat/receive/#install
+
+# Set the 10x pipeline to 'run' 
 tenx: run
 
 # =============================== Dependencies ================================
@@ -22,13 +19,13 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/otel-collector/regulate/module.yaml
+  - run/modules/input/forwarder/filebeat/receive/module.yaml
 
-  # Read events from OTel Collector via Unix socket with syslog parsing
-  - run/modules/input/forwarder/otel-collector/input
+  # Input module to read events from Filebeat into 10x pipeline
+  - run/modules/input/forwarder/filebeat/input
 
-  # Write filtered events back to OTel Collector via Forward protocol
-  - run/modules/input/forwarder/otel-collector/output/unix
+  # Output module to write filtered events from 10x pipeline into Filebeat
+  - run/modules/input/forwarder/filebeat/output
 
 # =============================== Mode Options ================================
 
@@ -38,11 +35,12 @@ outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=s
 
 outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
+# Legacy flag retained for compat. Filebeat transport reads outputWriteTemplates directly.
 encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-# ========================= Configuration Options =============================
+# ============================== Filebeat Options ==============================
 
-otelCollector:
+filebeat:
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.

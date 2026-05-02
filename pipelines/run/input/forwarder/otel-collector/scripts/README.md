@@ -6,7 +6,7 @@ Helper script to launch Log10x and OpenTelemetry Collector together for local se
 
 `launch-regulate.sh` automates the startup sequence:
 
-1. Starts Log10x in regulate mode (`tenx @run/input/forwarder/otel-collector/regulate @apps/reducer`)
+1. Starts Log10x in regulate mode (`tenx @run/input/forwarder/otel-collector/regulate @apps/receiver`)
 2. Waits for Log10x to be ready
 3. Starts OpenTelemetry Collector with the matching config (`regulate/tenxNix.yaml`)
 4. Prints status + log file locations

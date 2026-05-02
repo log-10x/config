@@ -1,14 +1,14 @@
 #
-# 🔟❎  Reducer app main config
+# 🔟❎  Receiver app main config
 #
-# Loads the required modules for a Reducer app instance.
+# Loads the required modules for a Receiver app instance.
 # The reducer filters noisy events and optionally encodes them for volume reduction.
 #
 # To enable optimization (encode events for 50-80% volume reduction), set:
 #   reducerOptimize: true
 # or pass reducerOptimize true on the command line.
 #
-# To learn more see https://doc.log10x.com/apps/reducer
+# To learn more see https://doc.log10x.com/apps/receiver
 
 # ============================ Bootstrap Runtime ==============================
 
@@ -16,7 +16,7 @@
 
 tenx: run
 
-runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReducer")
+runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReceiver")
 
 # =========================== Load App Modules ================================
 
@@ -47,15 +47,15 @@ include:
   # Set rateReducer.optimize: true in the rate reducer config to enable optimization.
   #
   # For additional info, see -
-  # https://doc.log10x.com/apps/reducer/run
-  # https://doc.log10x.com/apps/reducer/deploy
+  # https://doc.log10x.com/apps/receiver/run
+  # https://doc.log10x.com/apps/receiver/deploy
   #
-  # - run/input/forwarder/filebeat/regulate
-  # - run/input/forwarder/fluentbit/regulate
-  # - run/input/forwarder/fluentd/regulate
-  # - run/input/forwarder/logstash/regulate
+  # - run/input/forwarder/filebeat/receive
+  # - run/input/forwarder/fluentbit/receive
+  # - run/input/forwarder/fluentd/receive
+  # - run/input/forwarder/logstash/receive
   # - run/input/forwarder/otel-collector/regulate
-  # - run/input/forwarder/datadogAgent/regulate
+  # - run/input/forwarder/datadogAgent/receive
 
 # --------------------------- Enrich TenXObjects ------------------------------
 
@@ -71,7 +71,7 @@ include:
   - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
   # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
 
-# ---------------------------- Select Reducer ------------------------------
+# ---------------------------- Select Receiver ------------------------------
 
   #  Regulate TenXObjects via per-node budget sampling or a field-set mute file:
 

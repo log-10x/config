@@ -2,7 +2,7 @@
 
 # 🔟❎ 'run' rate reducer configuration
 
-# Rate reducers utilize cost-based sampling to filter noisy telemetry from event outputs (e.g., Splunk)
+# rate reducers utilize cost-based sampling to filter noisy telemetry from event outputs (e.g., Splunk)
 # Enforces spending limits by tracking byte volume and ingestion costs per event type
 # To learn more see https://doc.log10x.com/run/regulate/rate/
 

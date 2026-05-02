@@ -1,12 +1,13 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/logstash/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/receive/schema.json
 
-# 🔟❎ 'run' Logstash reducer configuration
+# 🔟❎ 'run' Fluentd reducer configuration
 
-# Configure an input that reads events from a Logstash forwarder and
-# an output that writes filtered TenXObjects back to Logstash.
+# Configure an input that reads events from a Fluentd forwarder and
+# an output that writes regulated TenXObjects back to Fluentd.
+# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
 
-# This config operates in conjunction with the instructions provided in:
-# https://doc.log10x.com/run/input/forwarder/logstash/regulate/#install
+# This config runs in conjunction with the instructions provided in:
+# https://doc.log10x.com/run/input/forwarder/fluentd/receive/#install
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -18,28 +19,30 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/logstash/regulate/module.yaml
+  - run/modules/input/forwarder/fluentd/receive/module.yaml
 
-    # Include the stdin input to read events from the forwarder
-  - run/modules/input/forwarder/logstash/input
+  # Include the stdin input from which to read events from the forwarder
+  - run/modules/input/forwarder/fluentd/input
 
-    # Include Unix domain/TCP socket output to write events to the forwarder
-  - '$="run/modules/input/forwarder/logstash/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "tcp" : "unix")'
+  # Include Unix domain socket/stdout to write events into the forwarder
+  - '$="run/modules/input/forwarder/fluentd/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "stdio" : "unix")'
 
 # =============================== Mode Options ================================
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+# Summary: reducerOptimize=true → compact-all; compactReducerLookupFile=<p> → compact-lookup.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
 
 outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-# Legacy flag retained for the Logstash input extractor name selector.
+# Legacy flag retained for fluentd/stdio (which emits TSV with joinFields and
+# can't cleanly use outputEncodeField). fluentd/unix uses outputEncodeField.
 encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
 
-# ============================== Logstash Options ==============================
+# ============================== Fluentd Options ==============================
 
-logstash:
+fluentd:
 
   # 'outputFields' specifies TenXObject field names to emit alongside the main event.
   #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
