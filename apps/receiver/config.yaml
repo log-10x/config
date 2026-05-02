@@ -2,11 +2,11 @@
 # 🔟❎  Receiver app main config
 #
 # Loads the required modules for a Receiver app instance.
-# The reducer filters noisy events and optionally encodes them for volume reduction.
+# The receiver filters noisy events and optionally encodes them for volume reduction.
 #
 # To enable optimization (encode events for 50-80% volume reduction), set:
-#   reducerOptimize: true
-# or pass reducerOptimize true on the command line.
+#   receiverOptimize: true
+# or pass receiverOptimize true on the command line.
 #
 # To learn more see https://doc.log10x.com/apps/receiver
 
@@ -44,7 +44,7 @@ include:
   # keep all of the below options commented out.
   #
   # All forwarder configs support both regulation and optimization modes.
-  # Set rateReducer.optimize: true in the rate reducer config to enable optimization.
+  # Set rateReceiver.optimize: true in the rate receiver config to enable optimization.
   #
   # For additional info, see -
   # https://doc.log10x.com/apps/receiver/run

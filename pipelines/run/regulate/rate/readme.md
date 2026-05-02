@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ rate reducer config
+## 1️⃣0️⃣❎ rate receiver config
 
-This is the default configuration for the rate reducer module.
+This is the default configuration for the rate receiver module.
 
-To learn more see the [rate reducer](https://doc.log10x.com/run/regulate/rate "Filter TenXObjects from output using either local per-node budget sampling or a declarative field-set keyed mute file.") module documentation
+To learn more see the [rate receiver](https://doc.log10x.com/run/regulate/rate "Filter TenXObjects from output using either local per-node budget sampling or a declarative field-set keyed mute file.") module documentation
 

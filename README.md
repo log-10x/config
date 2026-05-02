@@ -34,7 +34,7 @@ config/
 ├── apps/                      # Application entry points
 │   ├── edge/                  # Edge applications
 │   │   ├── optimizer/         # Log volume reduction
-│   │   ├── reducer/           # Rate reduction & mute files
+│   │   ├── receiver/           # Rate reduction & mute files
 │   │   └── reporter/          # Cost attribution
 │   ├── cloud/                 # Cloud applications
 │   │   ├── reporter/          # Analyzer cost analysis

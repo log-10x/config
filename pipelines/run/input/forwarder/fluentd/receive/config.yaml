@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/receive/schema.json
 
-# 🔟❎ 'run' Fluentd reducer configuration
+# 🔟❎ 'run' Fluentd receiver configuration
 
 # Configure an input that reads events from a Fluentd forwarder and
 # an output that writes regulated TenXObjects back to Fluentd.
-# When 'reducerOptimize' is enabled, events are encoded for volume reduction.
+# When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config runs in conjunction with the instructions provided in:
 # https://doc.log10x.com/run/input/forwarder/fluentd/receive/#install
@@ -30,15 +30,15 @@ include:
 # =============================== Mode Options ================================
 
 # See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
-# Summary: reducerOptimize=true → compact-all; compactReducerLookupFile=<p> → compact-lookup.
+# Summary: receiverOptimize=true → compact-all; compactReceiverLookupFile=<p> → compact-lookup.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReducerLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("reducerOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 
-outputWriteTemplates: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # Legacy flag retained for fluentd/stdio (which emits TSV with joinFields and
 # can't cleanly use outputEncodeField). fluentd/unix uses outputEncodeField.
-encodeObjects: $=yield TenXEnv.get("reducerOptimize", false) || TenXEnv.get("compactReducerLookupFile", false)
+encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
 
 # ============================== Fluentd Options ==============================
 

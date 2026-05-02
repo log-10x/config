@@ -21,10 +21,10 @@ chmod +x launch-regulate.sh
 ./launch-regulate.sh
 ```
 
-To enable compact encoding (reducer with optimize flag), set the `reducerOptimize=true` env var before launching:
+To enable compact encoding (receiver with optimize flag), set the `receiverOptimize=true` env var before launching:
 
 ```bash
-reducerOptimize=true ./launch-regulate.sh
+receiverOptimize=true ./launch-regulate.sh
 ```
 
 ## Environment Variables
@@ -48,7 +48,7 @@ LOG_DIR=/var/log/my-logs \
 ## Log Files
 
 ```bash
-tail -f /var/log/tenx-otel/tenx-reducer.log
+tail -f /var/log/tenx-otel/tenx-receiver.log
 tail -f /var/log/tenx-otel/otelcol.log
 ```
 
@@ -91,7 +91,7 @@ ps aux | grep -E "tenx|otelcol"
 Check the logs for errors:
 
 ```bash
-cat /var/log/tenx-otel/tenx-reducer.log
+cat /var/log/tenx-otel/tenx-receiver.log
 cat /var/log/tenx-otel/otelcol.log
 ```
 
