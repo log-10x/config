@@ -23,7 +23,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/vector/receive/module.yaml
+  - run/modules/input/forwarder/vector/regulate/module.yaml
 
   # Read events from Vector via Unix socket (newline-delimited records)
   - run/modules/input/forwarder/vector/input
