@@ -3,7 +3,7 @@
 # 🔟❎ 'run' Filebeat receiver configuration
 
 # Configure an input that reads events from a Filebeat forwarder and
-# an output that writes regulated TenXObjects back to Filebeat.
+# an output that writes received TenXObjects back to Filebeat.
 # When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
@@ -19,7 +19,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/filebeat/regulate/module.yaml
+  - run/modules/input/forwarder/filebeat/receive/module.yaml
 
   # Input module to read events from Filebeat into 10x pipeline
   - run/modules/input/forwarder/filebeat/input
@@ -29,7 +29,7 @@ include:
 
 # =============================== Mode Options ================================
 
-# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+# See fluentbit/receive/config.yaml for the full explanation of this dispatch.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 

@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Filebeat receiver config
+## 1️⃣0️⃣❎ Filebeat Receiver config
 
-This is the default configuration for the Filebeat receiver module.
+This is the default configuration for the Filebeat Receiver module.
 
-To learn more see the [Filebeat receiver](https://doc.log10x.com/run/input/forwarder/filebeat/receive "Read events from Filebeat forwarders to regulate which events to ship") module documentation
+To learn more see the [Filebeat Receiver](https://doc.log10x.com/run/input/forwarder/filebeat/receive "Receive events from Filebeat forwarders for filtering and compaction") module documentation
 

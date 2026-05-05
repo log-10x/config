@@ -2,7 +2,7 @@
 
 import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole } from '@tenx/tenx'
 
-export class LocalReducerInput extends TenXInput {
+export class LocalReceiverInput extends TenXInput {
 
     // only load class if a global lookup file is not available
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
@@ -34,7 +34,7 @@ export class LocalReducerInput extends TenXInput {
     }
 }
 
-export class LocalReducerObject extends TenXObject {
+export class LocalReceiverObject extends TenXObject {
 
     get shouldRetainEventWithoutLookup() {
 
@@ -64,12 +64,12 @@ export class LocalReducerObject extends TenXObject {
         if (localFieldSetSuffix) {
             // Increment field set counter and get value before increment
             // Counter resets every resetIntervalMs, tracking spend per field set
-            fieldSetSpend = TenXCounter.getAndInc("LocalReducer_" + localFieldSetSuffix, eventCost, resetIntervalMs);
+            fieldSetSpend = TenXCounter.getAndInc("LocalReceiver_" + localFieldSetSuffix, eventCost, resetIntervalMs);
         }
 
         // Track global spending across all events
         // Counter resets every resetIntervalMs, tracking total spend in current window
-        var totalSpend = TenXCounter.getAndInc("LocalReducer_global_cost_total", eventCost, resetIntervalMs);
+        var totalSpend = TenXCounter.getAndInc("LocalReceiver_global_cost_total", eventCost, resetIntervalMs);
 
         // Always retain the first event in a window (for both global and field set counters)
         // This ensures we never drop the very first event, which helps establish baseline metrics

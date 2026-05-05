@@ -27,7 +27,7 @@ import { TenXObject, TenXEnv, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsol
 // that high-severity events (ERROR, FATAL) are never fully suppressed even by a
 // 0.0 mute.
 
-export class GlobalReducerInput extends TenXInput {
+export class GlobalReceiverInput extends TenXInput {
 
     // only load class if a mute file is configured
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
@@ -72,7 +72,7 @@ export class GlobalReducerInput extends TenXInput {
     }
 }
 
-export class GlobalReducerObject extends TenXObject {
+export class GlobalReceiverObject extends TenXObject {
 
     get shouldRetainEventWithLookup() {
 

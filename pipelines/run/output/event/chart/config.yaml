@@ -51,7 +51,7 @@ outputStream:
     encodeType: json
 
     # 'filter' sets a JavaScript expression that TenXSummaries must evaluate as truthy to write to the output.
-    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: isSummary
 
 # ============================ Aggregator Options ===========================

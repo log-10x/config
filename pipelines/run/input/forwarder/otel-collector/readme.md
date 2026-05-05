@@ -7,13 +7,13 @@ Default configuration files for Log10x integration with OpenTelemetry Collector.
 The OpenTelemetry Collector integration provides three deployment modes:
 
 - **report** - Read and report on events for metrics aggregation
-- **regulate** - Filter and regulate which events to ship based on policies  
+- **receive** - Filter and receive which events to ship based on policies  
 - **optimize** - Transform and optimize events before shipping to outputs
 
 ## Configuration Files
 
 - `report/config.yaml` - Reporter configuration
-- `regulate/config.yaml` - Receiver configuration
+- `receive/config.yaml` - Receiver configuration
 - `optimize/config.yaml` - Optimizer configuration
 
 ## Architecture

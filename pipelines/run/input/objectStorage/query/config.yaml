@@ -97,7 +97,7 @@ query:
     # plumb through to the worker pipeline. With ACCEPT_SINGLE_VALUE_AS_ARRAY
     # in the engine's Jackson config, a single-string override value also
     # hydrates into the List<String> queryFilters field correctly.
-    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filters: $?queryFilters
 
     # ----------------------------- Limit Options ------------------------------

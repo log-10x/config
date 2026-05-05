@@ -3,7 +3,7 @@
 # 🔟❎ 'run' Vector receiver configuration
 #
 # Configure an input that reads events from Vector via a Unix socket and an
-# output that writes regulated TenXObjects back via the Fluent Forward
+# output that writes received TenXObjects back via the Fluent Forward
 # protocol. When 'receiverOptimize' is enabled, events are encoded for
 # volume reduction.
 #
@@ -23,7 +23,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/vector/regulate/module.yaml
+  - run/modules/input/forwarder/vector/receive/module.yaml
 
   # Read events from Vector via Unix socket (newline-delimited records)
   - run/modules/input/forwarder/vector/input
@@ -33,7 +33,7 @@ include:
 
 # =============================== Mode Options ================================
 
-# Mirrors the otel-collector / fluentbit dispatch — see fluentbit/regulate/config.yaml
+# Mirrors the otel-collector / fluentbit dispatch — see fluentbit/receive/config.yaml
 # for the full explanation.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'

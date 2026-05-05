@@ -4,11 +4,11 @@ Helper script to launch Log10x and OpenTelemetry Collector together for local se
 
 ## Overview
 
-`launch-regulate.sh` automates the startup sequence:
+`launch-receive.sh` automates the startup sequence:
 
-1. Starts Log10x in regulate mode (`tenx @run/input/forwarder/otel-collector/regulate @apps/receiver`)
+1. Starts Log10x in receive mode (`tenx @run/input/forwarder/otel-collector/receive @apps/receiver`)
 2. Waits for Log10x to be ready
-3. Starts OpenTelemetry Collector with the matching config (`regulate/tenxNix.yaml`)
+3. Starts OpenTelemetry Collector with the matching config (`receive/tenxNix.yaml`)
 4. Prints status + log file locations
 5. Gracefully shuts down both services on Ctrl+C
 
@@ -17,14 +17,14 @@ For production use, deploy via the `log10x-otel/opentelemetry-collector` Helm ch
 ## Usage
 
 ```bash
-chmod +x launch-regulate.sh
-./launch-regulate.sh
+chmod +x launch-receive.sh
+./launch-receive.sh
 ```
 
 To enable compact encoding (receiver with optimize flag), set the `receiverOptimize=true` env var before launching:
 
 ```bash
-receiverOptimize=true ./launch-regulate.sh
+receiverOptimize=true ./launch-receive.sh
 ```
 
 ## Environment Variables
@@ -42,7 +42,7 @@ Example:
 TENX_BIN=/opt/log10x/bin/tenx \
 OTELCOL_BIN=/usr/local/bin/otelcol-contrib \
 LOG_DIR=/var/log/my-logs \
-./launch-regulate.sh
+./launch-receive.sh
 ```
 
 ## Log Files
