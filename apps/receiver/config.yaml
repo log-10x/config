@@ -43,7 +43,7 @@ include:
   # files, the activation of the correct forwarder input is handled automatically,
   # keep all of the below options commented out.
   #
-  # All forwarder configs support both regulation and optimization modes.
+  # All forwarder configs support both filtering and optimization modes.
   # Set rateReceiver.optimize: true in the rate receiver config to enable optimization.
   #
   # For additional info, see -
@@ -54,7 +54,7 @@ include:
   # - run/input/forwarder/fluentbit/receive
   # - run/input/forwarder/fluentd/receive
   # - run/input/forwarder/logstash/receive
-  # - run/input/forwarder/otel-collector/regulate
+  # - run/input/forwarder/otel-collector/receive
   # - run/input/forwarder/datadogAgent/receive
 
 # --------------------------- Enrich TenXObjects ------------------------------
@@ -73,10 +73,10 @@ include:
 
 # ---------------------------- Select Receiver ------------------------------
 
-  #  Regulate TenXObjects via per-node budget sampling or a field-set mute file:
+  #  Receive TenXObjects via per-node budget sampling or a field-set mute file:
 
-  - run/regulate/rate           # https://doc.log10x.com/run/regulate/rate
-  - run/regulate/compact        # https://doc.log10x.com/run/regulate/compact
+  - run/receive/rate           # https://doc.log10x.com/run/receive/rate
+  - run/receive/compact        # https://doc.log10x.com/run/receive/compact
 
   #  Watch resource files (e.g. compact lookup CSV) and hot-reload on change.
   #  Required for GitOps flows where an external puller (e.g. @github) rewrites

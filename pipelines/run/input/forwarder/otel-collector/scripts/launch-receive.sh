@@ -2,7 +2,7 @@
 # Launch script for OpenTelemetry Collector + Log10x Receiver (Linux)
 #
 # This script starts both Log10x receiver and OpenTelemetry Collector
-# in the correct order for event filtering and regulation.
+# in the correct order for event filtering and receiving.
 
 set -e
 
@@ -10,7 +10,7 @@ set -e
 TENX_BIN="${TENX_BIN:-tenx}"
 OTELCOL_BIN="${OTELCOL_BIN:-otelcol}"
 TENX_MODULES="${TENX_MODULES:-/etc/tenx/modules}"
-OTEL_CONFIG="${TENX_MODULES}/pipelines/run/modules/input/forwarder/otel-collector/regulate/tenxNix.yaml"
+OTEL_CONFIG="${TENX_MODULES}/pipelines/run/modules/input/forwarder/otel-collector/receive/tenxNix.yaml"
 LOG_DIR="${LOG_DIR:-/var/log/tenx-otel}"
 
 # Create log directory if it doesn't exist
@@ -58,7 +58,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start Log10x receiver
 echo -e "${GREEN}Starting Log10x receiver...${NC}"
-$TENX_BIN @run/input/forwarder/otel-collector/regulate @apps/receiver > "$LOG_DIR/tenx-receiver.log" 2>&1 &
+$TENX_BIN @run/input/forwarder/otel-collector/receive @apps/receiver > "$LOG_DIR/tenx-receiver.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
 echo "Log file: $LOG_DIR/tenx-receiver.log"

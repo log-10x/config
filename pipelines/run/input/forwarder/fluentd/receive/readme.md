@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Fluentd receiver config
+## 1️⃣0️⃣❎ Fluentd Receiver config
 
-This is the default configuration for the Fluentd receiver module.
+This is the default configuration for the Fluentd Receiver module.
 
-To learn more see the [Fluentd receiver](https://doc.log10x.com/run/input/forwarder/fluentd/receive "Read events from Fluentd forwarders to regulate which events to ship") module documentation
+To learn more see the [Fluentd Receiver](https://doc.log10x.com/run/input/forwarder/fluentd/receive "Receive events from Fluentd forwarders for filtering and compaction") module documentation
 

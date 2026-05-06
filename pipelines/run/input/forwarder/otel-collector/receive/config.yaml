@@ -1,16 +1,16 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/receive/schema.json
 
 # 🔟❎ 'run' OpenTelemetry Collector receiver configuration
 #
 # Configure an input that reads events from OpenTelemetry Collector via syslog
-# and an output that writes regulated TenXObjects back via Forward protocol.
+# and an output that writes received TenXObjects back via Forward protocol.
 # When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 #
 # Architecture:
 #   OTel Collector --[syslog/unix]--> Log10x Receiver --[forward/unix]--> OTel Collector --> Final destinations
 #
 # Usage:
-#   tenx run @run/input/forwarder/otel-collector/regulate @apps/receiver
+#   tenx run @run/input/forwarder/otel-collector/receive @apps/receiver
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -22,7 +22,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/otel-collector/regulate/module.yaml
+  - run/modules/input/forwarder/otel-collector/receive/module.yaml
 
   # Read events from OTel Collector via Unix socket with syslog parsing
   - run/modules/input/forwarder/otel-collector/input
@@ -32,7 +32,7 @@ include:
 
 # =============================== Mode Options ================================
 
-# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+# See fluentbit/receive/config.yaml for the full explanation of this dispatch.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 

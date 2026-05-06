@@ -9,7 +9,7 @@ set -e
 TENX_BIN="${TENX_BIN:-tenx}"
 VECTOR_BIN="${VECTOR_BIN:-vector}"
 TENX_MODULES="${TENX_MODULES:-/etc/tenx/modules}"
-VECTOR_CONFIG="${VECTOR_CONFIG:-${TENX_MODULES}/pipelines/run/modules/input/forwarder/vector/regulate/tenxNix.yaml}"
+VECTOR_CONFIG="${VECTOR_CONFIG:-${TENX_MODULES}/pipelines/run/modules/input/forwarder/vector/receive/tenxNix.yaml}"
 LOG_DIR="${LOG_DIR:-/var/log/tenx-vector}"
 TENX_INPUT_SOCK="${TENX_INPUT_SOCK:-/tmp/tenx-vector-in.sock}"
 
@@ -44,7 +44,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 echo -e "${GREEN}Starting Log10x receiver...${NC}"
-$TENX_BIN @run/input/forwarder/vector/regulate @apps/receiver > "$LOG_DIR/tenx-receiver.log" 2>&1 &
+$TENX_BIN @run/input/forwarder/vector/receive @apps/receiver > "$LOG_DIR/tenx-receiver.log" 2>&1 &
 TENX_PID=$!
 echo "Log10x PID: $TENX_PID"
 

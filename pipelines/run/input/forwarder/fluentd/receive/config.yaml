@@ -3,7 +3,7 @@
 # 🔟❎ 'run' Fluentd receiver configuration
 
 # Configure an input that reads events from a Fluentd forwarder and
-# an output that writes regulated TenXObjects back to Fluentd.
+# an output that writes received TenXObjects back to Fluentd.
 # When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config runs in conjunction with the instructions provided in:
@@ -19,7 +19,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/fluentd/regulate/module.yaml
+  - run/modules/input/forwarder/fluentd/receive/module.yaml
 
   # Include the stdin input from which to read events from the forwarder
   - run/modules/input/forwarder/fluentd/input
@@ -29,7 +29,7 @@ include:
 
 # =============================== Mode Options ================================
 
-# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+# See fluentbit/receive/config.yaml for the full explanation of this dispatch.
 # Summary: receiverOptimize=true → compact-all; compactReceiverLookupFile=<p> → compact-lookup.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'

@@ -25,12 +25,12 @@ include:
   - run/modules/input/forwarder/fluentbit/input
 
   # Include Unix domain socket / Fluent Forward (TCP) output to write events into Fluent Bit,
-  # which relays them to the Datadog Agent. Mirrors the fluentbit/regulate selection.
+  # which relays them to the Datadog Agent. Mirrors the fluentbit/receive selection.
   - '$="run/modules/input/forwarder/fluentbit/output/" + (TenXString.includes(TenXEnv.get("os.name"), "Windows") ? "forward" : "unix")'
 
 # =============================== Mode Options ================================
 
-# See fluentbit/regulate/config.yaml for the full explanation of this dispatch.
+# See fluentbit/receive/config.yaml for the full explanation of this dispatch.
 
 outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
 

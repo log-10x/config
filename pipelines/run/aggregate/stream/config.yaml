@@ -19,7 +19,7 @@ aggregator:
   - name: streamed_events
 
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to be aggregated.
-    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: "this.isObject && !this.isDropped"
 
     # 'values' set the names of intrinsic/extracted/calculated fields whose combined values

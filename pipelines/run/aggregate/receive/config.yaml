@@ -1,9 +1,9 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/aggregate/regulate/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/aggregate/receive/schema.json
 
 # 🔟❎ 'run' aggregator config for the receiver app.
 
 # This file configures aggregators for tracking emitted (non-dropped) events with
-# additional metrics for tracking regulated (dropped) events for cost saving analysis.
+# additional metrics for tracking received (dropped) events for cost saving analysis.
 # When 'receiverOptimize' is enabled, the emitted_events aggregator also tracks
 # optimized event sizes to measure optimization effectiveness.
 # To learn more see https://doc.log10x.com/run/aggregate
@@ -22,7 +22,7 @@ aggregator:
   - name: emitted_events
 
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to be aggregated.
-    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     #
     # This filter excludes dropped events by checking the 'isDropped' property,
     # ensuring only emitted events are tracked.
@@ -70,7 +70,7 @@ aggregator:
   - name: all_events
 
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to be aggregated.
-    #  To learn more see https://doc.log10x.com/run/output/regulate/#filter-expressions
+    #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: isObject
 
     # 'values' set the names of intrinsic/extracted/calculated fields whose combined values

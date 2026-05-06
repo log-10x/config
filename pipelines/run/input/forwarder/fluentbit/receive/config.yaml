@@ -3,7 +3,7 @@
 # 🔟❎ 'run' Fluent Bit receiver configuration
 
 # Configure an input that reads events from a Fluent Bit forwarder and
-# an output that writes regulated TenXObjects back to Fluent Bit.
+# an output that writes received TenXObjects back to Fluent Bit.
 # When 'receiverOptimize' is enabled, events are encoded for volume reduction.
 
 # This config file operates in conjunction with the instructions provided in:
@@ -19,7 +19,7 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/fluentbit/regulate/module.yaml
+  - run/modules/input/forwarder/fluentbit/receive/module.yaml
 
   # Include the stdin input to read events from the forwarder
   - run/modules/input/forwarder/fluentbit/input
@@ -33,7 +33,7 @@ include:
 # Mode is selected here by two user flags:
 # - `receiverOptimize=true`        → compact-all: encoded=encode() for every event
 # - `compactReceiverLookupFile=<p>` → compact-lookup: encoded=shouldEncode()?encode():fullText
-# - neither                          → regulate: plain fullText
+# - neither                          → receive: plain fullText
 #
 # Substitution happens at config-load (`$=yield` defers until options are bound).
 # The transport stream.yaml then parses the resulting literal — shouldEncode() is
