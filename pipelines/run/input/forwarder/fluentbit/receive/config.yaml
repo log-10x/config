@@ -40,13 +40,13 @@ include:
 # only in the parsed expression when compactReceiver is actually configured, so
 # CompactObject's body is never compiled in modes that don't need it.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: $=yield TenXReceiver.encodeField()
 
-outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 
 # Legacy flag retained for fluentd/stdio and logstash input extractor name.
 # For fluentbit/unix + fluentbit/forward the mode is driven by outputEncodeField above.
-encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
+encodeObjects: $=yield TenXReceiver.writeTemplates()
 
 # ============================= Fluent Bit Options ============================
 

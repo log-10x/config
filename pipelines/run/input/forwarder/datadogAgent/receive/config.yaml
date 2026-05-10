@@ -32,8 +32,8 @@ include:
 
 # See fluentbit/receive/config.yaml for the full explanation of this dispatch.
 
-outputEncodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? "encoded=shouldEncode() ? encode() : fullText" : (TenXEnv.get("receiverOptimize") ? "encoded=encode()" : "fullText")'
+outputEncodeField: $=yield TenXReceiver.encodeField()
 
-outputWriteTemplates: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 
-encodeObjects: $=yield TenXEnv.get("receiverOptimize", false) || TenXEnv.get("compactReceiverLookupFile", false)
+encodeObjects: $=yield TenXReceiver.writeTemplates()
