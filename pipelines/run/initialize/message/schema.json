@@ -32,16 +32,24 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).   For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
+          "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).  For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
           "default" : "symbolMessage"
+        },
+        "messageHashField" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Field name to assign with the hash of the symbol sequence value\n\nSpecifies the name of the field to assign a compact, alphanumeric hash of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield) value, computed via [TenXString.hash](https://doc.log10x.com/api/js/#TenXString.hash).  The hash is a stable, JSON-safe identifier suitable for use as a deduplication key, metric dimension, or compact reference to the underlying message pattern.  Set to an empty value to disable. (Default: )",
+          "default" : ""
         },
         "originField" : {
           "type" : [
             "string",
             "null"
           ],
-          "markdownDescription" : "Field name to assign with symbol message origin file\n\nSpecifies the name of the field to assign the return value of [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: symbolOrigin)",
-          "default" : "symbolOrigin"
+          "markdownDescription" : "Field name to assign with symbol message origin file\n\nSpecifies the name of the field to assign the return value of [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: )",
+          "default" : ""
         }
       }
     }
