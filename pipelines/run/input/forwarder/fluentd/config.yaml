@@ -55,25 +55,31 @@ outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 #
 # TCP port for events arriving from Fluentd's `out_forward` plugin.
 # To use a Unix domain socket instead (Linux/macOS only), set:
-#   forwardInputPath: /tmp/tenx-fluentd-in.sock
-forwardInputPort: 24224
+#   fluentdInputPath: /tmp/tenx-fluentd-in.sock
+fluentdInputPort: 24224
 
 # Name of the JSON field in each Fluentd record containing the log line.
-# Defaults to `log` (Fluentd's `in_tail` convention for container/file logs).
-# Set to e.g. `message` if your sources emit the log line under a different key.
-fluentdMessageField: log
+# Default is `log` (Fluentd's `in_tail` convention for container/file logs).
+# Uncomment and change if your sources emit the log line under a different
+# key. Left commented so the option stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/fluentd @apps/receiver fluentdMessageField message
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once").
+# fluentdMessageField: log
 
 # ============================== Forward Output ===============================
 #
 # The Fluentd output included above defaults to TCP `127.0.0.1:24225`. To
 # override:
 #
-#   outputForwardHostAddress: 0.0.0.0
-#   outputForwardHostPort:    9999
+#   fluentdOutputHost: 0.0.0.0
+#   fluentdOutputPort: 9999
 #
 # Or on Linux/macOS, use a Unix domain socket:
 #
-#   outputForwardAddress:     /tmp/tenx-fluentd-out.sock
+#   fluentdOutputPath: /tmp/tenx-fluentd-out.sock
 #
 # The original Fluentd tag survives the round trip, so destinations that
 # route on `$TAG` (Splunk index, S3 path, Kafka topic, …) behave the same

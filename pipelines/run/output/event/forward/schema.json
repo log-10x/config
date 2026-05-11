@@ -33,11 +33,11 @@
           },
           "hostPort" : {
             "type" : [
-              "number",
-              "string"
+              "string",
+              "null"
             ],
-            "markdownDescription" : "Host port of target fluent instance\n\nSpecifies a host por used together with [outputForwardHostAddress](https://doc.log10x.com/run/output/event/forward/#outputforwardhostaddress) are ignored to encode object field values to. Ignored if [outputForwardAddress](https://doc.log10x.com/run/output/event/forward/#outputforwardaddress) is specified (Accepts number or string with $= prefix for runtime evaluation) (Default: 24224)",
-            "default" : 24224
+            "markdownDescription" : "Host port of target fluent instance\n\nSpecifies a host por used together with [outputForwardHostAddress](https://doc.log10x.com/run/output/event/forward/#outputforwardhostaddress) are ignored to encode object field values to. Ignored if [outputForwardAddress](https://doc.log10x.com/run/output/event/forward/#outputforwardaddress) is specified (Default: 24224)",
+            "default" : "24224"
           },
           "fields" : {
             "type" : [
