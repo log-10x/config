@@ -1,13 +1,14 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/receive/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/embedded/schema.json
 
-# 🔟❎ 'run' Fluentd receiver configuration
-
-# Configure an input that reads events from a Fluentd forwarder and
-# an output that writes received TenXObjects back to Fluentd.
-# When 'receiverOptimize' is enabled, events are encoded for volume reduction.
-
-# This config runs in conjunction with the instructions provided in:
-# https://doc.log10x.com/run/input/forwarder/fluentd/receive/#install
+# 🔟❎ 'run' Fluentd Embedded receiver configuration
+#
+# Embedded topology — Log10x runs as a child process of Fluentd via the
+# `exec_filter` plugin. Events are piped on stdin; processed events return
+# via stdout (Windows) or a Unix domain socket (Linux/macOS). Fluentd
+# manages the Log10x process lifecycle.
+#
+# For the alternative peer-process topology (recommended for k8s and any
+# Helm-chart-based deployment), see `../sidecar/config.yaml`.
 
 # Set the 10x pipeline to 'run'
 tenx: run
@@ -19,7 +20,11 @@ include:
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates, encodeObjects)
   - run/modules/input/forwarder/module.yaml
 
-  - run/modules/input/forwarder/fluentd/receive/module.yaml
+  # Shared Fluentd options (fluentdOutputFields, fluentdOutputEncodeType)
+  - run/modules/input/forwarder/fluentd/module.yaml
+
+  # Embedded-mode module marker
+  - run/modules/input/forwarder/fluentd/embedded/module.yaml
 
   # Include the stdin input from which to read events from the forwarder
   - run/modules/input/forwarder/fluentd/input
@@ -39,16 +44,3 @@ outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 # Legacy flag retained for fluentd/stdio (which emits TSV with joinFields and
 # can't cleanly use outputEncodeField). fluentd/unix uses outputEncodeField.
 encodeObjects: $=yield TenXReceiver.writeTemplates()
-
-# ============================== Fluentd Options ==============================
-
-fluentd:
-
-  # 'outputFields' specifies TenXObject field names to emit alongside the main event.
-  #  When set, enrichment fields are included in the sidecar output for forwarder post-processing.
-  #  Example: outputFields: [level, group, symbolMessage]
-  outputFields: []
-
-  # 'outputEncodeType' controls the output format when outputFields is set.
-  #  Possible values: 'json' or 'delimited'
-  outputEncodeType: delimited
