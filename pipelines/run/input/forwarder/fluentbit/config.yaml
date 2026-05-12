@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentbit/schema.json
+
+# 🔟❎ 'run' Fluent Bit receiver configuration
+#
+# Runs Log10x as a sidecar to Fluent Bit. The two processes exchange events
+# over the Fluent Forward protocol — Fluent Bit sends events to Log10x on
+# the input port, Log10x sends processed events back on the output port.
+#
+#   Fluent Bit [OUTPUT] forward (→ :24224) ──► Log10x Fluent Bit Forward input
+#                                                  │
+#                                                  ▼
+#                                               Receiver
+#                                                  │
+#                                                  ▼
+#   Fluent Bit [INPUT] forward (← :24225)  ◄── Log10x Fluent Bit Forward output
+#       Tag_Prefix tenx.
+#
+# On the Fluent Bit side, the egress `[INPUT] forward` MUST use
+# `Tag_Prefix tenx.` so processed events get a `tenx.` namespace —
+# enrichment filters and the ingest `[OUTPUT] forward` then `Match` on
+# the original tag scheme (e.g. `app.*`) and skip the returning events
+# by tag-namespacing alone. Fluent Bit has no label/scope concept; the
+# tag-prefix IS the bypass. See the reference Fluent Bit config at:
+#   modules/pipelines/run/modules/input/forwarder/fluentbit/conf/tenx-sidecar.conf
+#
+# Launch with:
+#   tenx @run/input/forwarder/fluentbit @apps/receiver
+
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Shared forwarder options (mode dispatch, output encoding)
+  - run/modules/input/forwarder/module.yaml
+
+  # Fluent Bit module — shared output-formatting options
+  - run/modules/input/forwarder/fluentbit/module.yaml
+
+  # Fluent Bit Forward input — decodes events from Fluent Bit and captures
+  # the message field. Defaults to listening on TCP `:24224`.
+  - run/modules/input/forwarder/fluentbit/input
+
+  # Fluent Bit Forward output — sends processed events back to Fluent Bit.
+  # Defaults to TCP `127.0.0.1:24225`.
+  - run/modules/input/forwarder/fluentbit/output
+
+# =============================== Mode Options ================================
+#
+# The Receiver app picks the encoding mode based on user flags:
+#   default                      → emit events verbatim (`fullText`)
+#   receiverOptimize=true        → compact-all (lossless compaction of every event)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+outputEncodeField: $=yield TenXReceiver.encodeField()
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+
+# ============================== Forward Input ================================
+#
+# TCP port for events arriving from Fluent Bit's `[OUTPUT] forward`.
+# To use a Unix domain socket instead (Linux/macOS only), set:
+#   fluentbitInputPath: /tmp/tenx-fluentbit-in.sock
+fluentbitInputPort: 24224
+
+# Name of the JSON field in each Fluent Bit record containing the log line.
+# Default is `log` (Fluent Bit's `tail` convention for container/file logs).
+# Uncomment and change if your sources emit the log line under a different
+# key. Left commented so the option stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/fluentbit @apps/receiver fluentbitMessageField message
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once").
+# fluentbitMessageField: log
+
+# ============================== Forward Output ===============================
+#
+# The Fluent Bit output included above defaults to TCP `127.0.0.1:24225`.
+# To override:
+#
+#   fluentbitOutputHost: 0.0.0.0
+#   fluentbitOutputPort: 9999
+#
+# Or on Linux/macOS, use a Unix domain socket:
+#
+#   fluentbitOutputPath: /tmp/tenx-fluentbit-out.sock
+#
+# The Fluent Bit-side `[INPUT] forward` with `Tag_Prefix tenx.` prepends
+# `tenx.` to every returning tag — destinations that route on the tag
+# suffix behave the same as without Log10x in the path, while filters /
+# the ingest `[OUTPUT] forward` (matching on `app.*`) skip the returning
+# events by tag-namespacing.
