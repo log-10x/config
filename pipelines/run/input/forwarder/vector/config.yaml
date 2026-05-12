@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/vector/schema.json
+
+# 🔟❎ 'run' Vector receiver configuration
+#
+# Runs Log10x as a sidecar to Vector. The two processes exchange events
+# over asymmetric protocols (Vector has no Forward sink, only a Forward
+# source):
+#
+#   Vector socket sink (NDJSON → :9000) ──► Log10x Vector socket input
+#                                              │
+#                                              ▼
+#                                           Receiver
+#                                              │
+#                                              ▼
+#   Vector fluent source (Forward ← :9001) ◄── Log10x Forward output
+#
+# On the Vector side, destination sinks MUST consume from the egress
+# `fluent` source (e.g. `tenx_out`) — not from the raw sources or the
+# enrichment transform — so the enrichment chain doesn't fire a second
+# time on the return path. See the reference Vector config at:
+#   modules/pipelines/run/modules/input/forwarder/vector/conf/tenx-sidecar.yaml
+#
+# Launch with:
+#   tenx @run/input/forwarder/vector @apps/receiver
+
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Shared forwarder options (mode dispatch, output encoding)
+  - run/modules/input/forwarder/module.yaml
+
+  # Vector module — shared output-formatting options
+  - run/modules/input/forwarder/vector/module.yaml
+
+  # Vector socket input — reads newline-delimited JSON from Vector's
+  # socket sink and captures the message field. Defaults to listening
+  # on TCP `:9000`.
+  - run/modules/input/forwarder/vector/input
+
+  # Vector Fluent Forward output — sends processed events back to
+  # Vector's fluent source. Defaults to TCP `127.0.0.1:9001`.
+  - run/modules/input/forwarder/vector/output
+
+# =============================== Mode Options ================================
+#
+# The Receiver app picks the encoding mode based on user flags:
+#   default                      → emit events verbatim (`fullText`)
+#   receiverOptimize=true        → compact-all (lossless compaction of every event)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+outputEncodeField: $=yield TenXReceiver.encodeField()
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+
+# ============================== Socket Input =================================
+#
+# TCP port for events arriving from Vector's `socket` sink (NDJSON).
+# To use a Unix domain socket instead (Linux/macOS only), set:
+#   vectorInputPath: /tmp/tenx-vector-in.sock
+vectorInputPort: 9000
+
+# Name of the JSON field in each Vector record containing the log line.
+# Default is `message` (Vector's convention for `file`, `kubernetes_logs`,
+# `journald`, and `socket` sources). Uncomment and change if your sources
+# emit the log line under a different key. Left commented so the option
+# stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/vector @apps/receiver vectorMessageField log
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once").
+# vectorMessageField: message
+
+# ============================== Forward Output ===============================
+#
+# The Vector Forward output included above defaults to TCP `127.0.0.1:9001`.
+# To override:
+#
+#   vectorOutputHost: 0.0.0.0
+#   vectorOutputPort: 9999
+#
+# Or on Linux/macOS, use a Unix domain socket:
+#
+#   vectorOutputPath: /tmp/tenx-vector-out.sock
+#
+# The tag stamped on the way in (default field `tag`) is restored on the
+# Forward wire, so destinations that route on the tag behave the same as
+# without Log10x in the path.
