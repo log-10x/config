@@ -56,9 +56,9 @@ include:
 
   # ------------------------------ Output: stdout -----------------------------
 
-  # Single stdout encoder; emits encoded TenXObjects as JSON lines so the
-  # MCP wrapper can parse without ambiguity.
-  - run/output/event/stdout        # https://doc.log10x.com/run/output/event/stdout
+  # Forked stdout config with per-line prefixes the MCP wrapper demuxes:
+  #   `~`        → encoded event,  `{` → template JSON,  `summary=` → aggregate.
+  - apps/mcp/stdout
 
 # ============================== Runtime args ================================
 
