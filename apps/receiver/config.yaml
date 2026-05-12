@@ -52,9 +52,10 @@ include:
   #
   # - run/input/forwarder/filebeat/receive
   # - run/input/forwarder/fluentbit/receive
-  # - run/input/forwarder/fluentd/receive
+  # - run/input/forwarder/fluentd
   # - run/input/forwarder/logstash/receive
-  # - run/input/forwarder/otel-collector/receive
+  # - run/input/forwarder/otel-collector
+  # - run/input/forwarder/vector
   # - run/input/forwarder/datadogAgent/receive
 
 # --------------------------- Enrich TenXObjects ------------------------------

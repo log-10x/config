@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/otel-collector/schema.json
+
+# 🔟❎ 'run' OpenTelemetry Collector receiver configuration
+#
+# Runs Log10x as a sidecar to the OpenTelemetry Collector. The two processes
+# exchange events over asymmetric protocols (the Collector has no Forward
+# sink, only a Forward receiver):
+#
+#   Collector syslog exporter (RFC5424 → :24226) ──► Log10x syslog input
+#                                                       │
+#                                                       ▼
+#                                                    Receiver
+#                                                       │
+#                                                       ▼
+#   Collector fluent_forward receiver (← :24227)  ◄── Log10x Forward output
+#
+# On the Collector side, destination exporters MUST live on the egress
+# pipeline (`logs/from-tenx`) consuming the `fluent_forward/tenx` receiver —
+# not on the ingest pipeline — so enrichment processors don't fire a second
+# time on the return path. See the reference Collector config at:
+#   modules/pipelines/run/modules/input/forwarder/otel-collector/conf/tenx-sidecar.yaml
+#
+# Both the `syslog` exporter and the `fluent_forward` receiver require the
+# `otelcol-contrib` distribution; the core `otelcol` distribution does not
+# ship them.
+#
+# Launch with:
+#   tenx @run/input/forwarder/otel-collector @apps/receiver
+
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Shared forwarder options (mode dispatch, output encoding)
+  - run/modules/input/forwarder/module.yaml
+
+  # OpenTelemetry Collector module — shared output-formatting options
+  - run/modules/input/forwarder/otel-collector/module.yaml
+
+  # OTel Collector syslog input — strips the RFC5424 envelope and captures
+  # the MSG text. Defaults to listening on TCP `:24226`.
+  - run/modules/input/forwarder/otel-collector/input
+
+  # OTel Collector Fluent Forward output — sends processed events back to
+  # the Collector's `fluent_forward` receiver. Defaults to TCP
+  # `127.0.0.1:24227`.
+  - run/modules/input/forwarder/otel-collector/output
+
+# =============================== Mode Options ================================
+#
+# The Receiver app picks the encoding mode based on user flags:
+#   default                      → emit events verbatim (`fullText`)
+#   receiverOptimize=true        → compact-all (lossless compaction of every event)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+outputEncodeField: $=yield TenXReceiver.encodeField()
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+
+# ============================== Syslog Input =================================
+#
+# TCP port for events arriving from the Collector's `syslog` exporter
+# (RFC5424). To use a Unix domain socket instead (Linux/macOS only), set:
+#   otelCollectorInputPath: /tmp/tenx-otel-in.sock
+otelCollectorInputPort: 24226
+
+# Whether to strip the RFC5424 syslog envelope and surface only the MSG
+# field. Defaults to `true`. Uncomment and change if you've configured the
+# Collector's `syslog` exporter without an RFC5424 envelope. Left commented
+# so the option stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/otel-collector @apps/receiver otelCollectorInputSyslog false
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once").
+# otelCollectorInputSyslog: true
+
+# ============================== Forward Output ===============================
+#
+# The Forward output included above defaults to TCP `127.0.0.1:24227`. To
+# override:
+#
+#   otelCollectorOutputHost: 0.0.0.0
+#   otelCollectorOutputPort: 9999
+#
+# Or on Linux/macOS, use a Unix domain socket:
+#
+#   otelCollectorOutputPath: /tmp/tenx-otel-out.sock
+#
+# Each top-level field of the rendered event becomes a Fluent field on the
+# wire, which the Collector's `fluent_forward` receiver maps onto an
+# attribute on the returning OTel log record.
