@@ -15,10 +15,10 @@
 #                                                ▼
 #   Logstash tcp input   (NDJSON ← :5045) ◄── Log10x JSON socket output
 #
-# On the Logstash side, the `tcp` input MUST live in a separate pipeline
-# from the ingest filter chain — Logstash's [multi-pipeline routing](https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html)
-# is what guarantees the ingest filters don't re-fire on returning events.
-# See the reference Logstash config at:
+# Put the `tcp` input in a separate Logstash pipeline from your enrichment
+# filters using Logstash's [multi-pipeline routing](https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html)
+# so the filters don't re-run on returning events. See the reference
+# Logstash config files:
 #   modules/pipelines/run/modules/input/forwarder/logstash/conf/pipelines.yml
 #   modules/pipelines/run/modules/input/forwarder/logstash/conf/tenx-ingest.conf
 #   modules/pipelines/run/modules/input/forwarder/logstash/conf/tenx-destinations.conf
@@ -65,14 +65,11 @@ logstashInputPort: 5044
 
 # Name of the JSON field in each Logstash event containing the log line.
 # Default is `message` (Logstash's convention for `file`, `beats`, `tcp`,
-# `http` inputs). Uncomment and change if your sources emit the log line
-# under a different key. Left commented so the option stays overridable
-# from the CLI:
+# `http` inputs). Either uncomment this line OR pass it on the CLI — not
+# both:
 #
 #     tenx @run/input/forwarder/logstash @apps/receiver logstashMessageField log
 #
-# (the engine treats this option as single-valued, so setting it both here
-#  and on the CLI would be rejected as "specified only once").
 # logstashMessageField: message
 
 # ============================== Socket Output ================================
