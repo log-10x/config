@@ -17,6 +17,7 @@
         "fields" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of TenXObject field names to include alongside the main event in output\n\nSpecifies TenXObject field names to emit alongside the main event text when writing back to the Filebeat forwarder. When empty (default), only the main event field is written. Example fields: level, group, symbolMessage. (Default: [])",
@@ -36,5 +37,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

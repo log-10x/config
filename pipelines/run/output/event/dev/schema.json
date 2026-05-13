@@ -19,7 +19,8 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Enable/disable dev output\n\nControls whether to generate a shareable console URL from the analysis results. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -35,7 +36,8 @@
           "openBrowser" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Auto-open results in browser\n\nIf true, automatically opens the generated console URL in the default browser when the pipeline completes. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -43,7 +45,8 @@
           "localOnly" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Local-only mode, output JSON without generating a URL\n\nIf true, outputs the analysis JSON to the console without generating or opening a URL. Use this for privacy when you prefer not to generate an external URL. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -66,7 +69,8 @@
           "dailyGb" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Estimated daily log volume in GB for ROI projections\n\nSpecifies an estimated daily log volume in gigabytes. The console viewer uses this value to project cost savings and ROI. Adjust to match your environment's actual daily log volume. (Accepts number or string with $= prefix for runtime evaluation) (Default: 100)",
             "default" : 100
@@ -74,7 +78,8 @@
           "topPatterns" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of top patterns to include by bytes\n\nSets the number of top log patterns (by bytes) to include in the output. (Accepts number or string with $= prefix for runtime evaluation) (Default: 10)",
             "default" : 10
@@ -82,7 +87,8 @@
           "vrTemplates" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of templates to include in volume reduction samples\n\nSets the number of template samples to include for the volume reduction proof dialog in the console viewer. Templates are selected by reduction ratio (compact size vs original size) weighted by frequency. (Accepts number or string with $= prefix for runtime evaluation) (Default: 10)",
             "default" : 10
@@ -90,7 +96,8 @@
           "vrEventsPerTemplate" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of encoded events per template in volume reduction samples\n\nSets the number of encoded event samples to include per template for the volume reduction proof dialog. (Accepts number or string with $= prefix for runtime evaluation) (Default: 1)",
             "default" : 1
@@ -99,5 +106,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

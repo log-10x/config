@@ -23,7 +23,8 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input is enabled (default true)\n\nSets whether to open the input stream. To enable this input only when a [splunkHost](https://doc.log10x.com/run/input/analyzer/splunk/#splunkhost) startup argument value is truthy, use: ``` yaml splunkEnabled: $=TenXEnv.get(\"splunkHost\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -31,7 +32,8 @@
           "printProgress" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console for testing an integration to a remote endpoint. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -46,7 +48,8 @@
           "port" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Splunk server port\n\nSets the Splunk server port to connect to (e.g., 8089) The port is not needed if the provided [splunkHost](https://doc.log10x.com/run/input/analyzer/splunk/#splunkhost) already encapsulates the port (Accepts number or string with $= prefix for runtime evaluation)"
           },
@@ -75,7 +78,8 @@
           "verifySSL" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Whether to verify SSL certificates (default true)\n\nSets whether to verify SSL certificates when connecting to Splunk. Set to `false` to allow connections to Splunk instances with self-signed certificates.  **Warning:** Disabling SSL verification is not recommended for production environments.  For example: ``` yaml splunkVerifySSL: false ``` (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -91,7 +95,8 @@
           "pageSize" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of events to retrieve with each result page\n\nSets the number of events to retrieve with each result page. **Performance:** Increase to 1000-2000 for high-volume environments to reduce API round-trips. (Accepts number or string with $= prefix for runtime evaluation) (Default: 500)",
             "default" : 500
@@ -99,14 +104,16 @@
           "totalBytesLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total bytes to read from input before closing\n\nSets the maximum number of bytes a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer).  **Performance:** Increase for longer analysis windows (e.g., 200MB for 10min windows).  For example: ``` yaml splunkTotalBytesLimit: $=parseBytes(\"1GB\") ``` (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "totalEventsLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total events to read from input before closing\n\nSets the maximum number of events a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer).  **Performance:** Adjust based on memory and processing capacity. Each event consumes memory during processing. (Accepts number or string with $= prefix for runtime evaluation) (Default: 10000)",
             "default" : 10000
@@ -122,7 +129,8 @@
           "queryInterval" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Query interval (in milliseconds) for checking new data from remote source\n\nSets the interval between queries to the remote Splunk API. This controls how frequently the input polls for new log data.  **Performance:** Increase for rate-limited APIs; decrease for real-time needs.  For example: ``` yaml splunkQueryInterval: $=parseDuration(\"5s\") ``` (Accepts number or string with $= prefix for runtime evaluation) (Default: 2000)",
             "default" : 2000
@@ -135,5 +143,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

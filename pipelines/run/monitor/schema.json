@@ -19,6 +19,7 @@
         "units" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Pipeline unit names to log and emit debug metrics\n\nSpecifies which 10x pipeline units will log and emit debug metrics while executing. Each pipeline prints the names of its configured units upon startup on the console and log file.  To emit information for all pipeline units, specify '*'.",

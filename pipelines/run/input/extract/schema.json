@@ -20,7 +20,8 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "A JavaScript expression that must be evaluated as 'truthy' to enable the extractor\n\nEnables/disables this extractor. If set, the JavaScript expression returns a truthy value to enable the extractor. For example, to configure this value to use a startup argument/shell variable, use:  ``` yaml extractor:    name: myExtractor    enabled: TenXEnv.get(\"performExtraction\")    ...  ``` (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -64,6 +65,7 @@
           "actions" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Actions in the form of actionType:name. Possible values:[captureAll, captureFirst, captureLast, captureArrays, captureFirstArray, captureLastArray, captureDefault, captureField, setOuterText, drop, redact, noTransform]\n\n\nDefines a list of actions defined as: 'actionType:name:alias' (e.g., 'captureAll:message:alias') to capture and redact values to transform into TenXObjects. For JSON extractors, 'name' refers to a field to look for in events and the value to which to apply the 'actionType'. This can be in the form of 'x.y.z' which will match internal fields in the json. For example: 'metadata.id' will match the 'id' field of the 'metadata' object in {\"metadata\": {\"id\": \"1234\"}}  For regex extractors, 'name' refers to a [regex pattern match group](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Named_capturing_group) defined by 'extractorPattern' to which to apply the 'actionType'.  This setting must be specified when [extractorType](https://doc.log10x.com/run/input/extract/#extractortype) = 'json'. If not specified and extractorType is 'pattern', the 'extractorPattern' pattern scans for regex capture groups, performing on each as'captureAll' action.  The 'alias' part is optional, and if provided is used to reference the object as it's name. This is useful when multiple extractors are used to extract different things which are later used in the same way.  If no capture groups are defined, any matches of the pattern within the input text line are captured.",

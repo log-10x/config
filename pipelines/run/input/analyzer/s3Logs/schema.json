@@ -23,14 +23,16 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input is enabled\n\nSets whether to open the input stream. To enable this input only when an 's3LogsBucket' startup argument value is truthy, use: ``` yaml s3LogsEnabled: $=TenXEnv.get(\"s3LogsBucket\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
           "printProgress" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console for testing an integration to a remote endpoint. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -80,6 +82,7 @@
           "totalEventsLimit" : {
             "type" : [
               "string",
+              "number",
               "null"
             ],
             "markdownDescription" : "Maximum total events to read from input before closing\n\nSets the maximum number of events a target pipeline input will read into the pipeline. This value limits the volume of events to read from the S3 object. (Default: 10000)",
@@ -102,5 +105,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

@@ -23,6 +23,7 @@
           "objectStorageArgs" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Custom object storage args\n\nCustom arguments passed as a map to the constructor of the underlying [object storage](https://doc.log10x.com/run/input/objectStorage/index/delete/#queryobjectobjectstoragename). This list is expected to hold pairs of key values (e.g., args: [key1, value1, key2, value2])",
@@ -61,5 +62,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

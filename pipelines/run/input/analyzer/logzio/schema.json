@@ -23,7 +23,8 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input is enabled\n\nSets whether to open the input stream. To enable this input only when a 'elasticSearchHost' startup argument value is truthy, use: ``` yaml elasticSearchEnabled: $=TenXEnv.get(\"elasticSearchHost\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -31,7 +32,8 @@
           "printProgress" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console for testing an integration to a remote endpoint. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -47,6 +49,7 @@
           "extractors" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of extractors to apply on the events returning from the query\n\nSets list of extractor names which will work on the events returning from the query. For more info on extractors, see: https://doc.log10x.com/run/input/extract",
@@ -64,7 +67,8 @@
           "port" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Elastic server port\n\nSets the elastic server port to connect to (e.g., '9443') The port value is not needed if [elasticSearchHost](https://doc.log10x.com/run/input/analyzer/elasticsearch/#elasticsearchhost) value encapsulates the port (Accepts number or string with $= prefix for runtime evaluation)"
           },
@@ -131,6 +135,7 @@
           "targets" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of data streams, indices, and aliases to search\n\nSets list of data streams, indices, and aliases to search. To search all data streams and indices, omit this parameter or use '*' or '_all'.",
@@ -149,7 +154,8 @@
           "querySize" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of documents to read per batch from the elastic server\n\nSets the number of documents to retrieve with each page of results. (Accepts number or string with $= prefix for runtime evaluation) (Default: 500)",
             "default" : 500
@@ -157,7 +163,8 @@
           "retryTimeout" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "A timeout period (in milliseconds) to wait for querying of new data\n\nDetermines how long to wait to invoke the search endpoint API again to query for new data. See [elastic-input.js](https://github.com/log-10x/modules/blob/main/pipelines/run/modules/input/analyzer/elasticsearch/elastic-input.js). (Accepts number or string with $= prefix for runtime evaluation) (Default: 10000)",
             "default" : 10000
@@ -165,14 +172,16 @@
           "totalBytesLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total bytes to read from input before closing\n\nSets the maximum number of bytes a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer).   For example: ``` yaml elasticSearchTotalBytesLimit: $=parseBytes(\"1GB\") ``` (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "totalEventsLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total events to read from input before closing\n\nSets the maximum number of events a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer). (Accepts number or string with $= prefix for runtime evaluation) (Default: 10000)",
             "default" : 10000
@@ -180,7 +189,8 @@
           "queryInterval" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Query interval (in milliseconds) for checking new data from remote source\n\nSets the interval between queries to the remote Elasticsearch API. This controls how frequently the input polls for new log data.  For example: ``` yaml elasticSearchQueryInterval: $=parseDuration(\"5s\") ``` (Accepts number or string with $= prefix for runtime evaluation) (Default: 2000)",
             "default" : 2000
@@ -193,5 +203,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

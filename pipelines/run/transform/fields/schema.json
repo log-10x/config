@@ -11,7 +11,8 @@
         "extract" : {
           "type" : [
             "boolean",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Scan TenXTemplate for nested JSON objects or key-value lists\n\nControls whether to scan TenXTemplates for JSON objects or key-value lists (e.g., `{\"price\": 10}` or `price=10`). TenXObjects instances of this template will provide access to these fields as named members (e.g., `this.price`). If a field appears more than once in [text](https://doc.log10x.com/api/js/#TenXBaseObject+text) it is accessible as an array (e.g., `this.price[1]`). (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
           "default" : true

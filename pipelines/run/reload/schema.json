@@ -18,7 +18,8 @@
         "restartPipeline" : {
           "type" : [
             "boolean",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Restart pipeline when config files are changed on disk\n\nControls whether to watch for modifications to [configuration files](https://doc.log10x.com/config/). Modifications will initiate a pipeline graceful restart. This setting can operate in conjunction with [GitHub config sync](https://doc.log10x.com/config/github/) to allow pipelines to reload/restart from a centralized configuration repository at run time. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
           "default" : true

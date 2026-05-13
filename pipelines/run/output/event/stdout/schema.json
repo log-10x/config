@@ -23,6 +23,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -40,6 +41,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, encode TenXObjects [stdoutFields](https://doc.log10x.com/run/output/event/stdout/#stdoutfields) to this output\n\nDetermine whether to write [stdoutFields](https://doc.log10x.com/run/output/event/stdout/#stdoutfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression. For example, setting 'stdoutWriteObjects' to '$=TenXEnv.get(\"stdout\")' enables/disables the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy. (Default: true)",
@@ -48,6 +50,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, write new TenXTemplates to this output\n\nControls whether to write template values of TenXObjects passed to this output. The output will only emit TenXTemplates that the pipeline did not load at startup via the [templateFile](https://doc.log10x.com/run/template/#tetemplatefilesmplatefile) argument, and will only emit an TenXTemplate once based on its [templateHash](https://doc.log10x.com/api/js/#TenXBaseObject+templateHash) value. (Default: false)",
@@ -93,7 +96,8 @@
           "log4j2" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "If true, write using log4j2 appender\n\nControls whether to write to file using an [OutputStream](https://doc.log10x.com/api/output/#outputstream) or a [log4j2 appender](https://doc.log10x.com/api/output/#log4j2). (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -105,5 +109,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

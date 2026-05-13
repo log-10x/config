@@ -14,6 +14,7 @@
         "enabled" : {
           "type" : [
             "string",
+            "boolean",
             "null"
           ],
           "markdownDescription" : "Enable/disable stdin input\n\nSpecifies whether to read event data from the stdin pipe (Default: true)",
@@ -22,6 +23,7 @@
         "extractors" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "JSON / regex extractor names\n\nDefines a list of JSON/regex extractor names to capture events from 'inputFilePath' to transform into TenXObjects. Each item in the list should map to an extractor defined via a configuration file or startup arguments group. To learn more see: [extractors](https://doc.log10x.com/run/input/extract).",
@@ -39,5 +41,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

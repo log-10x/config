@@ -11,6 +11,7 @@
         "sequenceReserved" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of terms to ignore when scanning symbol tokens\n\nDefines a list of terms that to ignore when searching for the symbol tokens constituting an TenXTemplate's 'message' portion (i.e., the longest consecutive sequence of [symbol](https://doc.log10x.com/run/transform/structure/#symbols) tokens). For example, for an TenXObject whose text contains: 'connect success = true', the value 'true' will not be considered a part of the instance's message, as it is mostly likely the result of a variable boolean state. To learn more see [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence). (Default: [\"null\",\"nil\",\"true\",\"false\"])",
@@ -27,7 +28,8 @@
         "maxOrigins" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Max number of source/binary origins to list per symbol\n\nControls the number of source code/binary origins to list per symbol token sequence. As a series of tokens within  a given template (e.g., 'ERROR', 'could not connect to \"{}') may appear  in multiple source/binary files within the pipeline's symbol files, the sorting algorithm selects [maxSymbolOrigins](https://doc.log10x.com/run/transform/symbol/#symbolmaxorigins) for comparison. (Accepts number or string with $= prefix for runtime evaluation) (Default: 64)",
           "default" : 64
@@ -39,6 +41,7 @@
             "origins" : {
               "type" : [
                 "array",
+                "string",
                 "null"
               ],
               "markdownDescription" : "List of source scanned file names for which to log information\n\nSpecifies a list of input file names within the loaded symbol library (e.g., 'my.scala', 'foo.java') for which to log information on if/how they participate in selecting the origin of a target TenXTemplate symbol sequence. This option helps debug how the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function selects  origin values for a target TenXTemplate symbol sequence.  Specify '*' for all input files.",
@@ -49,6 +52,7 @@
             "symbols" : {
               "type" : [
                 "array",
+                "string",
                 "null"
               ],
               "markdownDescription" : "List of TenXTemplate symbol values for which to log information\n\nList of symbol values such as class and method names(e.g., 'MyClass', 'foo') for which to log information on how their origin information is selected. This option helps debug how the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function selects  origin values for a target TenXTemplate symbol sequence.  Specify '*' for all symbols.",

@@ -23,7 +23,8 @@
           "connectTimeout" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Connection timeout in ms\n\nSets the connection timeout in ms for connecting to [outputUnixSocketAddress](https://doc.log10x.com/run/output/event/unix/#outputunixsocketaddress) To learn more see [connection timeouts](https://www.baeldung.com/java-socket-connection-read-timeout). (Accepts number or string with $= prefix for runtime evaluation) (Default: 5000)",
             "default" : 5000
@@ -31,6 +32,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -48,6 +50,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, encode TenXObjects [outputUnixSocketFields](https://doc.log10x.com/run/output/event/unix/#outputunixsocketfields) to this output\n\nDetermine whether to write [outputUnixSocketFields](https://doc.log10x.com/run/output/event/unix/#outputunixsocketfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   outputUnixSocketWriteObjects: $=TenXEnv.get(\"unixSocketAddress\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
@@ -56,6 +59,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, write new TenXTemplates to this output\n\nControls whether to write template values of TenXObjects passed to this output. The output will only emit TenXTemplates that the pipeline did not load at startup via the [templateFile](https://doc.log10x.com/run/template/#templatefiles) argument, and will only emit an TenXTemplate once based on its [templateHash](https://doc.log10x.com/api/js/#TenXBaseObject+templateHash) value. (Default: false)",
@@ -105,5 +109,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

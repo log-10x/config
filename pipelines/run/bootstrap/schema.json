@@ -37,6 +37,7 @@
         "attributes" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of attributes to add to all metrics reporting\n\nSpecifies a list of key-value pairs in the format `key:value` to be added as tags to pipeline metrics reported to the 10x service. These tags enable finer-grained filtering and analysis in monitoring systems like Prometheus. Multiple attributes can be combined into a single string using a semicolon (`;`), e.g., `key1:val1;key2:val2`.  If a key does not start with tenx_, the prefix tenx_ is automatically prepended to ensure consistency in tag naming conventions. For example, a provided attribute app:my-app will be reported as tenx_app:my-app  ``` yaml   runtimeAttributes:     - app:reporter     - env:edge ```",
@@ -49,6 +50,7 @@
     "includePaths" : {
       "type" : [
         "array",
+        "string",
         "null"
       ],
       "markdownDescription" : "Pipeline include folders\n\nSpecifies folders on disk for resoling relative references within [include directives](https://doc.log10x.com/config/yaml/#include-directives). (Default: [\"working directory of current process\"])",
@@ -62,6 +64,7 @@
     "jarFiles" : {
       "type" : [
         "array",
+        "string",
         "null"
       ],
       "markdownDescription" : "Jar files to load\n\nSpecifies a list of .jar files to load into the host JVM for use by [compile](https://doc.log10x.com/api/compile/), [input](https://doc.log10x.com/api/input/) and [output](https://doc.log10x.com/api/output/) API extensions.  !!! note \"\"      This argument is not supported in the [edge](https://doc.log10x.com/engine/flavors/#edge) runtime flavor.",
@@ -72,7 +75,8 @@
     "quiet" : {
       "type" : [
         "boolean",
-        "string"
+        "string",
+        "null"
       ],
       "markdownDescription" : "Disable printing binary version information to the console\n\nDisable printing build/version information to the console upon launch (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
       "default" : false
@@ -80,6 +84,7 @@
     "disabledArgs" : {
       "type" : [
         "array",
+        "string",
         "null"
       ],
       "markdownDescription" : "Limit argument values that can be set by users\n\nSpecifies a list of launch arguments that are disallowed from either command line or user config files. This argument provides a method of limiting the target [pipeline](https://doc.log10x.com/shared/bootstrap/#pipeline), [source](https://doc.log10x.com/config/#sources) and and [command line](https://doc.log10x.com/config/cli/) settable by the user.  This mechanism enables pipeline launchers such as the [Quarkus launcher](https://doc.log10x.com/api/launch/#quarkus) to limit user input received via REST requests to a target subset of 'safe' arguments.  For example, adding [procOutCommand](https://doc.log10x.com/run/output/event/process/#procoutcommand) to this list ensures that no external process outputs can be launched by the runtime.  An optional regex pattern can limit arguments to a certain subset of values in the form of: `<arg-name>[:pattern]` (e.g., specific process names). Multiple patterns can be specified per argument.  Matching the `source` argument determines which source locations to inspect (e.g., folders, files, GitHub repos). For example, an admin may place .yaml config files containing preset Fluent Bit outputs in `/etc/log10x/`, excluding their enclosed arguments from limits set by this list, while disallowing users to directly set them via the command-line or by sourcing them from their local/GitHub config files (see example below).  To limit:  The target pipeline (e.g., [run](https://doc.log10x.com/run/), [compile](https://doc.log10x.com/compile/)):  ``` yaml   disabledArgs:   - \"pipeline:^run\" # disallow compile ```  Target arguments (e.g., [process outputs](https://doc.log10x.com/run/output/event/process/)):  ``` yaml   - \"procOutCommand:^fluent-bit$\"   # limit to Fluent Bit only   # - procOutArgs: <specify-regex>  # further limit args for Fluent Bit ```  Control which argument [sources](https://doc.log10x.com/config/#sources) to inspect:  ``` yaml   - \"source:^github.*\"             # inspect of all arguments sourced from GitHub against this list   - \"source:^(?!/etc/log10x/).*\"   # inspect of all arguments sourced from config files NOT contained in: /etc/log10x/ ```",
@@ -90,6 +95,7 @@
     "debugEnvVars" : {
       "type" : [
         "array",
+        "string",
         "null"
       ],
       "markdownDescription" : "List environment variables to debug\n\nSpecifies a list of env var names for which to log information relating to how they are resolved. For example, the following call: `L1Env.get(\"myVar\", \"myDefault\")` can be resolved from a number of [sources](https://doc.log10x.com/api/js/#TenXEnv.get) ranging from launch arguments, to OS/JVM properties and a default value (e.g., myDefault).  Setting this value to `myVar` will log INFO level information detailing how the value of the `myVar` was resolved.",

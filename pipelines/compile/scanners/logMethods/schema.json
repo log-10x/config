@@ -11,6 +11,7 @@
         "methods" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Names of source code methods to mark as 'logging'\n\nLists 'logging' method names whose invocations to mark 'logging'. Logging frameworks commonly define standard methods to emit event information to program output (e.g., 'warn', 'error').",
@@ -28,6 +29,7 @@
         "streams" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Names of source code variables to mark as 'logging'\n\nLists 'logging' member names whose assignments to mark 'logging'. Programming languages commonly define standard members to emit events to output (e.g., 'out', 'cerr').",

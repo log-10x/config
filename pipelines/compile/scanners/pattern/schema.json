@@ -27,7 +27,8 @@
           "extractQuotes" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Extract single and double quoted values\n\nDefines whether to extract single and double quoted values from input lines, taking into consideration escaping and improperly closed quotations. This options provides am efficient method for extracting string constants from input files without relying on regex backtracking. To learn more see [pseudo code] (https://gist.github.com/talwgx/d31133f6278bb8b640baf050f78047d5). (Accepts boolean or string with $= prefix for runtime evaluation)"
           },

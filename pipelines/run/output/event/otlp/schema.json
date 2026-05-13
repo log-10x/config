@@ -27,6 +27,7 @@
           "port" : {
             "type" : [
               "string",
+              "number",
               "null"
             ],
             "markdownDescription" : "TCP port of the target OTLP/gRPC logs endpoint\n\nTCP port of the OTLP/gRPC logs receiver. Matches the `endpoint` of the Collector's `otlp` receiver. (Default: 4317)",
@@ -35,6 +36,7 @@
           "insecure" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, connect over plaintext (no TLS)\n\nWhen true, the gRPC channel is opened in plaintext mode (no TLS). Set to false only when the destination requires TLS. (Default: true)",
@@ -59,6 +61,7 @@
           "batchSize" : {
             "type" : [
               "string",
+              "number",
               "null"
             ],
             "markdownDescription" : "Maximum number of LogRecords to buffer before flushing\n\nWhen the buffered LogRecord count reaches this value, the appender immediately flushes via gRPC. (Default: 100)",
@@ -67,6 +70,7 @@
           "flushIntervalMs" : {
             "type" : [
               "string",
+              "number",
               "null"
             ],
             "markdownDescription" : "Maximum age in ms of a buffered LogRecord before forced flush\n\nPeriodic flush interval in milliseconds. Buffered LogRecords are flushed at most this often even when the batch size has not been reached. A longer interval lets more records coalesce into a single OTLP `ExportLogsServiceRequest`, which preserves the resource/scope grouping the destination Collector would see if Log10x weren't in the path. (Default: 1000)",
@@ -75,6 +79,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nNames of TenXObject intrinsic/extracted/calculated fields to write on each event. With `outputOtlpEncodeType: delimited` and a single field carrying a JSON envelope (e.g. `fullText`), the appender re-parses the envelope to recover the original key/value structure.",
@@ -85,6 +90,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, emit TenXObject field values to this output\n\nControls whether instance field values for TenXObjects passed to this output are written. Disable to keep templates-only emission active without ferrying every event payload over OTLP/gRPC. (Default: true)",
@@ -93,6 +99,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, emit new TenXTemplates to this output\n\nControls whether template values for TenXObjects passed to this output are written. Each new template is emitted at most once. Enable this alongside `receiverOptimize true` so the destination Collector can decode the compact body using the matching template. (Default: false)",
@@ -125,5 +132,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

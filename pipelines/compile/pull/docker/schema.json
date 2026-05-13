@@ -11,6 +11,7 @@
         "images" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Docker image files to pull\n\nSpecifies the URLs for the remote Docker images to pull in the form of: `<container-repository>/<image>/<version>`. For example:  ``` yaml  dockerImages: - docker.io/grafana/grafana:11.1.0 ```",
@@ -35,7 +36,8 @@
         "remove" : {
           "type" : [
             "boolean",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Remove image after scan\n\nSpecifies whether to remove [dockerImages](https://doc.log10x.com/compile/pull/docker/#dockerimages) using [docker rmi -f](https://docs.docker.com/reference/cli/docker/image/rm/) (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
           "default" : true

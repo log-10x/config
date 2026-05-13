@@ -23,6 +23,7 @@
           "headers" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Request HTTP header pairs\n\nSpecifies a list of HTTP header values to accompany requests in the form of <name>=<value> (e.g., header1=hello)",
@@ -41,6 +42,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -58,6 +60,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, encode TenXObjects [outputHttpFields](https://doc.log10x.com/run/output/event/http/#outputhttpfields) to this output\n\nDetermine whether to write [outputHttpFields](https://doc.log10x.com/run/output/event/http/#outputhttpfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   outputHttpWriteObjects: $=TenXEnv.get(\"myHttpAddress\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
@@ -66,6 +69,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, write new TenXTemplates to this output\n\nControls whether to write template values of TenXObjects passed to this output. The output will only emit TenXTemplates that the pipeline did not load at startup via the [templateFile](https://doc.log10x.com/run/template/#templatefiles) argument, and will only emit an TenXTemplate once based on its[templateHash](https://doc.log10x.com/api/js/#TenXBaseObject+templateHash) value. (Default: false)",
@@ -102,5 +106,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

@@ -20,6 +20,7 @@
           "enabled" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "Enable/disable this aggregator\n\nSets whether to open the input stream. To enable this input only when an 'aggregateErrors' startup argument value is truthy:  ``` yaml ... aggregator:   enabled: $=TenXEnv.get(\"aggregateErrors\") ``` (Default: true)",
@@ -27,7 +28,9 @@
           },
           "fields" : {
             "type" : [
-              "array"
+              "array",
+              "string",
+              "null"
             ],
             "markdownDescription" : "List of field names by which to aggregate TenXObjects\n\nProvides a list of intrinsic/extracted/calculated [TenXObject](https://doc.log10x.com/api/js/#TenXObject) field names by which to aggregate instances.  When the aggregator flushes the in-mem table to produced TenXSummaries, each generated TenXSummary instance provides access to the total values via its [summaryTotals](https://doc.log10x.com/api/js/#TenXSummary+summaryValues) array field.",
             "items" : {
@@ -44,6 +47,7 @@
           "totalFields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of fields whose values to tally into generated TenXSummaries\n\nSpecifies a list of intrinsic calculated/extracted TenXObject field names to tally and write into aggregated TenXSummary instances within a target flush  [threshold](https://doc.log10x.com/run/aggregate/#aggregatorflushthreshold) or [interval](https://doc.log10x.com/run/aggregate/#aggregatorflushinterval).  For example, setting a value of: `price` into this array will tally the prices of all TenXObjects aggregated into a target output TenXSummary instance.   A matching `price` value containing the sum of aggregated prices will be accessible for each TenXSummary instance via its  [summaryTotals](https://doc.log10x.com/api/js/#TenXSummary+summaryTotals) array.",
@@ -54,7 +58,8 @@
           "maxCardinality" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Max number of concurrent rows within the aggregator in-mem table within the flush interval\n\nSets the maximum number of unique rows within the aggregator's in-mem table. If the number of rows exceeds this value during [flushInterval](https://doc.log10x.com/run/aggregate/#aggregatorflushinterval) , the 'aggregatorDefaultValue' value will be for all TenXObjects instead of [field values](https://doc.log10x.com/run/aggregate/#aggregatorfields) until the aggregator is flushed.  This value is used as a backstop to ensure that the aggregator's in-mem table does not overflow when extracting and  aggregating very high cardinality values from the fields of TenXObjects passed to this aggregator.  If no value is provided or set to 0, the aggregator has no cap. This may result in an out-of-mem error when very high cardinality (e.g., 'spanID', 'GUID') [fields](https://doc.log10x.com/run/aggregate/#aggregatorfields) are specified. (Accepts number or string with $= prefix for runtime evaluation)"
           },
@@ -68,7 +73,8 @@
           "flushThreshold" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum the number of TenXObjects to aggregate before the aggregator flushes\n\nControls how many TenXObjects to upsert into this aggregator (e.g., 10000) before the aggregator transforms the rows of its in-mem table into TenXSummaries instances and flushes them into the pipeline.  If not set, the [flushInterval](https://doc.log10x.com/run/aggregate/#aggregatorflushinterval) argument determines when to flush the aggregator. If neither argument is present, the aggregator only flushes pending TenXSummaries when the pipeline terminates. (Accepts number or string with $= prefix for runtime evaluation)"
           },

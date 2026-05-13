@@ -26,6 +26,7 @@
           "inputArgs" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Arguments to pass to the spawned Fluent Bit  process setting up input\n\nList of values to pass as startup arguments to the spawned Fluent Bit  sub-process intended to set up it's stdin input. (Default: [\"-c\",\"$=path(\\\"fluentbit-10x-input.conf\\\")\"])",
@@ -40,6 +41,7 @@
           "outputArgs" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Arguments to pass to the spawned Fluent Bit  process setting up output\n\nList of values to pass as startup arguments to the spawned Fluent Bit sub-process intended to set up it's output plugin(s)",
@@ -50,7 +52,8 @@
           "lazyLaunch" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether to launch the process on-demand\n\nControls whether to spawn the target sub-process upon the creation of the output or on-demand. If true, launch the sub-process when the first TenXObject instance is written to its stdin. (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
@@ -65,7 +68,8 @@
                   "ms" : {
                     "type" : [
                       "number",
-                      "string"
+                      "string",
+                      "null"
                     ],
                     "markdownDescription" : "Wait time for process to startup\n\nSets a startup delay wait time in milliseconds before the process is considered available for events. if provided, will add a wait as part of starting the process before emitting events into it. max value for this argument is 10,000 (ie 10 seconds). if [fluentbitOutStartupWaitPattern](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitOutstartupwaitpattern) is also provided, the process will be considered a failure if the wait time has passed before a line matching [fluentbitOutStartupWaitPattern](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitoutstartupwaitpattern) was emitted. (Accepts number or string with $= prefix for runtime evaluation) (Default: 5000)",
                     "default" : 5000
@@ -100,13 +104,15 @@
           "maxCacheSize" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Max number of sub-processes to keep alive across subsequent 10x pipeline executions\n\nSets the global maximum number of processes that can retained globally across 10x pipeline executions within the host JVM. This value is useful when launching shippers (e.g., Filebeat, Fluent Bit) for use across multiple 10x pipeline executions within a server environment. This value only applies when [fluentbitOutDestroyMode](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitoutdestroymode) is set to `cached`. If [fluentbitOutMaxCacheSize](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitoutmaxcachesize) is set to 0, no caching is performed, and sub-processes are destroyed gracefully. (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -124,6 +130,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, TenXObject field values specified by [fluentbitOutFields](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitoutfields) are encoded to this output\n\nDetermine whether to write [fluentbitOutFields](https://doc.log10x.com/run/output/event/fluentbit/#fluentbitoutfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   fluentbitOutWriteObjects: $=TenXEnv.get(\"myProcCmd\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
@@ -132,6 +139,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, write new TenXTemplates to this output\n\nControls whether to write template values of TenXObjects passed to this output. The output will only emit TenXTemplates that the pipeline did not load at startup via the[templateFile](https://doc.log10x.com/run/template/#templatefiles) argument, and will only emit an TenXTemplate once based on its [templateHash](https://doc.log10x.com/api/js/#TenXBaseObject+templateHash) value. (Default: false)",
@@ -174,5 +182,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }
