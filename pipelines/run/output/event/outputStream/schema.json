@@ -23,6 +23,7 @@
           "args" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Arguments to pass to the constructor of 'outputStreamClass'\n\nValue pairs to insert to the OutputStream/Writer constructor 'args' Map. This argument adds configuration values to the map passed to Stream/Writer ctor in addition to those specified by its matching 'outputStream' option group instance.  This argument allows for providing stream-specific context and default values such as a host address, port, etc.",
@@ -33,6 +34,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -43,6 +45,7 @@
           "groupKeys" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Values to assign an 'outputStream' to a target output instance\n\nSpecifies a list of values by which instances of the 'outputStream' option group are assigned to specific instances of 'outputStreamClass' to enable multiple outputs to use a single synchronized OutputStream instance.",
@@ -60,6 +63,7 @@
           "writeObjects" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, TenXObject field values specified by [outputStreamFields](https://doc.log10x.com/run/output/event/outputstream/#outputstreamfields) are encoded to this output\n\nDetermine whether to write [outputStreamFields](https://doc.log10x.com/run/output/event/outputstream/#outputstreamfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   outputStreamWriteObjects: $=TenXEnv.get(\"myOutputStreamClass\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
@@ -68,6 +72,7 @@
           "writeTemplates" : {
             "type" : [
               "string",
+              "boolean",
               "null"
             ],
             "markdownDescription" : "If true, write new TenXTemplates to this output\n\nControls whether to write template values of TenXObjects passed to this output. The output will only emit TenXTemplates that the pipeline did not load at startup via the [templateFile](https://doc.log10x.com/run/template/#templatefiles) argument, and will only emit an TenXTemplate once based on its [templateHash](https://doc.log10x.com/api/js/#TenXBaseObject+templateHash) value. (Default: false)",
@@ -104,5 +109,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

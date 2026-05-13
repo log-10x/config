@@ -13,6 +13,7 @@
           "repos" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Names of repo(s) to pull\n\nIdentifies GitHub repositories to pull in the form of username/owner (e.g., opensearch-project/OpenSearch)",
@@ -37,6 +38,7 @@
           "folders" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Repo folders to pull\n\nIdentifies folder(s) within [githubPullRepos](https://doc.log10x.com/compile/pull/github/#githubpullrepos) to pull. if omitted, the entire repo is pulled.",

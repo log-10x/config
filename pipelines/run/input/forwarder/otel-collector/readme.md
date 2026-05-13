@@ -1,27 +1,5 @@
-# OpenTelemetry Collector Forwarder Configuration
+## 1️⃣0️⃣❎ OpenTelemetry Collector receiver config
 
-Default configuration files for Log10x integration with OpenTelemetry Collector.
+This is the default configuration for the OpenTelemetry Collector receiver module.
 
-## Overview
-
-The OpenTelemetry Collector integration provides three deployment modes:
-
-- **report** - Read and report on events for metrics aggregation
-- **receive** - Filter and receive which events to ship based on policies  
-- **optimize** - Transform and optimize events before shipping to outputs
-
-## Configuration Files
-
-- `report/config.yaml` - Reporter configuration
-- `receive/config.yaml` - Receiver configuration
-- `optimize/config.yaml` - Optimizer configuration
-
-## Architecture
-
-Unlike other forwarders, OpenTelemetry Collector cannot launch a Log10x sidecar process. Instead:
-
-1. Log10x runs as a standalone service
-2. OTel Collector sends JSON events via TCP to Log10x
-3. Log10x processes and returns optimized events via Unix socket (forward protocol)
-4. OTel Collector forwards optimized events to final destinations
-
+To learn more see the [OpenTelemetry Collector](https://doc.log10x.com/run/input/forwarder/otel-collector "Receive and optimize events collected by the OpenTelemetry Collector via OTLP/gRPC and the fluent_forward receiver") module documentation.

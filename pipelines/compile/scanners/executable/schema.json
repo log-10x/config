@@ -27,6 +27,7 @@
           "extensions" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "A list of file extensions a target file must match to apply this scanner\n\nAn array of file extensions to test a file candidate against. If the candidate matches any extensions, apply this scanner.",
@@ -62,6 +63,7 @@
               "args" : {
                 "type" : [
                   "array",
+                  "string",
                   "null"
                 ],
                 "markdownDescription" : "List of arguments passed to 'execSelectorProcess'\n\nDefines arguments for the selector process, if provided. The `file` macro takes the value of the target exec file to launch.",
@@ -102,6 +104,7 @@
           "args" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of arguments passed to 'execProcess' ('file' is replaced by scan target)\n\nDefines launch arguments [execProcess](https://doc.log10x.com/compile/scanner/executable/#execprocess). The `file` macro expands into the input file path",
@@ -123,20 +126,23 @@
               "minLength" : {
                 "type" : [
                   "number",
-                  "string"
+                  "string",
+                  "null"
                 ],
                 "markdownDescription" : "Minimal length of the string read from 'execProcess' to read as a symbol\n\nSets the minimal length a string read from the scanner process stdout must be to be considered a symbol (Accepts number or string with $= prefix for runtime evaluation)"
               },
               "maxLength" : {
                 "type" : [
                   "number",
-                  "string"
+                  "string",
+                  "null"
                 ],
                 "markdownDescription" : "Max length the string read from 'execProcess' to read as a symbol\n\nSets the maximum length a string read from the scanner process stdout must be to be considered a symbol (Accepts number or string with $= prefix for runtime evaluation)"
               },
               "filters" : {
                 "type" : [
                   "array",
+                  "string",
                   "null"
                 ],
                 "markdownDescription" : "Patterns a line read from 'execProcess' must NOT match\n\nDefines regex patterns applied to each line read from the scanner process' stdout that must NOT match for the line value to be captured as a symbol.   For example, to avoid [AWAV binary](https://stackoverflow.com/questions/39322552/meaning-of-a-common-string-in-executables) when using the `strings` OS utility, specify:  ``` yaml execSymbolFilters:   -  ^AWAV      ````",
@@ -147,6 +153,7 @@
               "setSelectors" : {
                 "type" : [
                   "array",
+                  "string",
                   "null"
                 ],
                 "markdownDescription" : "Regex patterns to determines whether to treat an input value as set of tokens\n\nDefines regex patterns must ALL matc to treat an input value as a line (e.g., 'error connecting to {}'), or as a series of independent tokens (e.g., 'error', 'connecting', 'to') to reduce the cardinality and size of the output symbol file.   For example, when processing files that contain values GO compile symbols such as:   ``` github.com/open-telemetry/opentelemetry-collector-contrib/exporter/fileexporter.group[go.shape.struct ```  Specify the pattern below to break the string into separate symbol tokens (e.g., shape, struct,..):   ``` yaml setSelectors:  - ^(?:github\\.com|golang\\.org|type:\\.eq\\.(?:github\\.com|golang\\.org))(/[a-zA-Z0-9_-]+)*$ - ^[a-zA-Z0-9_/:\\.\\[\\]\\*,-]*(?:\\.[a-zA-Z0-9]+|\\[[a-zA-Z0-9,\\.\\*/:_-]+\\]|-fm)?$ ```",
@@ -166,7 +173,8 @@
           "symbolsPrefix" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "A prefix lines read from 'execProcess' must match to parse as structured JSON symbols\n\nSets a prefix that must precede lines read from the scan process' stdout to parse as structured JSON symbol trees. Only applies when [execIsStructured](https://doc.log10x.com/compile/scanner/executable/#execisstructured) is true (Accepts boolean or string with $= prefix for runtime evaluation)"
           }

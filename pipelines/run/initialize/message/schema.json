@@ -22,7 +22,8 @@
         "maxLen" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Max number of output chars\n\nSpecifies the max number of chars of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield). Set 0 to unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
           "default" : 0
@@ -54,5 +55,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

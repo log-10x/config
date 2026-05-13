@@ -34,6 +34,7 @@
           "parserFactoryArgs" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Arguments for 'textParserFactory' ctor\n\nSpecifies arguments to pass to the parser factory instance constructor. This option only applies if 'textParserFactoryClass' is set.",
@@ -44,42 +45,48 @@
           "scanFieldValues" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Controls whether to capture Jackson parser field values\n\nControls whether to capture a Jackson parser's [VALUE_STRING](https://fasterxml.github.io/jackson-core/javadoc/2.8/com/fasterxml/jackson/core/JsonToken.html#VALUE_STRING) tokens are scanned for entries or just values of [FIELD_NAME](https://fasterxml.github.io/jackson-core/javadoc/2.8/com/fasterxml/jackson/core/JsonToken.html#FIELD_NAME) tokens.    This option only applies if 'textParserFactoryClass' is set. (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
           "maxLines" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Max number of lines to scan\n\nControls the maximum number of lines to scan for symbol values from the input file. This option is useful when scanning existing log files as 'templates' for parsing future logs from a similar input stream. (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "lineOffset" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Line number from which to start scan\n\nSpecifies the line number from which to start scanning for symbols. This option is useful when scanning a specific portion of a text file. (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "allowDigits" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Controls whether to capture tokens containing numeric as symbol tokens\n\nControls whether tokens contain numeric chars (e.g., 0-9) are accepted as symbol tokens. As alphanumeric combinations tend to have high cardinality (e.g., GUID, trace_id), it is not generally advised  to add them to symbol units unless specifically known to be 'constant' / low cardinality values (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
           "minLength" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Min character length for a token to be considered a symbol value\n\nSets the minimal character length a token must have to constitute a symbol value. Very short tokens (e.g., len < 3) have a high probability of being dynamic values with high cardinality and, as such, should not  be captured as symbol values. (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "maxLength" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Max character length for a token to be considered a symbol value\n\nSets the maximum character length a token must have to constitute a symbol value. Very long tokens (e.g., len > 100) have a high probability of being dynamic values with high cardinality and, as such, should not  be captured as symbol values. (Accepts number or string with $= prefix for runtime evaluation)"
           }

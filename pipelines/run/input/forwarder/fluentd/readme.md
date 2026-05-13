@@ -1,6 +1,5 @@
-## 1️⃣0️⃣❎ Fluentd optimizer config
+## 1️⃣0️⃣❎ Fluentd receiver config
 
-This is the fluentd configuration for the Fluentd optimizer module.
+This is the default configuration for the Fluentd receiver module.
 
-To learn more see the [Fluentd optimizer](https://doc.log10x.com/run/input/forwarder/fluentd/optimize "Optimize events collected by Fluentd forwarder") module documentation
-
+To learn more see the [Fluentd](https://doc.log10x.com/run/input/forwarder/fluentd "Receive and optimize events collected by Fluentd via the Fluent Forward protocol") module documentation.

@@ -11,6 +11,7 @@
         "chartNames" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of charts to pull\n\nSpecifies a list of chart names (e.g., open-telemetry/opentelemetry-demo) to pass to [helmCommand](https://doc.log10x.com/compile/pull/helm/#helmcommand). The scanner will invoke the [template](https://helm.sh/docs/helm/helm_template/) and [show chart](https://helm.sh/docs/helm/helm_show_chart/) commands to pull its values.yaml and chart.yaml files to scan for Docker container images and GitHub repo files.",
@@ -21,6 +22,7 @@
         "chartFiles" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of charts templates and value files to scan\n\nSpecifies a list of chart value and templates files to scan. These file paths may be relative to the include paths list. If file paths are canonical, their enclosing folders must be included in the includePaths argument.",
@@ -39,7 +41,8 @@
                 "repos" : {
                   "type" : [
                     "boolean",
-                    "string"
+                    "string",
+                    "null"
                   ],
                   "markdownDescription" : "Pull GitHub repos\n\nSpecifies whether to pull [GitHub repos](https://doc.log10x.com/compile/pull/github/) referenced by an input Helm template files. (Accepts boolean or string with $= prefix for runtime evaluation)"
                 },
@@ -55,7 +58,8 @@
             "dockerImages" : {
               "type" : [
                 "boolean",
-                "string"
+                "string",
+                "null"
               ],
               "markdownDescription" : "Pull docker container images\n\nSpecifies whether to pull [Docker images](https://doc.log10x.com/compile/pull/docker/) referenced by an input Helm values and template files. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
               "default" : true

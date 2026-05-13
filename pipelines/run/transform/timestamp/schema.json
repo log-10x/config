@@ -11,6 +11,7 @@
         "patterns" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Date-time formats for parsing timestamps from input events\n\nLists date-time formats in [Java specification](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html) for parsing timestamp epoch values from input events. (Default: [\"[config.yaml](https://github.com/log-10x/config/tree/main/pipelines/run/config/transform/timestamp/config.yaml)\"])",
@@ -32,7 +33,8 @@
         "maxPerObject" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Maximum number of timestamps per TenXObject\n\nControls the maximum number of timestamps to add into an TenXObject's [timestamp](https://doc.log10x.com/api/js/#TenXObject+timestamp) array. Set to 0 for unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
           "default" : 0
@@ -40,7 +42,8 @@
         "searchLengthLimitFromStart" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Maximum number of characters to scan for timestamps from event start\n\nLimits the number of characters to search for timestamps from the beginning of the object's [text](https://doc.log10x.com/api/js/#TenXBaseObject+text)  field. Set 0 for unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
           "default" : 0
@@ -48,7 +51,8 @@
         "searchLengthLimitFromEnd" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Max number of characters to scan for timestamps from event end\n\nLimits the number of characters to search for timestamps from the end of the object's [text](https://doc.log10x.com/api/js/#TenXBaseObject+text) field. Set 0 for unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
           "default" : 0
@@ -64,6 +68,7 @@
         "literals" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "Timestamp literals\n\nAn array of strings literal values to treat as valid parts of timestamp (e.g., 'Z', 'T', 'GMT'). (Default: [\"T\",\"Z\"])",

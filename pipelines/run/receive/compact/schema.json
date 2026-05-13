@@ -21,6 +21,7 @@
         "fieldNames" : {
           "type" : [
             "array",
+            "string",
             "null"
           ],
           "markdownDescription" : "List of TenXObject fields used to key compact lookup entries\n\nDefines the list of TenXObject field names joined with underscores to form each event's lookup key. The key format matches the rate receiver's `rateReceiverFieldNames`, so an entry in the compact lookup targets the same pattern identity the Reporter attributes cost to. **Default**: `[symbolMessage]` (same as the rate receiver's default).  **Multi-dimensional compaction** (e.g., \"compact this pattern only for tenants X, Y\"):  ```yaml compactReceiverFieldNames:   - symbolMessage   - tenantId ```  Changing this field set currently requires an engine restart — a future enhancement will allow hot-swapping via a bootstrap key inside the lookup file. (Default: [\"symbolMessage\"])",
@@ -34,7 +35,8 @@
         "lookupRetain" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Lookup file poll interval in milliseconds\n\nDefines how often the engine re-reads `compactReceiverLookupFile` to pick up new/changed entries. Default of 5 minutes (300000ms) aligns with the rate receiver's `rateReceiverLookupRetain`. Shorter values make GitOps changes take effect faster at the cost of more file I/O. Longer values reduce I/O but delay effect.  **Validation**: must be at least 60000ms (1 minute). (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
           "default" : 300000
@@ -42,12 +44,13 @@
         "default" : {
           "type" : [
             "boolean",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Default compaction decision when no lookup entry applies\n\nControls the fallback decision when no lookup file is loaded, no entry matches an event's field-set, or a matching entry has expired. - `false` (default) — preserve `fullText`. Lookup entries opt specific patterns INTO compaction. - `true` — compact via `encode()`. Lookup entries opt specific patterns OUT (e.g., audit/compliance patterns that must stay verbose).  Flipping this value is a policy-level decision (affects every event), not a lookup edit. Changing it requires a pod rollout. The lookup handles pattern-level overrides without restart. (Accepts boolean or string with $= prefix for runtime evaluation)"
         }
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

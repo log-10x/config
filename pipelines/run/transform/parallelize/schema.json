@@ -18,7 +18,8 @@
         "batchSize" : {
           "type" : [
             "number",
-            "string"
+            "string",
+            "null"
           ],
           "markdownDescription" : "Maximum number of events to queue for concurrent processing before flushing\n\nSets the number of events to queue before flushing them to transform into TenXObjects. If [threadPoolSize](https://doc.log10x.com/run/transform/parallelize/#paralleleventthreadpoolsize) is 1, this value is unused, and events are transformed into TenXObject synchronously  to their calling input's thread.  If 0, flush pending events after [flushInterval](https://doc.log10x.com/run/transform/parallelize/#paralleleventflushinterval) expires or the source input reaches end-of-file. (Accepts number or string with $= prefix for runtime evaluation) (Default: 1000)",
           "default" : 1000

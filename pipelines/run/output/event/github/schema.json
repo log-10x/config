@@ -71,7 +71,8 @@
           "squashMerge" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Use squash merge when merging pull requests\n\nSpecifies whether to use squash merge (true) or regular merge (false) when merging the pull request. Squash merge combines all commits into a single commit, resulting in a cleaner commit history. This is useful for automated commits that run frequently (e.g., GitOps policy updates). (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -79,6 +80,7 @@
           "fields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXObject field names to encode\n\nSpecifies a list of TenXObject intrinsic/calculated/extracted field names to extract and write to the output.",
@@ -126,5 +128,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

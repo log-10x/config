@@ -26,7 +26,8 @@
           "readPrintProgress" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console This value is commonly used when testing an integration to a remote endpoint. (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
@@ -47,7 +48,8 @@
           "writeResults" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether matched events are buffered to JSONL and uploaded to object storage\n\nControls whether the stream pipeline launches the JSONL results writer in addition to the byte-count marker backstop used by the query coordinator.  Defaults to `false` so the extra JSONL upload only runs when a caller explicitly opts in. The query coordinator forwards this flag to each stream worker it dispatches via a `queryObjectWriteResults=<value>` bootstrap arg on the stream pipeline launch.  Out-of-band consumers like the Log10x MCP server set this to `true` so they can retrieve full event payloads from S3 under `{indexObjectPath(queryResults)}/{queryId}/{sliceFrom}_{sliceTo}/*.jsonl`. Deployments that only rely on the coordinator's numeric-key poll leave this off.  ``` yaml queryWriteResults: true ``` (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -55,7 +57,8 @@
           "writeSummaries" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether per-slice TenXSummary aggregates are buffered to JSONL and uploaded\n\nControls whether the stream pipeline launches a TenXSummary-mode results writer in addition to the events writer (gated by `queryWriteResults`) and the byte-count marker backstop.  Defaults to `false`. The query coordinator forwards this flag to each stream worker it dispatches via a `queryObjectWriteSummaries=<value>` bootstrap arg on the stream pipeline launch.  When set to `true`, per-slice aggregated summaries (count, bytesum, grouping fields produced by `run/aggregate/stream`) are written to `{indexObjectPath(querySummaries)}/{queryId}/{sliceFrom}_{sliceTo}/*.jsonl`. Consumers (e.g. log10x_pattern_trend, log10x_top_patterns) can poll these per-slice summaries to render time-spread results for high-cardinality patterns without paying the bandwidth cost of full event JSONL.  Independent of `queryWriteResults`; either can be on in isolation or both together.  ``` yaml queryWriteSummaries: true ``` (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -77,6 +80,7 @@
           "filters" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of terms to search for\n\nSpecifies JavaScript expressions applied in-memory to all TenXObjects that match the [querySearch](https://doc.log10x.com/run/input/objectStorage/query/#querysearch) expression. Supports all valid [TenX JavaScript](https://doc.log10x.com/api/js/) expressions for complex filtering, enrichment, and processing.  This provides precise, exact filtering after data is fetched from storage.  ``` yaml queryFilters:   - LevelTemplate.level == \"ERROR\"    - Math.max(this.price, 100) ```",
@@ -122,6 +126,7 @@
           "objectStorageArgs" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Custom object storage args\n\nCustom arguments passed as a map to the constructor of the underlying [object storage](https://doc.log10x.com/run/input/objectStorage/query/#indexobjectstoragename). This list is expected to hold pairs of key values (e.g., args: [key1, value1, key2, value2])",
@@ -171,7 +176,8 @@
                   "maxInstances" : {
                     "type" : [
                       "number",
-                      "string"
+                      "string",
+                      "null"
                     ],
                     "markdownDescription" : "Max number of instances of the scan worker\n\nSpecifies the maximum number of [scan](https://doc.log10x.com/run/input/objectStorage/query/#scan) worker instances that will traverse the index. if the provided time range and [timeSlice](https://doc.log10x.com/run/input/objectStorage/query/#queryscanfunctionparalleltimeslice) provided will result in more instances than the provided value, the time slice will increase its size until the amount of workers needed will be less than this value.  For example, if a query specifies a time range of `60min` and a time slice of `1m`, while this value is set to `25`, the time slice will be effectively increased to `3m` to accommodate this.  The maximum value for this option is: 10,000 (Accepts number or string with $= prefix for runtime evaluation) (Default: 1000)",
                     "default" : 1000
@@ -179,7 +185,8 @@
                   "threads" : {
                     "type" : [
                       "number",
-                      "string"
+                      "string",
+                      "null"
                     ],
                     "markdownDescription" : "Max number of threads allocated per each 'scan' worker instance\n\nSets the number of JVM threads to scan through a time slice of the index within a [scan](https://doc.log10x.com/run/input/objectStorage/query/#scan) worker instance. For example, if [timeSlice](https://doc.log10x.com/run/input/objectStorage/query/#queryscanfunctionparalleltimeslice) is `10min` and this value is set to 10, scan each 1m index time range using a dedicated thread. If set to 1 or 0, a single thread will scan through the entire index time range (e.g., 10min). (Accepts number or string with $= prefix for runtime evaluation)"
                   }
@@ -222,7 +229,8 @@
                   "objects" : {
                     "type" : [
                       "number",
-                      "string"
+                      "string",
+                      "null"
                     ],
                     "markdownDescription" : "Max number of input object byte ranges to process in a single 'stream' instance\n\nDefines the maximum number of Storage objects to process by a single instance of the [stream](https://doc.log10x.com/run/input/objectStorage/query/#stream) worker.  For example, if set to 50 and the [scan](https://doc.log10x.com/run/input/objectStorage/query/#scan) phase has identified 200 potentially matching input object byte ranges, four instances of the stream worker will split the workload in parallel. (Accepts number or string with $= prefix for runtime evaluation)"
                   },
@@ -257,6 +265,7 @@
               "vars" : {
                 "type" : [
                   "array",
+                  "string",
                   "null"
                 ],
                 "markdownDescription" : "Specifies a list of variable values to scan for\n\nSpecifies a list of variable values to scan for",
@@ -267,6 +276,7 @@
               "templateHashes" : {
                 "type" : [
                   "array",
+                  "string",
                   "null"
                 ],
                 "markdownDescription" : "Specifies a list of TenXTemplate hash values to scan for\n\nSpecifies a list of TenXTemplate hash values to scan for",
@@ -286,7 +296,8 @@
           "elapseTime" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Epoch after which processing times out\n\nEpoch value which if exceeds the current system time will result in this request being cancelled (Accepts number or string with $= prefix for runtime evaluation)"
           }
@@ -302,5 +313,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

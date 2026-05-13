@@ -1,6 +1,5 @@
-## 1️⃣0️⃣❎ Fluent Bit input config
+## 1️⃣0️⃣❎ Fluent Bit receiver config
 
-This is the default configuration for the Fluent Bit input module.
+This is the default configuration for the Fluent Bit receiver module.
 
-To learn more see the [Fluent Bit input](https://doc.log10x.com/run/input/forwarder/fluentbit "Report, receive, and optimize events collected by a Fluent Bit forwarder") module documentation
-
+To learn more see the [Fluent Bit](https://doc.log10x.com/run/input/forwarder/fluentbit "Receive and optimize events collected by Fluent Bit via the Fluent Forward protocol") module documentation.

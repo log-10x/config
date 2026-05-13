@@ -16,7 +16,8 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Enable this output\n\nEnable or disable this output. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
             "default" : true
@@ -68,6 +69,7 @@
           "counterFields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "Names of the TenXSummary fields used to increment the metric counter value\n\nDefines the name of the TenXSummary field by whose value to increment the counter.",
@@ -78,6 +80,7 @@
           "tagFields" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of TenXSummary fields to use as metric tag values\n\nDefines the TenXSummary field names to use as `tag` values. Tags are dimensions that enable slicing a particular named metric to drill down to reason about its value. To learn more see [micrometer tags](https://www.baeldung.com/micrometer#1-tags)",
@@ -88,6 +91,7 @@
           "tagFieldNames" : {
             "type" : [
               "array",
+              "string",
               "null"
             ],
             "markdownDescription" : "List of custom names to use for TenXSummary fields.\n\nDefines the a list of custom names to give fields when reporting them. Format as a list of name1, custom1, name2, custom2.  For example, to set a custom name of 'My-Custom-Field' to an existing 'intrinsic-field': ``` yaml prometheusRW:   tagFieldNames:     - intrinsic-field     - My-Custom-Field",
@@ -105,7 +109,8 @@
           "maxCardinality" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum number of unique metric combinations allowed\n\nSets the maximum number of unique metric combinations (cardinality) allowed for this output. When exceeded, metrics will be dropped to prevent excessive cardinality. (Accepts number or string with $= prefix for runtime evaluation) (Default: 500)",
             "default" : 500
@@ -119,5 +124,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }

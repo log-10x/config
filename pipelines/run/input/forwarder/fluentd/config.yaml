@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/fluentd/schema.json
+
+# 🔟❎ 'run' Fluentd receiver configuration
+#
+# Runs Log10x as a sidecar to Fluentd. The two processes exchange events
+# over the Fluent Forward protocol — Fluentd sends events to Log10x on the
+# input port, Log10x sends processed events back on the output port.
+#
+#   Fluentd out_forward (→ :24224) ──► Log10x Fluentd Forward input
+#                                         │
+#                                         ▼
+#                                      Receiver
+#                                         │
+#                                         ▼
+#   Fluentd in_forward (← :24225) ◄── Log10x Fluentd Forward output
+#
+# On the Fluentd side, the `in_forward` source MUST be routed to a dedicated
+# `@label` (typically `@OUTPUT`) so processed events bypass the enrichment
+# filter chain on the return path. See the reference Fluentd config at:
+#   modules/pipelines/run/modules/input/forwarder/fluentd/conf/tenx-sidecar.conf
+#
+# Launch with:
+#   tenx @run/input/forwarder/fluentd @apps/receiver
+
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Shared forwarder options (mode dispatch, output encoding)
+  - run/modules/input/forwarder/module.yaml
+
+  # Fluentd module — shared output-formatting options
+  - run/modules/input/forwarder/fluentd/module.yaml
+
+  # Fluentd Forward input — decodes events from Fluentd and captures the
+  # message field. Defaults to listening on TCP `:24224`.
+  - run/modules/input/forwarder/fluentd/input
+
+  # Fluentd Forward output — sends processed events back to Fluentd.
+  # Defaults to TCP `127.0.0.1:24225`.
+  - run/modules/input/forwarder/fluentd/output
+
+# =============================== Mode Options ================================
+#
+# The Receiver app picks the encoding mode based on user flags:
+#   default                      → emit events verbatim (`fullText`)
+#   receiverOptimize=true        → compact-all (lossless compaction of every event)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+outputEncodeField: $=yield TenXReceiver.encodeField()
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+
+# ============================== Forward Input ================================
+#
+# TCP port for events arriving from Fluentd's `out_forward` plugin.
+# To use a Unix domain socket instead (Linux/macOS only), set:
+#   fluentdInputPath: /tmp/tenx-fluentd-in.sock
+fluentdInputPort: 24224
+
+# Name of the JSON field in each Fluentd record containing the log line.
+# Default is `log` (Fluentd's `in_tail` convention for container/file logs).
+# Uncomment and change if your sources emit the log line under a different
+# key. Left commented so the option stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/fluentd @apps/receiver fluentdMessageField message
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once").
+# fluentdMessageField: log
+
+# ============================== Forward Output ===============================
+#
+# The Fluentd output included above defaults to TCP `127.0.0.1:24225`. To
+# override:
+#
+#   fluentdOutputHost: 0.0.0.0
+#   fluentdOutputPort: 9999
+#
+# Or on Linux/macOS, use a Unix domain socket:
+#
+#   fluentdOutputPath: /tmp/tenx-fluentd-out.sock
+#
+# The original Fluentd tag survives the round trip, so destinations that
+# route on `$TAG` (Splunk index, S3 path, Kafka topic, …) behave the same
+# as without Log10x in the path.

@@ -23,14 +23,16 @@
           "enabled" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input is enabled\n\nSets whether to open the input stream. To enable this input only when a 'cloudwatchLogsName' startup argument value is truthy, use: ``` yaml cloudwatchLogsEnabled: $=TenXEnv.get(\"cloudwatchLogsName\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Accepts boolean or string with $= prefix for runtime evaluation)"
           },
           "printProgress" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console for testing an integration to a remote endpoint. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -73,7 +75,8 @@
           "limit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Number of events to read per batch from the AWS CloudWatch Logs service\n\nSets the number of documents to retrieve with each page of results. To learn more see: [request limit](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_GetLogEvents.html#CWL-GetLogEvents-request-limit) (Accepts number or string with $= prefix for runtime evaluation) (Default: 500)",
             "default" : 500
@@ -88,7 +91,8 @@
           "startFromHead" : {
             "type" : [
               "boolean",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "If true, return the earliest log events first. If false, return the most recent log events first.\n\nControls the direction of the search (old <-> new events). By default, the search starts from the most recent events. To learn more see: [startFromHead](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_GetLogEvents.html#CWL-GetLogEvents-request-startFromHead) (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
@@ -96,21 +100,24 @@
           "startTime" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "The start of the time range, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC.\n\nSets the start of the time range, expressed as milliseconds after Jan 1, 1970 00:00:00 UTC. Events with a timestamp equal to this time or later than this time are included. Events with a timestamp earlier than this time are excluded: To learn more see: [startTime](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_GetLogEvents.html#CWL-GetLogEvents-request-startTime) (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "endTime" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "The end of the time range, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC\n\nSets the end of the time range, expressed as milliseconds after Jan 1, 1970 00:00:00 UTC. Events with a timestamp equal to or later than this time are not included: To learn more see: [endTime](https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_GetLogEvents.html#CWL-GetLogEvents-request-endTime) (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "retryTimeout" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "A timeout period (in milliseconds) to wait for querying of new data\n\nUsed by [cloudwatchLogs-input.js](https://github.com/log-10x/modules/blob/main/pipelines/run/modules/input/analyzer/cloudwatchLogs/cloudwatchLogs-input.js) to determine how long to wait to invoke the 'GetLogEvents' API again to query for new data. (Accepts number or string with $= prefix for runtime evaluation) (Default: 20000)",
             "default" : 20000
@@ -118,14 +125,16 @@
           "totalBytesLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total bytes to read from input before closing\n\nSets the maximum number of bytes a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer).   For example: ``` yaml totalBytesLimit: $=parseBytes(\"1GB\") ``` (Accepts number or string with $= prefix for runtime evaluation)"
           },
           "totalEventsLimit" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Maximum total events to read from input before closing\n\nSets the maximum number of events a target pipeline input will read into the pipeline. This value limits the volume of events to read from a local/remote source (e.g., log analyzer). (Accepts number or string with $= prefix for runtime evaluation) (Default: 10000)",
             "default" : 10000
@@ -141,7 +150,8 @@
           "queryInterval" : {
             "type" : [
               "number",
-              "string"
+              "string",
+              "null"
             ],
             "markdownDescription" : "Query interval (in milliseconds) for checking new data from remote source\n\nSets the interval between queries to the remote CloudWatch Logs API. This controls how frequently the input polls for new log data.  For example: ``` yaml cloudwatchLogsQueryInterval: $=parseDuration(\"5s\") ``` (Accepts number or string with $= prefix for runtime evaluation) (Default: 2000)",
             "default" : 2000
@@ -163,5 +173,5 @@
       }
     }
   },
-  "additionalProperties" : false
+  "additionalProperties" : true
 }
