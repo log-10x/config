@@ -50,13 +50,13 @@ include:
   # https://doc.log10x.com/apps/receiver/run
   # https://doc.log10x.com/apps/receiver/deploy
   #
-  # - run/input/forwarder/filebeat/receive
-  # - run/input/forwarder/fluentbit/receive
+  # - run/input/forwarder/filebeat
+  # - run/input/forwarder/fluentbit
   # - run/input/forwarder/fluentd
-  # - run/input/forwarder/logstash/receive
+  # - run/input/forwarder/logstash
   # - run/input/forwarder/otel-collector
   # - run/input/forwarder/vector
-  # - run/input/forwarder/datadogAgent/receive
+  # - run/input/forwarder/datadogAgent
 
 # --------------------------- Enrich TenXObjects ------------------------------
 
