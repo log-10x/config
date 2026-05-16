@@ -30,19 +30,10 @@ tenx: run
 include:
 
   # Shared forwarder options (mode dispatch, output encoding)
-  - run/modules/input/forwarder/module.yaml
+  - run/input/forwarder/config.yaml
 
   # Vector integration — options + socket input / Forward output streams
   - run/modules/input/forwarder/vector
-
-# =============================== Mode Options ================================
-#
-# The Receiver app picks the encoding mode based on user flags:
-#   default                      → emit events verbatim (`fullText`)
-#   receiverOptimize=true        → compact-all (lossless compaction of every event)
-#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
-outputEncodeField: $=yield TenXReceiver.encodeField()
-outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 
 # ============================== Socket Input =================================
 #

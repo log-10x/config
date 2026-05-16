@@ -17,7 +17,7 @@ tenx: run
 include:
 
   # Parent module declaring shared forwarder options (outputEncodeField, outputWriteTemplates)
-  - run/modules/input/forwarder/module.yaml
+  - run/input/forwarder/config.yaml
 
   - run/modules/input/forwarder/filebeat/receive/module.yaml
 
@@ -26,14 +26,6 @@ include:
 
   # Output module to write filtered events from 10x pipeline into Filebeat
   - run/modules/input/forwarder/filebeat/output
-
-# =============================== Mode Options ================================
-
-# See fluentbit/receive/config.yaml for the full explanation of this dispatch.
-
-outputEncodeField: $=yield TenXReceiver.encodeField()
-
-outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
 
 # ============================== Filebeat Options ==============================
 
