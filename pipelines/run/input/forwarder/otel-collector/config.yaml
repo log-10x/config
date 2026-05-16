@@ -53,7 +53,7 @@ otelCollectorInputPort: 4317
 
 # Top-level JSON field name carrying the log line text. Default is `body`
 # (the flattened shape the input emits for plain-text OTLP bodies — see
-# `run/modules/input/forwarder/otel-collector/input/doc.md`). Uncomment and
+# `run/modules/input/forwarder/otel-collector/doc.md`). Uncomment and
 # change if your Collector pipeline copies the log line into a different
 # attribute (e.g. an `<attr_key>` set via a transform). Left commented so
 # the option stays overridable from the CLI:

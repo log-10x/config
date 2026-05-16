@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/datadogAgent/schema.json
+
+# 🔟❎ 'run' Datadog Agent receiver configuration
+#
+# Runs Log10x as a sidecar to Fluent Bit, which sits between the application
+# logs (Folder A) and the Datadog Agent (which tails Folder B). The 10x
+# leg is identical to the plain Fluent Bit sidecar setup — events flow
+# over the Fluent Forward protocol both ways. Fluent Bit's own output
+# writes processed events to Folder B; the Datadog Agent ingests from
+# there with its normal `logs_config`.
+#
+#   App logs (Folder A) ─► Fluent Bit ─► Log10x ─► Fluent Bit ─► Folder B ─► DD Agent ─► Datadog
+#
+# See the reference Fluent Bit config at:
+#   modules/pipelines/run/modules/input/forwarder/fluentbit/conf/tenx-sidecar.conf
+#
+# Launch with:
+#   tenx @run/input/forwarder/datadogAgent @apps/receiver
+
+tenx: run
+
+# =============================== Dependencies ================================
+
+include:
+
+  # Shared forwarder options (mode dispatch, output encoding)
+  - run/modules/input/forwarder/module.yaml
+
+  # Fluent Bit integration — options + Forward input/output streams
+  - run/modules/input/forwarder/fluentbit
+
+# =============================== Mode Options ================================
+#
+# The Receiver app picks the encoding mode based on user flags:
+#   default                      → emit events verbatim (`fullText`)
+#   receiverOptimize=true        → compact-all (lossless compaction of every event)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+outputEncodeField: $=yield TenXReceiver.encodeField()
+outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+
+# ============================== Forward Input ================================
+#
+# TCP port for events arriving from Fluent Bit's `[OUTPUT] forward`.
+# To use a Unix domain socket instead (Linux/macOS only), set:
+#   fluentbitInputPath: /tmp/tenx-fluentbit-in.sock
+fluentbitInputPort: 24224
+
+# Name of the JSON field in each Fluent Bit record containing the log line.
+# Default is `log` (Fluent Bit's `tail` convention for container/file logs).
+# Uncomment and change if your sources emit the log line under a different
+# key. Left commented so the option stays overridable from the CLI:
+#
+#     tenx @run/input/forwarder/datadogAgent @apps/receiver fluentbitMessageField message
+#
+# (the engine treats this option as single-valued, so setting it both here
+#  and on the CLI would be rejected as "specified only once".)
+# fluentbitMessageField: log
+
+# ============================== Forward Output ===============================
+#
+# The Fluent Bit output included above defaults to TCP `127.0.0.1:24225`.
+# To override:
+#
+#   fluentbitOutputHost: 0.0.0.0
+#   fluentbitOutputPort: 9999
+#
+# Or on Linux/macOS, use a Unix domain socket:
+#
+#   fluentbitOutputPath: /tmp/tenx-fluentbit-out.sock
