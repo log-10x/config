@@ -33,16 +33,16 @@
                 "null"
               ],
               "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Vector's `socket` sink with `mode: unix` and a matching `path`. Ignored on Windows."
+            },
+            "messageField" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Vector record that contains the actual log message text. The default (`message`) matches Vector's convention for the `file`, `kubernetes_logs`, `journald`, and `socket` sources. Set to e.g. `log` if your sources emit the log line under a different key. (Default: message)",
+              "default" : "message"
             }
           }
-        },
-        "messageField" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Vector record that contains the actual log message text. The default (`message`) matches Vector's convention for the `file`, `kubernetes_logs`, `journald`, and `socket` sources. Set to e.g. `log` if your sources emit the log line under a different key. (Default: message)",
-          "default" : "message"
         },
         "output" : {
           "type" : "object",

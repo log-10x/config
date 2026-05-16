@@ -33,16 +33,16 @@
                 "null"
               ],
               "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Logstash's `unix` output plugin with `codec => json_lines` and a matching `path`. Ignored on Windows."
+            },
+            "messageField" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Logstash event that contains the actual log message text. The default (`message`) matches Logstash's convention for the `file`, `beats`, `tcp`, and `http` inputs. Set to e.g. `log` if your sources emit the log line under a different key. (Default: message)",
+              "default" : "message"
             }
           }
-        },
-        "messageField" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Logstash event that contains the actual log message text. The default (`message`) matches Logstash's convention for the `file`, `beats`, `tcp`, and `http` inputs. Set to e.g. `log` if your sources emit the log line under a different key. (Default: message)",
-          "default" : "message"
         },
         "output" : {
           "type" : "object",

@@ -59,11 +59,11 @@ fluentbitInputPort: 24224
 # Uncomment and change if your sources emit the log line under a different
 # key. Left commented so the option stays overridable from the CLI:
 #
-#     tenx @run/input/forwarder/fluentbit @apps/receiver fluentbitMessageField message
+#     tenx @run/input/forwarder/fluentbit @apps/receiver fluentbitInputMessageField message
 #
 # (the engine treats this option as single-valued, so setting it both here
 #  and on the CLI would be rejected as "specified only once").
-# fluentbitMessageField: log
+# fluentbitInputMessageField: log
 
 # ============================== Forward Output ===============================
 #

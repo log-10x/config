@@ -58,11 +58,11 @@ otelCollectorInputPort: 4317
 # attribute (e.g. an `<attr_key>` set via a transform). Left commented so
 # the option stays overridable from the CLI:
 #
-#     tenx @run/input/forwarder/otel-collector @apps/receiver otelCollectorMessageField <name>
+#     tenx @run/input/forwarder/otel-collector @apps/receiver otelCollectorInputMessageField <name>
 #
 # (the engine treats this option as single-valued, so setting it both here
 #  and on the CLI would be rejected as "specified only once").
-# otelCollectorMessageField: body
+# otelCollectorInputMessageField: body
 
 # ============================== OTLP Output ==================================
 #

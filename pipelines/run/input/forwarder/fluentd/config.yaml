@@ -55,11 +55,11 @@ fluentdInputPort: 24224
 # Uncomment and change if your sources emit the log line under a different
 # key. Left commented so the option stays overridable from the CLI:
 #
-#     tenx @run/input/forwarder/fluentd @apps/receiver fluentdMessageField message
+#     tenx @run/input/forwarder/fluentd @apps/receiver fluentdInputMessageField message
 #
 # (the engine treats this option as single-valued, so setting it both here
 #  and on the CLI would be rejected as "specified only once").
-# fluentdMessageField: log
+# fluentdInputMessageField: log
 
 # ============================== Forward Output ===============================
 #

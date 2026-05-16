@@ -33,16 +33,16 @@
                 "null"
               ],
               "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Fluent Bit's `forward` output with `Unix_Path` set to a matching path. Ignored on Windows."
+            },
+            "messageField" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Fluent Bit record that contains the actual log message text. The default (`log`) matches Fluent Bit's `tail` input convention for container and file logs. Set to e.g. `message` if your sources emit the log line under a different key. (Default: log)",
+              "default" : "log"
             }
           }
-        },
-        "messageField" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Name of the JSON field carrying the original log line\n\nName of the field in each Fluent Bit record that contains the actual log message text. The default (`log`) matches Fluent Bit's `tail` input convention for container and file logs. Set to e.g. `message` if your sources emit the log line under a different key. (Default: log)",
-          "default" : "log"
         },
         "output" : {
           "type" : "object",

@@ -59,9 +59,9 @@ logstashInputPort: 5044
 # `http` inputs). Either uncomment this line OR pass it on the CLI — not
 # both:
 #
-#     tenx @run/input/forwarder/logstash @apps/receiver logstashMessageField log
+#     tenx @run/input/forwarder/logstash @apps/receiver logstashInputMessageField log
 #
-# logstashMessageField: message
+# logstashInputMessageField: message
 
 # ============================== Socket Output ================================
 #

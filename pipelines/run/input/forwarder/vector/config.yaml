@@ -57,11 +57,11 @@ vectorInputPort: 9000
 # emit the log line under a different key. Left commented so the option
 # stays overridable from the CLI:
 #
-#     tenx @run/input/forwarder/vector @apps/receiver vectorMessageField log
+#     tenx @run/input/forwarder/vector @apps/receiver vectorInputMessageField log
 #
 # (the engine treats this option as single-valued, so setting it both here
 #  and on the CLI would be rejected as "specified only once").
-# vectorMessageField: message
+# vectorInputMessageField: message
 
 # ============================== Forward Output ===============================
 #
