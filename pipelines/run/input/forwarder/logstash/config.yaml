@@ -35,17 +35,8 @@ include:
   # Shared forwarder options (mode dispatch, output encoding)
   - run/modules/input/forwarder/module.yaml
 
-  # Logstash module — shared output-formatting options
-  - run/modules/input/forwarder/logstash/module.yaml
-
-  # Logstash JSON socket input — reads newline-delimited JSON from
-  # Logstash's tcp output and captures the message field. Defaults to
-  # listening on TCP `:5044`.
-  - run/modules/input/forwarder/logstash/input
-
-  # Logstash JSON socket output — sends processed events back to
-  # Logstash's tcp input. Defaults to TCP `127.0.0.1:5045`.
-  - run/modules/input/forwarder/logstash/output
+  # Logstash integration — options + JSON socket input/output streams
+  - run/modules/input/forwarder/logstash
 
 # =============================== Mode Options ================================
 #

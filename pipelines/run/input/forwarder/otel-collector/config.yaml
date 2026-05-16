@@ -34,17 +34,8 @@ include:
   # Shared forwarder options (mode dispatch, output encoding)
   - run/modules/input/forwarder/module.yaml
 
-  # OpenTelemetry Collector module — shared output-formatting options
-  - run/modules/input/forwarder/otel-collector/module.yaml
-
-  # OTel Collector OTLP/gRPC input — flattens the OTLP record into a single
-  # JSON record. Defaults to listening on TCP `:4317`.
-  - run/modules/input/forwarder/otel-collector/input
-
-  # OTel Collector Fluent Forward output — sends processed events back to
-  # the Collector's `fluent_forward` receiver. Defaults to TCP
-  # `127.0.0.1:24225`.
-  - run/modules/input/forwarder/otel-collector/output
+  # OpenTelemetry Collector integration — options + OTLP/gRPC input/output streams
+  - run/modules/input/forwarder/otel-collector
 
 # =============================== Mode Options ================================
 #

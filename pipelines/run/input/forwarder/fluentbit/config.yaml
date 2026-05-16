@@ -35,16 +35,8 @@ include:
   # Shared forwarder options (mode dispatch, output encoding)
   - run/modules/input/forwarder/module.yaml
 
-  # Fluent Bit module — shared output-formatting options
-  - run/modules/input/forwarder/fluentbit/module.yaml
-
-  # Fluent Bit Forward input — decodes events from Fluent Bit and captures
-  # the message field. Defaults to listening on TCP `:24224`.
-  - run/modules/input/forwarder/fluentbit/input
-
-  # Fluent Bit Forward output — sends processed events back to Fluent Bit.
-  # Defaults to TCP `127.0.0.1:24225`.
-  - run/modules/input/forwarder/fluentbit/output
+  # Fluent Bit integration — options + Forward input/output streams
+  - run/modules/input/forwarder/fluentbit
 
 # =============================== Mode Options ================================
 #

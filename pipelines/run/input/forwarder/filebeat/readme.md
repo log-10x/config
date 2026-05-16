@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Edge Reporter config
+## 1️⃣0️⃣❎ Filebeat input config
 
-This is the forwarder Inputs+Filebeat configuration for the Edge Reporter module.
+This is the default configuration for the Filebeat input module.
 
-To learn more see the [Edge Reporter module](https://doc.log10x.com/apps/reporter "Edge Reporter module") documentation
+To learn more see the [Filebeat input](https://doc.log10x.com/run/input/forwarder/filebeat "Report, receive, and optimize events collected by Filebeat forwarders") module documentation
 

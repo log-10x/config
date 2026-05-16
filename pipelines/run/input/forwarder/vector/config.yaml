@@ -32,17 +32,8 @@ include:
   # Shared forwarder options (mode dispatch, output encoding)
   - run/modules/input/forwarder/module.yaml
 
-  # Vector module — shared output-formatting options
-  - run/modules/input/forwarder/vector/module.yaml
-
-  # Vector socket input — reads newline-delimited JSON from Vector's
-  # socket sink and captures the message field. Defaults to listening
-  # on TCP `:9000`.
-  - run/modules/input/forwarder/vector/input
-
-  # Vector Fluent Forward output — sends processed events back to
-  # Vector's fluent source. Defaults to TCP `127.0.0.1:9001`.
-  - run/modules/input/forwarder/vector/output
+  # Vector integration — options + socket input / Forward output streams
+  - run/modules/input/forwarder/vector
 
 # =============================== Mode Options ================================
 #

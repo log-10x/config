@@ -31,16 +31,8 @@ include:
   # Shared forwarder options (mode dispatch, output encoding)
   - run/modules/input/forwarder/module.yaml
 
-  # Fluentd module — shared output-formatting options
-  - run/modules/input/forwarder/fluentd/module.yaml
-
-  # Fluentd Forward input — decodes events from Fluentd and captures the
-  # message field. Defaults to listening on TCP `:24224`.
-  - run/modules/input/forwarder/fluentd/input
-
-  # Fluentd Forward output — sends processed events back to Fluentd.
-  # Defaults to TCP `127.0.0.1:24225`.
-  - run/modules/input/forwarder/fluentd/output
+  # Fluentd integration — options + Forward input/output streams
+  - run/modules/input/forwarder/fluentd
 
 # =============================== Mode Options ================================
 #
