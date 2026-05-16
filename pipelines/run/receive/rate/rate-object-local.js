@@ -10,7 +10,9 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 //    with no carryover, so a burst can overshoot inside a window.
 //  - Value-blind beyond rateReceiverLevelBoost: shedding is probabilistic
 //    across everything over budget, signal included.
-const DEFAULT_MIN_RETENTION_THRESHOLD = 0.1;
+// NOTE: the tenx script parser only accepts class/import/static at module
+// top level — no top-level const/let/var. The min-retention default is
+// inlined as the literal 0.1 in both read sites below; keep them in sync.
 
 export class LocalReceiverInput extends TenXInput {
 
@@ -36,7 +38,7 @@ export class LocalReceiverInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", DEFAULT_MIN_RETENTION_THRESHOLD);
+        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
         if (!(minRetentionThreshold >= 0.01)) {
             throw new Error("the 'rateReceiverMinRetentionThreshold' argument must be at least 0.01, received: " + minRetentionThreshold);
@@ -119,7 +121,7 @@ export class LocalReceiverObject extends TenXObject {
         // Apply minimum retention threshold to ensure critical events are always retained
         // Boost multiplier only applies to the minimum threshold, not the entire threshold
         // This prevents boost values < 1.0 from reducing retention when under budget
-        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", DEFAULT_MIN_RETENTION_THRESHOLD);
+        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
         var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverLevelBoost"));
         var level = this.get(TenXEnv.get("levelField"));
         var boost = TenXMap.get(boostMap, level, 1);
