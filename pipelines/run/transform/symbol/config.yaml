@@ -52,12 +52,15 @@ symbol:
   # ----------------------------- Debug Options -------------------------------
   
   debug:
-
+ 
     # 'symbol' debugging allows for verbose printing of the selection process
     #  for symbol tokens from the pipeline's 10x symbol files used to produce the
     #  results of 10x reflection functions.
     #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbol
     
+
+   # 'loggerName' controls the name of the log4j logger used by origins and symbols below
+    loggerName: "symbolDebugger"
 
     # 'origins' outputs information about the origin selection process for an TenXTemplate symbol.
     #  For example, setting 'units' to 'foo.js' will output information about if/how it 
@@ -78,5 +81,5 @@ symbol:
     #  Specifying '*' will emit information for all source code /binary files that have
     #  been selected as the origin of any TenXTemplate objects within the pipeline.
     symbols: [
-     # '*'
+    #  '*'
     ]
