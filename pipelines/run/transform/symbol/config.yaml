@@ -80,6 +80,6 @@ symbol:
 
     #  Specifying '*' will emit information for all source code /binary files that have
     #  been selected as the origin of any TenXTemplate objects within the pipeline.
-    symbols: [
+    symbols: [''
     #  '*'
     ]
