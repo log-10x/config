@@ -1,8 +1,11 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/vector/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/input/forwarder/datadogAgent/schema.json
 
-# 🔟❎ 'run' Vector receiver configuration
+# 🔟❎ 'run' Datadog Agent receiver configuration
 #
-# To learn more see https://doc.log10x.com/run/input/forwarder/vector/
+# The Datadog Agent integration is a Fluent Bit file-relay (see doc.md for
+# the data flow). The 10x leg uses the Fluent Bit module's options below.
+#
+# To learn more see https://doc.log10x.com/run/input/forwarder/datadogAgent/
 
 tenx: run
 
@@ -10,44 +13,43 @@ tenx: run
 
 include:
   - run/input/forwarder/config.yaml
-  - run/modules/input/forwarder/vector
+  - run/modules/input/forwarder/fluentbit
 
-# =============================== Vector Options ==============================
+# ============================= Fluent Bit Options ============================
 
-vector:
+fluentbit:
 
   # ----------------------------- Input Options -----------------------------
 
   input:
 
-    # 'port' specifies the TCP port to listen on for events from Vector's
-    #  `socket` sink (`mode: tcp`, `encoding.codec: json`,
-    #  `framing.method: newline_delimited`).
-    port: 9000
+    # 'port' specifies the TCP port to listen on for events from Fluent Bit's
+    #  forward output plugin.
+    port: 24224
 
     # 'path' switches the input to a Unix domain socket instead of TCP.
     #  When set, takes precedence over 'port'.
-    # path: /tmp/tenx-vector-in.sock
+    # path: /tmp/tenx-fluentbit-in.sock
 
-    # 'messageField' is the name of the JSON field in each Vector record
+    # 'messageField' is the name of the JSON field in each Fluent Bit record
     #  carrying the log line text.
-    messageField: message
+    messageField: log
 
   # ----------------------------- Output Options ----------------------------
 
   output:
 
-    # 'host' specifies the TCP host of Vector's `fluent` source receiving
+    # 'host' specifies the TCP host of Fluent Bit's forward input receiving
     #  processed events from Log10x.
     host: 127.0.0.1
 
-    # 'port' specifies the TCP port of Vector's `fluent` source. MUST differ
+    # 'port' specifies the TCP port of Fluent Bit's forward input. MUST differ
     #  from input.port or the two would collide on the same listener.
-    port: 9001
+    port: 24225
 
     # 'path' switches the output to a Unix domain socket instead of TCP.
     #  When set, takes precedence over 'host'/'port'.
-    # path: /tmp/tenx-vector-out.sock
+    # path: /tmp/tenx-fluentbit-out.sock
 
     # 'encodeType' is the on-wire format for the Forward record.
     #  - 'delimited': each top-level field of the rendered record becomes its

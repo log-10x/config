@@ -1,0 +1,37 @@
+{
+  "type" : "object",
+  "properties" : {
+    "include" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tenx" : {
+      "type" : "string"
+    },
+    "output" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "encodeField" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The single field expression each forwarder's output stream writes per event\n\nSelected per forwarder mode by the user-facing config.yaml: - **receive** (default): `fullText` — plain passthrough, no encoding - **compact-all**: `encoded=encode()` — every event compacted - **compact-lookup**: `encoded=shouldEncode() ? encode() : fullText` — per-pattern   decision via the compactReceiver module (requires `compactReceiverLookupFile`)  Advanced users can override directly to customize the output field expression. (Default: fullText)",
+          "default" : "fullText"
+        },
+        "writeTemplates" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Whether the forwarder emits new TenXTemplates alongside encoded events\n\nTrue for encoding modes (compact-all, compact-lookup) so decoders can reconstruct events from templateHash + vars. False for receive mode (no encoding → no templates needed). (Default: false)",
+          "default" : "false"
+        }
+      }
+    }
+  },
+  "additionalProperties" : true
+}

@@ -2,84 +2,50 @@
 
 # 🔟❎ 'run' Logstash receiver configuration
 #
-# Runs Log10x as a sidecar to Logstash. The two processes exchange events
-# as newline-delimited JSON — Logstash's `tcp` output sends events to
-# Log10x on the input port, Log10x emits processed events back on the
-# output port for Logstash's `tcp` input to consume.
-#
-#   Logstash tcp output  (NDJSON → :5044) ──► Log10x JSON socket input
-#                                                │
-#                                                ▼
-#                                             Receiver
-#                                                │
-#                                                ▼
-#   Logstash tcp input   (NDJSON ← :5045) ◄── Log10x JSON socket output
-#
-# Put the `tcp` input in a separate Logstash pipeline from your enrichment
-# filters using Logstash's [multi-pipeline routing](https://www.elastic.co/guide/en/logstash/current/multiple-pipelines.html)
-# so the filters don't re-run on returning events. See the reference
-# Logstash config files:
-#   modules/pipelines/run/modules/input/forwarder/logstash/conf/pipelines.yml
-#   modules/pipelines/run/modules/input/forwarder/logstash/conf/tenx-ingest.conf
-#   modules/pipelines/run/modules/input/forwarder/logstash/conf/tenx-destinations.conf
-#
-# Launch with:
-#   tenx @run/input/forwarder/logstash @apps/receiver
+# To learn more see https://doc.log10x.com/run/input/forwarder/logstash/
 
 tenx: run
 
 # =============================== Dependencies ================================
 
 include:
+  - run/input/forwarder/config.yaml
+  - run/modules/input/forwarder/logstash
 
-  # Shared forwarder options (mode dispatch, output encoding)
-  - run/modules/input/forwarder/module.yaml
+# ============================== Logstash Options =============================
 
-  # Logstash module — shared output-formatting options
-  - run/modules/input/forwarder/logstash/module.yaml
+logstash:
 
-  # Logstash JSON socket input — reads newline-delimited JSON from
-  # Logstash's tcp output and captures the message field. Defaults to
-  # listening on TCP `:5044`.
-  - run/modules/input/forwarder/logstash/input
+  # ----------------------------- Input Options -----------------------------
 
-  # Logstash JSON socket output — sends processed events back to
-  # Logstash's tcp input. Defaults to TCP `127.0.0.1:5045`.
-  - run/modules/input/forwarder/logstash/output
+  input:
 
-# =============================== Mode Options ================================
-#
-# The Receiver app picks the encoding mode based on user flags:
-#   default                      → emit events verbatim (`fullText`)
-#   receiverOptimize=true        → compact-all (lossless compaction of every event)
-#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
-outputEncodeField: $=yield TenXReceiver.encodeField()
-outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+    # 'port' specifies the TCP port to listen on for events from Logstash's
+    #  `tcp` output with `codec => json_lines`.
+    port: 5044
 
-# ============================== Socket Input =================================
-#
-# TCP port for events arriving from Logstash's `tcp` output (NDJSON).
-# To use a Unix domain socket instead (Linux/macOS only), set:
-#   logstashInputPath: /tmp/tenx-logstash-in.sock
-logstashInputPort: 5044
+    # 'path' switches the input to a Unix domain socket instead of TCP.
+    #  When set, takes precedence over 'port'.
+    # path: /tmp/tenx-logstash-in.sock
 
-# Name of the JSON field in each Logstash event containing the log line.
-# Default is `message` (Logstash's convention for `file`, `beats`, `tcp`,
-# `http` inputs). Either uncomment this line OR pass it on the CLI — not
-# both:
-#
-#     tenx @run/input/forwarder/logstash @apps/receiver logstashMessageField log
-#
-# logstashMessageField: message
+    # 'messageField' is the name of the JSON field in each Logstash event
+    #  carrying the log line text.
+    messageField: message
 
-# ============================== Socket Output ================================
-#
-# The Logstash output included above defaults to TCP `127.0.0.1:5045`.
-# To override:
-#
-#   logstashOutputHost: 0.0.0.0
-#   logstashOutputPort: 9999
-#
-# The `tag` field added by the ingest pipeline is preserved on the return
-# path, so destinations that route on it (Splunk index, S3 prefix, Kafka
-# topic, …) behave the same as without Log10x in the path.
+  # ----------------------------- Output Options ----------------------------
+
+  output:
+
+    # 'host' specifies the TCP host of Logstash's `tcp` input receiving
+    #  processed events from Log10x.
+    host: 127.0.0.1
+
+    # 'port' specifies the TCP port of Logstash's `tcp` input. MUST differ
+    #  from input.port or the two would collide on the same listener.
+    port: 5045
+
+    # 'encodeType' is the on-wire format for the socket record.
+    #  - 'delimited': each top-level field of the rendered record becomes its
+    #    own emitted field — preserves the original record's structure.
+    #  - 'json': the whole record is wrapped as one stringified field.
+    encodeType: delimited
