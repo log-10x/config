@@ -27,18 +27,22 @@ symbol:
   #  as the 'true' value is mostly likely the result of a variable boolean state.
   #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbolSequence
   sequenceReserved:
+    # literals
     - "null"
     - "nil"
     - "true"
     - "false"
+    # stopwords
     - "to"
     - "the"
     - "a"
     - "at"
     - "for"
+    # generic log words
     - "log"
     - "info"
-    - "http"  
+    - "http"
+    # severity levels
     - TRACE
     - DEBUG
     - INFO
@@ -48,6 +52,37 @@ symbol:
     - CRITICAL
     - ALERT
     - EMERGENCY
+    # stopwords
+    - "with"
+    - "in"
+    - "on"
+    - "of"
+    - "from"
+    - "by"
+    # structured / envelope keys
+    - "service"
+    - "instance"
+    - "component"
+    - "signal"
+    - "exporter"
+    - "resource"
+    - "scope"
+    - "attributes"
+    - "trace"
+    - "span"
+    - "flags"
+    - "context"
+    - "baggage"
+    - "severity"
+    - "timestamp"
+    # tokenizer artifact
+    - "t"
+    # k8s / structured keys
+    - "pod"
+    - "container"
+    - "namespace"
+    - "logger"
+    - "level"
 
   # ----------------------------- Debug Options -------------------------------
   

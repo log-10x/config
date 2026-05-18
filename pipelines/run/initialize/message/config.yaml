@@ -28,4 +28,4 @@ symbol:
   messageHashField: tenx_hash
 
   # 'maxLen' specifies the max char len of the output messageField
-  maxLen: 70
+  maxLen: 120
