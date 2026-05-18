@@ -34,11 +34,11 @@ config/
 ├── apps/                      # Application entry points
 │   ├── edge/                  # Edge applications
 │   │   ├── optimizer/         # Log volume reduction
-│   │   ├── receiver/           # Rate reduction & mute files
+│   │   ├── receiver/          # Rate reduction & mute files
 │   │   └── reporter/          # Cost attribution
 │   ├── cloud/                 # Cloud applications
 │   │   ├── reporter/          # Analyzer cost analysis
-│   │   └── retriever/          # S3 data lake (index/query)
+│   │   └── retriever/         # S3 data lake (index/query)
 │   ├── compiler/              # Symbol compilation
 │   └── dev/                   # Local development
 │
@@ -52,7 +52,7 @@ config/
 │   │   ├── input/             # Event sources (forwarders, analyzers)
 │   │   ├── initialize/        # Field enrichment (level, k8s, geoIP)
 │   │   ├── aggregate/         # Event summarization
-│   │   ├── receive/          # Policy enforcement
+│   │   ├── receive/           # Policy enforcement
 │   │   ├── output/            # Event & metric outputs
 │   │   └── transform/         # Event processing
 │   ├── gitops/                # GitOps workflow config

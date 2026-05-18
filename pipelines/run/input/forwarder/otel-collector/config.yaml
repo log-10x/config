@@ -2,85 +2,47 @@
 
 # 🔟❎ 'run' OpenTelemetry Collector receiver configuration
 #
-# Runs Log10x as a sidecar to the OpenTelemetry Collector. Both directions
-# exchange events over OTLP/gRPC:
-#
-#   Collector OTLP exporter (gRPC → :4317)   ──► Log10x OTLP input
-#                                                  │
-#                                                  ▼
-#                                               Receiver
-#                                                  │
-#                                                  ▼
-#   Collector OTLP receiver (← :24225)       ◄── Log10x OTLP output
-#
-# On the Collector side, destination exporters MUST live on the egress
-# pipeline (`logs/from-tenx`) consuming the `otlp/tenx` receiver — not on the
-# ingest pipeline — so enrichment processors don't fire a second time on the
-# return path. See the reference Collector config at:
-#   modules/pipelines/run/modules/input/forwarder/otel-collector/conf/tenx-sidecar.yaml
-#
-# Both ports use the core OTLP/gRPC receiver and exporter, so the core
-# `otelcol` distribution is sufficient (no `otelcol-contrib` build required).
-#
-# Launch with:
-#   tenx @run/input/forwarder/otel-collector @apps/receiver
+# To learn more see https://doc.log10x.com/run/input/forwarder/otel-collector/
 
 tenx: run
 
 # =============================== Dependencies ================================
 
 include:
+  - run/input/forwarder/config.yaml
+  - run/modules/input/forwarder/otel-collector
 
-  # Shared forwarder options (mode dispatch, output encoding)
-  - run/modules/input/forwarder/module.yaml
+# ====================== OpenTelemetry Collector Options ======================
 
-  # OpenTelemetry Collector module — shared output-formatting options
-  - run/modules/input/forwarder/otel-collector/module.yaml
+otelCollector:
 
-  # OTel Collector OTLP/gRPC input — flattens the OTLP record into a single
-  # JSON record. Defaults to listening on TCP `:4317`.
-  - run/modules/input/forwarder/otel-collector/input
+  # ----------------------------- Input Options -----------------------------
 
-  # OTel Collector Fluent Forward output — sends processed events back to
-  # the Collector's `fluent_forward` receiver. Defaults to TCP
-  # `127.0.0.1:24225`.
-  - run/modules/input/forwarder/otel-collector/output
+  input:
 
-# =============================== Mode Options ================================
-#
-# The Receiver app picks the encoding mode based on user flags:
-#   default                      → emit events verbatim (`fullText`)
-#   receiverOptimize=true        → compact-all (lossless compaction of every event)
-#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
-outputEncodeField: $=yield TenXReceiver.encodeField()
-outputWriteTemplates: $=yield TenXReceiver.writeTemplates()
+    # 'port' specifies the TCP port to listen on for OTLP/gRPC events from the
+    #  OpenTelemetry Collector's `otlp` exporter.
+    port: 4317
 
-# ============================== OTLP/gRPC Input ==============================
-#
-# TCP port for OTLP/gRPC events arriving from the Collector's `otlp` exporter.
-otelCollectorInputPort: 4317
+    # 'messageField' is the name of the JSON field on the rendered record
+    #  carrying the log line text.
+    messageField: body
 
-# Top-level JSON field name carrying the log line text. Default is `body`
-# (the flattened shape the input emits for plain-text OTLP bodies — see
-# `run/modules/input/forwarder/otel-collector/input/doc.md`). Uncomment and
-# change if your Collector pipeline copies the log line into a different
-# attribute (e.g. an `<attr_key>` set via a transform). Left commented so
-# the option stays overridable from the CLI:
-#
-#     tenx @run/input/forwarder/otel-collector @apps/receiver otelCollectorMessageField <name>
-#
-# (the engine treats this option as single-valued, so setting it both here
-#  and on the CLI would be rejected as "specified only once").
-# otelCollectorMessageField: body
+  # ----------------------------- Output Options ----------------------------
 
-# ============================== OTLP Output ==================================
-#
-# The OTLP output included above defaults to TCP `127.0.0.1:24225`. To
-# override:
-#
-#   otelCollectorOutputHost: 0.0.0.0
-#   otelCollectorOutputPort: 9999
-#
-# Each top-level field of the rendered event becomes an attribute on the
-# returning OTLP `LogRecord`; the `body` field is lifted into `LogRecord.body`
-# in its original `AnyValue` shape so the message round-trips byte-for-byte.
+  output:
+
+    # 'host' specifies the TCP host of the OpenTelemetry Collector's `otlp`
+    #  receiver receiving processed events from Log10x.
+    host: 127.0.0.1
+
+    # 'port' specifies the TCP port of the Collector's `otlp` receiver. MUST
+    #  differ from input.port or the two would collide on the same listener.
+    port: 24225
+
+    # 'encodeType' is the on-wire encoding for the rendered record.
+    #  - 'delimited': each top-level field of the rendered record becomes an
+    #    attribute on the returning OTLP LogRecord; the `body` field is lifted
+    #    into LogRecord.body so the message round-trips byte-for-byte.
+    #  - 'json': the whole record is wrapped as one stringified field.
+    encodeType: delimited
