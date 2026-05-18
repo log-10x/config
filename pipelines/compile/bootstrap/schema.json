@@ -6,30 +6,27 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "Name of pipeline to execute\n\nTarget [pipeline](https://doc.log10x.com/engine/pipeline/) to execute. For example, to specify the [run](https://doc.log10x.com/run/) pipeline and a [YAML](https://doc.log10x.com/config/yaml/) config file containing launch arguments, use:  ``` console $ tenx run @~/my.yaml ``` The YAML file may specify the pipeline name via a 'tenx' entry, allowing the 'pipeline' argument to be omitted from the command line.  For example (my.yaml):  ``` yaml tenx: run # set the pipeline to 'run' licenseKey: <my-license-jwt> ... ```  Allows for launching the run pipeline via: ``` console $ tenx @~/my.yaml ```"
+      "markdownDescription" : "Name of pipeline to execute\n\nTarget [pipeline](https://doc.log10x.com/engine/pipeline/) to execute. For example, to specify the [run](https://doc.log10x.com/run/) pipeline and a [YAML](https://doc.log10x.com/config/yaml/) config file containing launch arguments, use:  ``` console $ tenx run @~/my.yaml ``` The YAML file may specify the pipeline name via a 'tenx' entry, allowing the 'pipeline' argument to be omitted from the command line.  For example (my.yaml):  ``` yaml tenx: run # set the pipeline to 'run' apiKey: <my-key> ... ```  Allows for launching the run pipeline via: ``` console $ tenx @~/my.yaml ```"
     },
-    "licenseKey" : {
-      "type" : [
-        "string",
-        "null"
-      ],
-      "markdownDescription" : "10x license JWT\n\nSpecifies a signed JWT license token used for authenticating against the 10x service. Verified offline against an embedded public key. This value is accessible from your [account settings](https://console.log10x.com)."
-    },
-    "licenseFile" : {
-      "type" : [
-        "string",
-        "null"
-      ],
-      "markdownDescription" : "Path to a file containing the 10x license JWT\n\nPreferred over `licenseKey` on production hosts: the token does not appear in process listings (`ps`). The file should contain the signed JWT as a single ASCII line."
-    },
-    "offline" : {
-      "type" : [
-        "boolean",
-        "string",
-        "null"
-      ],
-      "markdownDescription" : "Run the engine airgapped\n\nWhen `true`, the license is verified locally against the embedded public key and ALL outbound calls to the 10x SaaS gateway are suppressed (no DNS lookups, no TCP connections, no metric forwarding). (Default: false)",
-      "default" : false
+    "license" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "file" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Path to a file containing the 10x license JWT\n\nPath to a file containing the signed 10x license JWT. Preferred over `licenseKey` for production: the token is not visible in `ps` output and is easy to rotate by replacing the file.  Download a license from your [account](https://console.log10x.com).  If both `licenseFile` and `licenseKey` are provided, the file wins."
+        },
+        "key" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "10x license JWT (inline)\n\nThe signed 10x license JWT, passed inline. Discouraged on the command line because the value is visible in `ps` output; prefer `licenseFile` in production.  Download a license from your [account](https://console.log10x.com)."
+        }
+      }
     },
     "metricEndpoint" : {
       "type" : [
@@ -121,8 +118,7 @@
     }
   },
   "required" : [
-    "tenx",
-    "licenseKey"
+    "tenx"
   ],
   "additionalProperties" : false
 }
