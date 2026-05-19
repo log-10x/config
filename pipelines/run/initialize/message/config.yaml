@@ -24,5 +24,8 @@ symbol:
   # 'messageField' specifies the field name to assign the source/binary origin file name to target TenXObjects
   messageField: message_pattern
 
+  # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key. Set empty to disable.
+  messageHashField: tenx_hash
+
   # 'maxLen' specifies the max char len of the output messageField
-  maxLen: 70
+  maxLen: 120

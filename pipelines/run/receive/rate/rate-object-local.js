@@ -2,6 +2,18 @@
 
 import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole } from '@tenx/tenx'
 
+// Known design limits (intentional, not bugs):
+//  - Per-node only: each engine instance enforces its own budget; with N
+//    receivers the effective spend is ~N * rateReceiverBudgetPerHour. No
+//    fleet coordination.
+//  - Sawtooth window: counters hard-reset every rateReceiverResetIntervalMs
+//    with no carryover, so a burst can overshoot inside a window.
+//  - Value-blind beyond rateReceiverLevelBoost: shedding is probabilistic
+//    across everything over budget, signal included.
+// NOTE: the tenx script parser only accepts class/import/static at module
+// top level — no top-level const/let/var. The min-retention default is
+// inlined as the literal 0.1 in both read sites below; keep them in sync.
+
 export class LocalReceiverInput extends TenXInput {
 
     // only load class if a global lookup file is not available
@@ -26,10 +38,10 @@ export class LocalReceiverInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var minSampleRate = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.01);
+        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
-        if (!(minSampleRate >= 0.01)) {
-            throw new Error("the 'rateReceiverLookupRetain' argument must be greater than  0.01, received: " + minSampleRate);
+        if (!(minRetentionThreshold >= 0.01)) {
+            throw new Error("the 'rateReceiverMinRetentionThreshold' argument must be at least 0.01, received: " + minRetentionThreshold);
         }
     }
 }
@@ -82,7 +94,7 @@ export class LocalReceiverObject extends TenXObject {
         var projectedGlobalSpend = totalSpend + eventCost;
         var budgetPerWindow = ((budgetPerHour * resetIntervalMs) / 3600000);
 
-        var globalBudgetUtilization = TenXMath.min(projectedSpend / budgetPerWindow, 1);
+        var globalBudgetUtilization = TenXMath.min(projectedGlobalSpend / budgetPerWindow, 1);
 
         // Probability-based throttling: inversely proportional to remaining budget
         // retentionThreshold represents the threshold above which we drop events
