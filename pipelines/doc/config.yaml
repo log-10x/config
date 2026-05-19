@@ -8,8 +8,11 @@ tenx: doc
 
 # ============================= Generate Options ==============================
 
-# 'apiKey' specifies an api key used authenticating against the 10x service
-apiKey: $=TenXEnv.get("TENX_API_KEY", "NO-API-KEY")
+# 'licenseKey' specifies a signed JWT license token used for authenticating against the 10x service
+licenseKey: $=TenXEnv.get("TENX_LICENSE_KEY", "NO-LICENSE")
+
+# 'licenseFile' specifies a path to a file containing the signed JWT license token.
+licenseFile: $=TenXEnv.get("TENX_LICENSE_FILE")
 
 runtimeName: doc
 
