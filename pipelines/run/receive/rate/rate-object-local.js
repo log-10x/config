@@ -2,18 +2,6 @@
 
 import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole } from '@tenx/tenx'
 
-// Known design limits (intentional, not bugs):
-//  - Per-node only: each engine instance enforces its own budget; with N
-//    receivers the effective spend is ~N * rateReceiverBudgetPerHour. No
-//    fleet coordination.
-//  - Sawtooth window: counters hard-reset every rateReceiverResetIntervalMs
-//    with no carryover, so a burst can overshoot inside a window.
-//  - Value-blind beyond rateReceiverLevelBoost: shedding is probabilistic
-//    across everything over budget, signal included.
-// NOTE: the tenx script parser only accepts class/import/static at module
-// top level — no top-level const/let/var. The min-retention default is
-// inlined as the literal 0.1 in both read sites below; keep them in sync.
-
 export class LocalReceiverInput extends TenXInput {
 
     // only load class if a global lookup file is not available

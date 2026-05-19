@@ -77,12 +77,6 @@ symbol:
     - "timestamp"
     # tokenizer artifact
     - "t"
-    # k8s / structured keys
-    - "pod"
-    - "container"
-    - "namespace"
-    - "logger"
-    - "level"
 
   # ----------------------------- Debug Options -------------------------------
   
