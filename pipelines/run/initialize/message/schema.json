@@ -7,6 +7,23 @@
     "tenx" : {
       "type" : "string"
     },
+    "message" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "negators" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "List of patterns that mark a log line as boilerplate/continuation so message-template skips its own pattern compute.\n\nApplies only when the template is single-event AND not a group head. Non-negator lines in that case still receive a pattern; negator-matching orphans do not.",
+          "items" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
     "symbol" : {
       "type" : "object",
       "additionalProperties" : false,
