@@ -117,9 +117,7 @@
           }
         },
         "required" : [
-          "host",
-          "user",
-          "password"
+          "host"
         ]
       }
     }

@@ -21,7 +21,7 @@ elastic:
     # --------------------------- Connection Options --------------------------
 
     # 'host' sets the host to send metrics to (e.g., https://<deployment-name>.us-central1.gcp.cloud.es.io).
-  - host: "" # (REQUIRED)
+  - host: $=TenXEnv.get("ELASTICSEARCH_HOST") # (EnvVar REQUIRED)
 
     # 'apiKeyCredentials' sets base64-encoded credentials string
     #  To learn more see: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html

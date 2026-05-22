@@ -28,7 +28,9 @@ signalfx:
     source: null
 
     # 'sourceUri' sets the URI of an internal proxy en route to signalFx.
-    sourceUri: https://ingest.signalfx.com
+    #  'SIGNALFX_INGEST_URL' overrides the default ingest endpoint
+    #  (e.g. https://ingest.us1.signalfx.com, https://ingest.eu0.signalfx.com).
+    sourceUri: $=TenXEnv.get("SIGNALFX_INGEST_URL", "https://ingest.signalfx.com")
 
     # ---------------------------- Counter Options ----------------------------
 

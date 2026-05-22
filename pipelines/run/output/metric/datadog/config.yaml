@@ -26,8 +26,10 @@ datadog:
     applicationKey: $=TenXEnv.get("DD_APP_KEY") # (EnvVar REQUIRED)
 
     # 'uri' sets the Datadog site address to which to connect.
+    #  'DD_SITE' is the bare site domain (e.g. 'us5.datadoghq.com', 'datadoghq.eu') —
+    #  matches the Datadog Agent convention so existing cluster secrets work as-is.
     #  To learn more see: https://docs.datadoghq.com/getting_started/site/
-    uri: https://us5.datadoghq.com # (or https://api.us3.datadoghq.com)
+    uri: $="https://" + TenXEnv.get("DD_SITE", "us5.datadoghq.com")
 
     # ---------------------------- Publish Options ----------------------------
 

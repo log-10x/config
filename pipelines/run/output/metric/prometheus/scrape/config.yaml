@@ -20,7 +20,9 @@ prometheus:
     # --------------------------- Connection Options --------------------------
 
     # 'port' sets the port number to listen to the Prometheus scraper on
-  - port: 9100
+    #  Override via 'PROMETHEUS_SCRAPE_PORT' to avoid collisions in sidecar deployments
+    #  (default 9100 collides with node_exporter).
+  - port: $=TenXEnv.get("PROMETHEUS_SCRAPE_PORT", 9100)
 
     # ---------------------------- Counter Options ----------------------------
 
