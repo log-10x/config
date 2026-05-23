@@ -5,7 +5,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 // Per-container noise regulator -- NO-MUTE-FILE variant. HYBRID algorithm.
 //
 // Loaded only when `rateReceiverLookupFile` is empty. When a mute file IS
-// configured, the mute-file variant (RegulatorWithMuteObject in
+// configured, the mute-file variant (rateReceiverLookupObject in
 // rate-object-lookup.js) loads instead and handles BOTH the mute check and the
 // regulator inline in a single filter. Exactly one variant is loaded at any
 // time, so `settings.yaml groupFilters` carries a single entry and there is no
@@ -56,7 +56,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 //   - Fail-open: an exception in a receive-stage filter must result in retain.
 //     This is an engine-wide policy, not specific to this module.
 
-export class RegulatorInput extends TenXInput {
+export class rateReceiverInput extends TenXInput {
 
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
@@ -93,7 +93,7 @@ export class RegulatorInput extends TenXInput {
     }
 }
 
-export class RegulatorObject extends TenXObject {
+export class rateReceiverObject extends TenXObject {
 
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {

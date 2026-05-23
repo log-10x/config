@@ -8,7 +8,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 // AND the regulator inline in a single filter, so the "file wins" semantic is
 // genuine (the file's decision short-circuits the regulator path).
 //
-// The no-mute-file variant (RegulatorObject in rate-object-local.js) loads
+// The no-mute-file variant (rateReceiverObject in rate-object-local.js) loads
 // instead when the file is empty. The two variants are mutually exclusive via
 // `shouldLoad`, so `settings.yaml groupFilters` dispatches to the right one and
 // there is no inter-filter coordination problem.
@@ -16,7 +16,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 // The split exists because `TenXLookup.get` is parse-validated against
 // registered tables at engine init -- it cannot live in the no-file class even
 // behind a runtime if-guard. Keep the regulator path here in sync with
-// `RegulatorObject.shouldRetainEvent`; the only difference is the mute check
+// `rateReceiverObject.shouldRetainEvent`; the only difference is the mute check
 // at step 1.
 //
 // HEADLINE GUARANTEE: no single log pattern can exceed `rateReceiverAbsoluteCap`
@@ -34,7 +34,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 //   5. Share guard (sanity): kept if pattern is < minSharePercent of container.
 //   6. Severity floor: kept with probability = severity floor; otherwise drop.
 
-export class LookupInput extends TenXInput {
+export class rateReceiverLookupInput extends TenXInput {
 
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
@@ -84,14 +84,14 @@ export class LookupInput extends TenXInput {
     }
 }
 
-export class RegulatorWithMuteObject extends TenXObject {
+export class rateReceiverLookupObject extends TenXObject {
 
     // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
     static shouldLoad(config) {
         return TenXEnv.get("rateReceiverLookupFile");
     }
 
-    // Distinct getter name from RegulatorObject.shouldRetainEvent: method names
+    // Distinct getter name from rateReceiverObject.shouldRetainEvent: method names
     // are in a GLOBAL namespace across all parsed classes (the engine validates
     // every class in every file regardless of shouldLoad), so two classes can't
     // share a getter name even when they are mutually exclusive at load time.
@@ -153,7 +153,7 @@ export class RegulatorWithMuteObject extends TenXObject {
             return true;
         }
 
-        // ---- regulator path (mirrors RegulatorObject.shouldRetainEvent) ----
+        // ---- regulator path (mirrors rateReceiverObject.shouldRetainEvent) ----
 
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
