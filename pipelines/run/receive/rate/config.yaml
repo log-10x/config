@@ -38,12 +38,21 @@ rateReceiver:
   #  window is ~4.25 minutes.
   resetIntervalMs: $=parseDuration("4m")
 
-  # 'absoluteCap' is the primary trigger (HEADLINE GUARANTEE): maximum bytes of a
-  #  single pattern that may accumulate per container within the current window.
-  #  No single pattern can exceed this many bytes per container per window;
+  # 'absoluteCap' is the fleet-wide trigger (HEADLINE GUARANTEE): the maximum bytes
+  #  of a single pattern that may accumulate per container within the current
+  #  window. No single pattern can exceed this many bytes per container per window;
   #  customers can compute their worst-case per-pattern-per-container spend from
   #  this number directly.
-  absoluteCap: 10485760   # 10 MB
+  #
+  #  Default 0 = disabled. Three customer configurations are first-class:
+  #    - Per-container only: leave 'absoluteCap' unset, set 'capLookupFile' below.
+  #      Listed containers get the file's cap; unlisted containers are
+  #      unregulated by the absolute cap. Most selective.
+  #    - Fleet-wide only: set 'absoluteCap' to a positive integer (e.g., 10485760
+  #      for 10 MB). Applies to every container the regulator sees.
+  #    - Both: per-container entries in 'capLookupFile' override the fleet-wide
+  #      cap; unlisted containers fall back to the fleet-wide cap (safety floor).
+  # absoluteCap: 10485760   # 10 MB
 
   # 'minSharePercent' is the sanity guard against false positives on legitimately
   #  high-volume containers. If a pattern is over `absoluteCap` BUT below this
@@ -103,6 +112,30 @@ rateReceiver:
     # 'file' specifies the mute file path. Will reload on change.
     #  Comment out to run the regulator alone (the default).
     # file: $=path("data/sample/mutes") + "/mutes.csv"
+
+    # 'retain' specifies the period before the file is marked as stale.
+    retain: $=parseDuration("10m")
+
+  # ---------------------------- Cap File Options -----------------------------
+
+  # Optional declarative per-container cap file keyed by the value of
+  # 'containerField' (the k8s container name by default). Each entry assigns a
+  # byte cap to a specific container; the file wins per-event over 'absoluteCap'
+  # above. Listed containers get the file's cap; unlisted containers fall back
+  # to 'absoluteCap' (or to no cap, when 'absoluteCap' is unset/0).
+  #
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   container,cap
+  #   <container>,<bytes>[:<untilEpochSec>][:<reason>]
+  #
+  # Intended to be managed via GitOps + the log10x_configure_regulator MCP tool,
+  # which derives per-container caps from a monthly dollar budget and opens a PR
+  # against this file.
+  capLookup:
+
+    # 'file' specifies the per-container cap file path. Will reload on change.
+    #  Comment out to use only 'absoluteCap' (or no cap if it is also unset).
+    # file: $=path("data/sample/caps") + "/caps.csv"
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")

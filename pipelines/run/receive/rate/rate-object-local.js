@@ -16,12 +16,19 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 // a runtime if-guard, so the lookup code is in its own file with its own
 // `shouldLoad` gate.
 //
-// HEADLINE GUARANTEE: no single log pattern can exceed `rateReceiverAbsoluteCap`
-// bytes per container per `rateReceiverResetIntervalMs` window (default 10 MB
-// per container per 5 minutes). The customer can compute the worst-case monthly
-// spend per pattern per container from this number alone.
+// HEADLINE GUARANTEE: no single log pattern can exceed its resolved cap bytes
+// per container per `rateReceiverResetIntervalMs` window. The cap is resolved
+// per-event in priority order:
+//   1. `rateReceiverCapLookupFile` -- per-container entry from the cap file
+//      (resolved by rate-object-cap.js via `this.rateReceiverResolvedCap`).
+//   2. `rateReceiverAbsoluteCap` -- fleet-wide cap (if positive).
+//   3. No cap -- the over-cap branch is skipped and the event is retained
+//      with no counter state accumulated. Protection is strictly opt-in;
+//      the regulator does nothing for containers without a resolved cap.
+// Customers can compute worst-case monthly spend per pattern per container
+// from the resolved cap and their per-GB vendor rate.
 //
-// Decision order per event:
+// Decision order per event (only runs when a cap IS resolved):
 //   1. Warmup: a brand-new container is left unregulated for a grace period so
 //      startup transients (init logs, queue burn-down, cache warming) are not
 //      mistaken for a dominating pattern. This is a DELAY only -- no learned
@@ -30,7 +37,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 //   2. Baseline: the first N events of each (pattern, container) per window are
 //      always kept, so even a heavily-capped pattern leaves a forensic sample.
 //   3. ABSOLUTE CAP (primary trigger): if patternBytes (after this event) is at
-//      or below `rateReceiverAbsoluteCap`, retain. This is the headline guarantee.
+//      or below the resolved cap, retain. This is the headline guarantee.
 //   4. SHARE GUARD (sanity check): if the pattern is over the cap BUT below
 //      `rateReceiverMinSharePercent` of its container's volume, retain anyway.
 //      Prevents false positives on legitimately high-volume containers (busy
@@ -53,6 +60,9 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 //     least-recently-used. An evicted cold (pattern, container) counter simply
 //     re-baselines if it reappears, so high cardinality degrades gracefully
 //     rather than growing without bound. No overflow handling needed here.
+//   - Counter increments only happen when a cap is resolved for the container,
+//     so containers with no cap (neither file entry nor positive env-var
+//     fallback) accumulate zero counter cardinality.
 //   - Fail-open: an exception in a receive-stage filter must result in retain.
 //     This is an engine-wide policy, not specific to this module.
 
@@ -112,6 +122,25 @@ export class rateReceiverObject extends TenXObject {
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__"; // no-container fallback: regulate node-wide
 
+        // ---- absolute cap resolution (per-event) ----
+        // Per-container cap from `rateReceiverCapLookupFile` (resolved by the
+        // shouldLoad-gated rate-object-cap.js, which exposes the value via
+        // `this.rateReceiverResolvedCap`) wins over the fleet-wide
+        // `rateReceiverAbsoluteCap`. When the cap-class is unloaded (cap file
+        // unset), the getter is absent and `this.rateReceiverResolvedCap` is
+        // undefined; the falsy-check falls through cleanly to the env-var
+        // fallback. If neither yields a positive cap for this container, the
+        // over-cap branch is opt-out: return true immediately with no counter
+        // state accumulated, keeping the counter keyspace bounded to
+        // containers that are actually being regulated.
+        var absoluteCap = this.rateReceiverResolvedCap;
+        if (!absoluteCap) {
+            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
+        }
+        if (absoluteCap == 0) {
+            return true; // no cap for this container -> regulator is opt-out
+        }
+
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
 
@@ -154,7 +183,7 @@ export class rateReceiverObject extends TenXObject {
         }
 
         // ---- 3. absolute cap (PRIMARY TRIGGER, HEADLINE GUARANTEE) ----
-        var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 10485760);
+        // `absoluteCap` was resolved per-event above (file -> env -> early-out).
         if ((patternBytes + bytes) <= absoluteCap) {
             return true; // under the cap -> keep
         }

@@ -19,20 +19,28 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 // `rateReceiverObject.shouldRetainEvent`; the only difference is the mute check
 // at step 1.
 //
-// HEADLINE GUARANTEE: no single log pattern can exceed `rateReceiverAbsoluteCap`
-// bytes per container per `rateReceiverResetIntervalMs` window, UNLESS a mute
-// file entry overrides for that pattern (file wins).
+// HEADLINE GUARANTEE: no single log pattern can exceed its resolved cap bytes
+// per container per `rateReceiverResetIntervalMs` window, UNLESS a mute file
+// entry overrides for that pattern (file wins). The regulator-path cap is
+// resolved per-event in priority order:
+//   1. `rateReceiverCapLookupFile` -- per-container entry from the cap file
+//      (resolved by rate-object-cap.js via `this.rateReceiverResolvedCap`).
+//   2. `rateReceiverAbsoluteCap` -- fleet-wide cap (if positive).
+//   3. No cap -- the regulator-path is skipped for this container and the
+//      event is retained with no counter state accumulated.
 //
 // Decision order per event:
 //   1. Mute file (FILE WINS): if the pattern is listed and active in the file,
 //      the file's `<sampleRate>` decides -- max(sampleRate, severity floor) so a
 //      0.0 mute never silences ERROR/CRITICAL. Expired/malformed entries fall
 //      through to the regulator.
-//   2. Warmup: brand-new container left unregulated for the grace period.
-//   3. Baseline: first N events of each (pattern, container) per window kept.
-//   4. Absolute cap (primary): kept if patternBytes (after this event) <= cap.
-//   5. Share guard (sanity): kept if pattern is < minSharePercent of container.
-//   6. Severity floor: kept with probability = severity floor; otherwise drop.
+//   2. Cap resolution: if no cap resolves for this container, retain the event
+//      and skip the regulator path entirely (no counters touched).
+//   3. Warmup: brand-new container left unregulated for the grace period.
+//   4. Baseline: first N events of each (pattern, container) per window kept.
+//   5. Absolute cap (primary): kept if patternBytes (after this event) <= cap.
+//   6. Share guard (sanity): kept if pattern is < minSharePercent of container.
+//   7. Severity floor: kept with probability = severity floor; otherwise drop.
 
 export class rateReceiverLookupInput extends TenXInput {
 
@@ -159,6 +167,25 @@ export class rateReceiverLookupObject extends TenXObject {
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__"; // no-container fallback: regulate node-wide
 
+        // ---- absolute cap resolution (per-event) ----
+        // Per-container cap from `rateReceiverCapLookupFile` (resolved by the
+        // shouldLoad-gated rate-object-cap.js, which exposes the value via
+        // `this.rateReceiverResolvedCap`) wins over the fleet-wide
+        // `rateReceiverAbsoluteCap`. When the cap-class is unloaded (cap file
+        // unset), the getter is absent and `this.rateReceiverResolvedCap` is
+        // undefined; the falsy-check falls through cleanly to the env-var
+        // fallback. If neither yields a positive cap for this container, the
+        // regulator path is opt-out: return true immediately with no counter
+        // state accumulated, keeping the counter keyspace bounded to
+        // containers that are actually being regulated.
+        var absoluteCap = this.rateReceiverResolvedCap;
+        if (!absoluteCap) {
+            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
+        }
+        if (absoluteCap == 0) {
+            return true; // no cap for this container -> regulator path is opt-out
+        }
+
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
 
@@ -168,7 +195,7 @@ export class rateReceiverLookupObject extends TenXObject {
         var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
-        // ---- 2. warmup gate (delay only; no learned baseline) ----
+        // ---- 3. warmup gate (delay only; no learned baseline) ----
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
@@ -179,25 +206,25 @@ export class rateReceiverLookupObject extends TenXObject {
             return true;
         }
 
-        // ---- 3. baseline: keep the first N of each pattern per window ----
+        // ---- 4. baseline: keep the first N of each pattern per window ----
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
             return true;
         }
 
-        // ---- 4. absolute cap (PRIMARY TRIGGER, HEADLINE GUARANTEE) ----
-        var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 10485760);
+        // ---- 5. absolute cap (PRIMARY TRIGGER, HEADLINE GUARANTEE) ----
+        // `absoluteCap` was resolved per-event above (file -> env -> early-out).
         if ((patternBytes + bytes) <= absoluteCap) {
             return true;
         }
 
-        // ---- 5. share guard (sanity: protect legitimately busy containers) ----
+        // ---- 6. share guard (sanity: protect legitimately busy containers) ----
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
         if (share < minSharePercent) {
             return true;
         }
 
-        // ---- 6. severity floor wins over cap ----
+        // ---- 7. severity floor wins over cap ----
         // Drop attribution is already in the receive aggregator's
         // `all_events - emitted_events`; no separate overshoot counter needed.
         if (TenXMath.random() < floor) {
