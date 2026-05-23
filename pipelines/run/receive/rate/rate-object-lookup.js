@@ -2,40 +2,34 @@
 
 import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLookup, TenXConsole, TenXDate, TenXString } from '@tenx/tenx'
 
-// Per-container noise regulator -- WITH-MUTE-FILE variant. HYBRID algorithm.
+// Per-container noise regulator -- WITH-MUTE, NO-CAP-FILE variant.
 //
-// Loaded only when `rateReceiverLookupFile` is set. Handles BOTH the mute check
-// AND the regulator inline in a single filter, so the "file wins" semantic is
-// genuine (the file's decision short-circuits the regulator path).
+// One of FOUR regulator-decision classes split across the (mute, cap)
+// cartesian. See rate-object-local.js's header for the full overview.
+// This file is the WITH-MUTE NO-CAP-FILE variant: per-event cap comes
+// from the fleet-wide `rateReceiverAbsoluteCap` env var only.
 //
-// The no-mute-file variant (rateReceiverObject in rate-object-local.js) loads
-// instead when the file is empty. The two variants are mutually exclusive via
-// `shouldLoad`, so `settings.yaml groupFilters` dispatches to the right one and
-// there is no inter-filter coordination problem.
+// Two classes:
+//   1. `rateReceiverLookupInput` (shouldLoad: muteFile is set): registers
+//      the mute lookup table via TenXLookup.load. Independent of cap
+//      state, so the with-mute-and-cap variant in rate-object-lookup-cap.js
+//      can also use the table without duplicating the load.
+//   2. `rateReceiverLookupObject` (shouldLoad: muteFile && !capFile):
+//      mute-check (FILE WINS) + regulator algorithm + env-var cap.
+//      Dispatched via `shouldRetainEventWithMute()` from settings.yaml's
+//      groupFilters 4-way ternary.
 //
-// The split exists because `TenXLookup.get` is parse-validated against
-// registered tables at engine init -- it cannot live in the no-file class even
-// behind a runtime if-guard. Keep the regulator path here in sync with
-// `rateReceiverObject.shouldRetainEvent`; the only difference is the mute check
-// at step 1.
-//
-// HEADLINE GUARANTEE: no single log pattern can exceed its resolved cap bytes
-// per container per `rateReceiverResetIntervalMs` window, UNLESS a mute file
-// entry overrides for that pattern (file wins). The regulator-path cap is
-// resolved per-event in priority order:
-//   1. `rateReceiverCapLookupFile` -- per-container entry from the cap file
-//      (resolved by rate-object-cap.js via `this.rateReceiverResolvedCap`).
-//   2. `rateReceiverAbsoluteCap` -- fleet-wide cap (if positive).
-//   3. No cap -- the regulator-path is skipped for this container and the
-//      event is retained with no counter state accumulated.
+// HEADLINE GUARANTEE (cap variants): no single log pattern can exceed its
+// resolved cap bytes per container per `rateReceiverResetIntervalMs`
+// window, UNLESS a mute file entry overrides for that pattern (file wins).
 //
 // Decision order per event:
-//   1. Mute file (FILE WINS): if the pattern is listed and active in the file,
-//      the file's `<sampleRate>` decides -- max(sampleRate, severity floor) so a
-//      0.0 mute never silences ERROR/CRITICAL. Expired/malformed entries fall
-//      through to the regulator.
-//   2. Cap resolution: if no cap resolves for this container, retain the event
-//      and skip the regulator path entirely (no counters touched).
+//   1. Mute file (FILE WINS): if the pattern is listed and active in the
+//      file, the file's `<sampleRate>` decides -- max(sampleRate, severity
+//      floor) so a 0.0 mute never silences ERROR/CRITICAL. Expired/malformed
+//      entries fall through to the regulator.
+//   2. Cap resolution (env-var only here): if no cap, retain and skip the
+//      regulator path entirely (no counters touched).
 //   3. Warmup: brand-new container left unregulated for the grace period.
 //   4. Baseline: first N events of each (pattern, container) per window kept.
 //   5. Absolute cap (primary): kept if patternBytes (after this event) <= cap.
@@ -44,7 +38,9 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 
 export class rateReceiverLookupInput extends TenXInput {
 
-    // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
+    // shouldLoad: mute file is set, regardless of cap state. Validation +
+    // mute-lookup-table registration are shared by rateReceiverLookupObject
+    // (no cap) and rateReceiverLookupCapObject (with cap).
     static shouldLoad(config) {
         return TenXEnv.get("rateReceiverLookupFile");
     }
@@ -94,42 +90,27 @@ export class rateReceiverLookupInput extends TenXInput {
 
 export class rateReceiverLookupObject extends TenXObject {
 
-    // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
+    // WITH mute file, NO cap file.
     static shouldLoad(config) {
-        return TenXEnv.get("rateReceiverLookupFile");
+        return TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // Distinct getter name from rateReceiverObject.shouldRetainEvent: method names
-    // are in a GLOBAL namespace across all parsed classes (the engine validates
-    // every class in every file regardless of shouldLoad), so two classes can't
-    // share a getter name even when they are mutually exclusive at load time.
-    // settings.yaml dispatches via env ternary into a single groupFilters slot.
+    // Distinct getter name from the other three variants -- method names
+    // are in a GLOBAL namespace across all parsed classes.
     get shouldRetainEventWithMute() {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        // ---- identity ----
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return true; // cannot identify the pattern -> leave it alone
+        if (!fieldSetKey) return true;
 
-        // ---- severity floor (used by both mute and regulator paths) ----
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
         var floor = floorRaw ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
         // ---- 1. mute file (FILE WINS) ----
-        // An active entry short-circuits the regulator: the file decides.
-        // RETURNS ARE FLATTENED -- the TenX DSL compiler does not handle `return`
-        // from inside multi-level nested ifs the way standard JS does. The
-        // previously-verified shouldRetainByLookup pattern uses guard clauses
-        // with returns at the function-body level only. Mirror that here: compute
-        // the active-mute threshold in nested ifs, then make the decision (with
-        // its return) at level 1.
-        //
         // Parse "<sampleRate>:<untilEpochSec>[:<reason>]" with indexOf/substring.
-        // (Array indexing on a TenXString.split result does not work in the DSL --
-        // parts[N] resolves to a field lookup, not a list element.)
         var hasActiveMute = false;
         var muteThreshold = 0;
         var entry = TenXLookup.get("rateReceiverLookupFile", fieldSetKey);
@@ -142,60 +123,35 @@ export class rateReceiverLookupObject extends TenXObject {
                 var untilEpochSec = TenXMath.parseDouble(TenXString.substring(entry, c1 + 1, untilEnd));
                 if ((TenXDate.now() / 1000) < untilEpochSec) {
                     hasActiveMute = true;
-                    // severity floor wins over a 0.0 mute (so ERROR/CRITICAL are
-                    // never fully silenced)
                     muteThreshold = TenXMath.max(sampleRate, floor);
                 }
-                // expired entry -> hasActiveMute stays false -> fall through
             }
-            // malformed entry -> hasActiveMute stays false -> fall through
         }
-        // Two guards at function-body level (NOT a single block containing both
-        // return true and return false -- the DSL appears to mishandle that shape).
         if (hasActiveMute && (TenXMath.random() <= muteThreshold)) return true;
         if (hasActiveMute) {
-            // drop by mute. this.drop() sets isDropped; returning true lets the
-            // event flow into the receive aggregator stage so the all_events vs
-            // emitted_events delta attributes the saving.
             this.drop();
             return true;
         }
 
-        // ---- regulator path (mirrors rateReceiverObject.shouldRetainEvent) ----
+        // ---- regulator path (env-var cap only; no cap file in this variant) ----
 
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
-        if (!container) container = "__node__"; // no-container fallback: regulate node-wide
+        if (!container) container = "__node__";
 
-        // ---- absolute cap resolution (per-event) ----
-        // Per-container cap from `rateReceiverCapLookupFile` (resolved by the
-        // shouldLoad-gated rate-object-cap.js, which exposes the value via
-        // `this.rateReceiverResolvedCap`) wins over the fleet-wide
-        // `rateReceiverAbsoluteCap`. When the cap-class is unloaded (cap file
-        // unset), the getter is absent and `this.rateReceiverResolvedCap` is
-        // undefined; the falsy-check falls through cleanly to the env-var
-        // fallback. If neither yields a positive cap for this container, the
-        // regulator path is opt-out: return true immediately with no counter
-        // state accumulated, keeping the counter keyspace bounded to
-        // containers that are actually being regulated.
-        var absoluteCap = this.rateReceiverResolvedCap;
-        if (!absoluteCap) {
-            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
-        }
+        var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         if (absoluteCap == 0) {
-            return true; // no cap for this container -> regulator path is opt-out
+            return true;
         }
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
 
-        // ---- counters (windowed: reflect recent volume) ----
         var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
         var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
         var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
-        // ---- 3. warmup gate (delay only; no learned baseline) ----
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
@@ -206,27 +162,20 @@ export class rateReceiverLookupObject extends TenXObject {
             return true;
         }
 
-        // ---- 4. baseline: keep the first N of each pattern per window ----
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
             return true;
         }
 
-        // ---- 5. absolute cap (PRIMARY TRIGGER, HEADLINE GUARANTEE) ----
-        // `absoluteCap` was resolved per-event above (file -> env -> early-out).
         if ((patternBytes + bytes) <= absoluteCap) {
             return true;
         }
 
-        // ---- 6. share guard (sanity: protect legitimately busy containers) ----
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
         if (share < minSharePercent) {
             return true;
         }
 
-        // ---- 7. severity floor wins over cap ----
-        // Drop attribution is already in the receive aggregator's
-        // `all_events - emitted_events`; no separate overshoot counter needed.
         if (TenXMath.random() < floor) {
             return true;
         }
@@ -238,11 +187,6 @@ export class rateReceiverLookupObject extends TenXObject {
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
 
-        // Return TRUE so the dropped event continues into the receive aggregator
-        // stage (downstream from group). The `this.drop()` above sets isDropped,
-        // which excludes the event from emitted_events (filter: !isDropped) but
-        // includes it in all_events (filter: isObject). The delta IS the savings
-        // attribution per (pattern, container).
         return true;
     }
 }

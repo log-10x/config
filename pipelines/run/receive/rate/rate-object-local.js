@@ -1,74 +1,65 @@
 // @loader: tenx
 
-import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole } from '@tenx/tenx'
+import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole, TenXDate } from '@tenx/tenx'
 
-// Per-container noise regulator -- NO-MUTE-FILE variant. HYBRID algorithm.
+// Per-container noise regulator -- NO-MUTE, NO-CAP-FILE variant.
 //
-// Loaded only when `rateReceiverLookupFile` is empty. When a mute file IS
-// configured, the mute-file variant (rateReceiverLookupObject in
-// rate-object-lookup.js) loads instead and handles BOTH the mute check and the
-// regulator inline in a single filter. Exactly one variant is loaded at any
-// time, so `settings.yaml groupFilters` carries a single entry and there is no
-// inter-filter coordination problem.
+// This is one of FOUR regulator-decision classes split across the (mute,
+// cap) cartesian. Each variant has its own getter name dispatched by
+// settings.yaml's groupFilters 4-way ternary, because TenXLookup.get is
+// parse-validated against runtime-registered tables -- a class that
+// references a lookup table that may not be loaded fails engine init.
 //
-// The split exists because `TenXLookup.get` is parse-validated against
-// registered tables at engine init -- it cannot live in this class even behind
-// a runtime if-guard, so the lookup code is in its own file with its own
-// `shouldLoad` gate.
+//   shouldLoad gates:                           Getter:
+//   - rateReceiverObject:             !mute && !cap   shouldRetainEvent
+//   - rateReceiverCapObject:          !mute &&  cap   shouldRetainEventWithCap
+//   - rateReceiverLookupObject:        mute && !cap   shouldRetainEventWithMute
+//   - rateReceiverLookupCapObject:     mute &&  cap   shouldRetainEventWithMuteAndCap
 //
-// HEADLINE GUARANTEE: no single log pattern can exceed its resolved cap bytes
-// per container per `rateReceiverResetIntervalMs` window. The cap is resolved
-// per-event in priority order:
-//   1. `rateReceiverCapLookupFile` -- per-container entry from the cap file
-//      (resolved by rate-object-cap.js via `this.rateReceiverResolvedCap`).
-//   2. `rateReceiverAbsoluteCap` -- fleet-wide cap (if positive).
-//   3. No cap -- the over-cap branch is skipped and the event is retained
-//      with no counter state accumulated. Protection is strictly opt-in;
-//      the regulator does nothing for containers without a resolved cap.
-// Customers can compute worst-case monthly spend per pattern per container
-// from the resolved cap and their per-GB vendor rate.
+// This file is the NO-MUTE NO-CAP-FILE variant: no lookups at all, cap
+// comes from the fleet-wide `rateReceiverAbsoluteCap` env var only. If the
+// env var is 0 (default), the regulator does nothing.
+//
+// Cross-class composition was attempted first (a per-event getter
+// `rateReceiverResolvedCap` on a separate cap-class read via
+// `this.rateReceiverResolvedCap`) and verified BROKEN on the demo cluster:
+// the getter never fired from this class's regulator. TenX DSL does not
+// compose property-style getters across separately-declared TenXObject
+// classes the way the aspect model suggested. Inlining the lookup didn't
+// work either: parse-validation walks every loaded class and rejects
+// TenXLookup.get when the table is not registered, regardless of runtime
+// if-guards. The 4-class cartesian is the structurally honest answer.
+//
+// HEADLINE GUARANTEE (the cap variants): no single log pattern can exceed
+// its resolved cap bytes per container per `rateReceiverResetIntervalMs`
+// window. Cap resolution priority:
+//   1. `rateReceiverCapLookupFile` (cap-file variants only)
+//   2. `rateReceiverAbsoluteCap` env var (this variant)
+//   3. No cap: the over-cap branch is skipped, event retained, no counter
+//      state accumulated. Protection is strictly opt-in.
 //
 // Decision order per event (only runs when a cap IS resolved):
-//   1. Warmup: a brand-new container is left unregulated for a grace period so
-//      startup transients (init logs, queue burn-down, cache warming) are not
-//      mistaken for a dominating pattern. This is a DELAY only -- no learned
-//      baseline survives the warmup; the only state is the container's first-seen
-//      timestamp.
-//   2. Baseline: the first N events of each (pattern, container) per window are
-//      always kept, so even a heavily-capped pattern leaves a forensic sample.
-//   3. ABSOLUTE CAP (primary trigger): if patternBytes (after this event) is at
-//      or below the resolved cap, retain. This is the headline guarantee.
-//   4. SHARE GUARD (sanity check): if the pattern is over the cap BUT below
-//      `rateReceiverMinSharePercent` of its container's volume, retain anyway.
-//      Prevents false positives on legitimately high-volume containers (busy
-//      API gateways, access log workloads) where the pattern is small relative
-//      to the chatter.
-//   5. Severity floor wins over cap: keep with probability = the severity floor
-//      (Error 0.50 / Warn 0.30 / Info,Debug 0.10). Drop attribution per
-//      (pattern, container) comes from the receive aggregator's `all_events`
-//      minus `emitted_events`; no separate floor counter is needed.
-//
-// Identity: the pattern key is the joined `rateReceiverFieldNames` (usually
-// `symbolMessage`); the container is `rateReceiverContainerField` (the k8s
-// container name, stable across pod replicas -- never the pod). When no container
-// field is present (non-k8s input), the regulator falls back to a single
-// node-wide bucket.
+//   1. Warmup: brand-new container left unregulated for `warmupMs`.
+//   2. Baseline: first `baselineCount` events of each pattern kept per
+//      window for forensic visibility.
+//   3. ABSOLUTE CAP (primary trigger): under cap -> keep.
+//   4. SHARE GUARD: pattern is small share of a chatty container -> keep.
+//   5. Severity floor wins over cap: keep with probability = floor.
 //
 // ENGINE NOTES:
-//   - Counter keyspace is bounded by the engine: AtomicCounterRegistry is a
-//     prunable cache (~262K entries) that resets idle counters and evicts the
-//     least-recently-used. An evicted cold (pattern, container) counter simply
-//     re-baselines if it reappears, so high cardinality degrades gracefully
-//     rather than growing without bound. No overflow handling needed here.
-//   - Counter increments only happen when a cap is resolved for the container,
-//     so containers with no cap (neither file entry nor positive env-var
-//     fallback) accumulate zero counter cardinality.
-//   - Fail-open: an exception in a receive-stage filter must result in retain.
-//     This is an engine-wide policy, not specific to this module.
+//   - Counter keyspace is bounded by AtomicCounterRegistry (~262K LRU);
+//     evicted counters re-baseline gracefully.
+//   - Counter increments only happen when a cap is resolved, so unprotected
+//     containers accumulate zero counter cardinality.
+//   - Fail-open: an exception in a receive-stage filter must result in
+//     retain. Engine-wide policy.
 
 export class rateReceiverInput extends TenXInput {
 
-    // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
+    // Validation runs whenever there is no mute file; this Input is shared by
+    // both the no-cap (rate-object-local.js) and with-cap (rate-object-cap.js)
+    // regulator-object classes -- we don't want to validate twice or split
+    // the validation across files.
     static shouldLoad(config) {
         return !TenXEnv.get("rateReceiverLookupFile");
     }
@@ -105,115 +96,69 @@ export class rateReceiverInput extends TenXInput {
 
 export class rateReceiverObject extends TenXObject {
 
-    // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
+    // No mute file AND no cap file: pure env-var cap path.
     static shouldLoad(config) {
-        return !TenXEnv.get("rateReceiverLookupFile");
+        return !TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
     }
 
     get shouldRetainEvent() {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        // ---- identity ----
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return true; // cannot identify the pattern -> leave it alone
+        if (!fieldSetKey) return true;
 
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
-        if (!container) container = "__node__"; // no-container fallback: regulate node-wide
+        if (!container) container = "__node__";
 
-        // ---- absolute cap resolution (per-event) ----
-        // Per-container cap from `rateReceiverCapLookupFile` (resolved by the
-        // shouldLoad-gated rate-object-cap.js, which exposes the value via
-        // `this.rateReceiverResolvedCap`) wins over the fleet-wide
-        // `rateReceiverAbsoluteCap`. When the cap-class is unloaded (cap file
-        // unset), the getter is absent and `this.rateReceiverResolvedCap` is
-        // undefined; the falsy-check falls through cleanly to the env-var
-        // fallback. If neither yields a positive cap for this container, the
-        // over-cap branch is opt-out: return true immediately with no counter
-        // state accumulated, keeping the counter keyspace bounded to
-        // containers that are actually being regulated.
-        var absoluteCap = this.rateReceiverResolvedCap;
-        if (!absoluteCap) {
-            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
-        }
+        // No cap-file path here -- fleet-wide env var only.
+        var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         if (absoluteCap == 0) {
-            return true; // no cap for this container -> regulator is opt-out
+            return true; // no cap configured for this container -> opt-out
         }
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
 
-        // Severity floor for this event (absolute, NOT a multiplier). Used by the
-        // over-cap path so high-severity events are never fully suppressed.
-        // severityFloors map values are strings ("0.5"); parse to a number so
-        // arithmetic/comparison works. Map miss -> numeric minRetentionThreshold.
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
         var floor = floorRaw ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
-        // ---- counters (windowed: reflect recent volume) ----
         var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
         var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
         var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
-        // ---- 1. warmup gate (delay only; no learned baseline) ----
-        // Only state that survives the grace period is the first-seen timestamp,
-        // stored in a counter with NO reset interval so it persists across the
-        // windowed resets above. Its sole job is to answer "has this container been
-        // alive long enough to judge?". Do NOT add baseline/profile state here.
         var now = TenXDate.now();
-        // Read the persisted timestamp as a NUMBER. TenXCounter.get returns a
-        // counter object (breaks arithmetic); getAndInc(name, 0) returns the
-        // numeric value without changing it.
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
-            TenXCounter.getAndSet("rg_seen_" + container, now); // no reset interval -> persists
-            return true; // brand-new container, in warmup
+            TenXCounter.getAndSet("rg_seen_" + container, now);
+            return true;
         }
         if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
-            return true; // still within the startup grace period
+            return true;
         }
 
-        // ---- 2. baseline: keep the first N of each pattern per window ----
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
             return true;
         }
 
-        // ---- 3. absolute cap (PRIMARY TRIGGER, HEADLINE GUARANTEE) ----
-        // `absoluteCap` was resolved per-event above (file -> env -> early-out).
         if ((patternBytes + bytes) <= absoluteCap) {
-            return true; // under the cap -> keep
+            return true;
         }
 
-        // ---- 4. share guard (sanity check: protect legitimately busy containers) ----
-        // The pattern is over the absolute cap. If it is ALSO above this share of
-        // its container's volume, it is a noisy outlier worth sampling. If it is
-        // BELOW this share, the container is genuinely high-volume and the
-        // pattern is part of normal operation -- leave it alone.
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
         if (share < minSharePercent) {
-            return true; // small share of a chatty container -> don't sample
+            return true;
         }
 
-        // ---- 5. over the cap AND over the share guard: severity floor wins ----
-        // The engine's receive aggregator already attributes drops per (pattern,
-        // container) via `all_events - emitted_events`; a separate floor-overshoot
-        // counter would be redundant. If the operator wants to confirm the floor
-        // is preserving ERROR/WARN visibility, they query the emitted events
-        // filtered by severity directly.
         if (TenXMath.random() < floor) {
             return true;
         }
 
-        // ---- drop ----
-        // groupFilters retain on a truthy return, so dropping = return false.
-        // this.drop() also marks the object dropped so the receive-stage
-        // aggregators (emitted_events filters !isDropped) attribute the saving:
-        // a dropped event is in all_events but not emitted_events.
         this.drop();
 
         if (TenXLog.isDebug()) {
@@ -221,11 +166,6 @@ export class rateReceiverObject extends TenXObject {
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
 
-        // Return TRUE so the dropped event continues into the receive aggregator
-        // stage (downstream from group). The `this.drop()` above sets isDropped,
-        // which excludes the event from emitted_events (filter: !isDropped) but
-        // includes it in all_events (filter: isObject). The delta IS the savings
-        // attribution per (pattern, container).
         return true;
     }
 }
