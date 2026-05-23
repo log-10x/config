@@ -146,10 +146,11 @@ export class RegulatorWithMuteObject extends TenXObject {
         // return true and return false -- the DSL appears to mishandle that shape).
         if (hasActiveMute && (TenXMath.random() <= muteThreshold)) return true;
         if (hasActiveMute) {
-            // drop by mute. this.drop() marks the event so the receive-stage
-            // aggregators (emitted_events filters !isDropped) attribute the saving.
+            // drop by mute. this.drop() sets isDropped; returning true lets the
+            // event flow into the receive aggregator stage so the all_events vs
+            // emitted_events delta attributes the saving.
             this.drop();
-            return false;
+            return true;
         }
 
         // ---- regulator path (mirrors RegulatorObject.shouldRetainEvent) ----
@@ -210,6 +211,11 @@ export class RegulatorWithMuteObject extends TenXObject {
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
 
-        return false;
+        // Return TRUE so the dropped event continues into the receive aggregator
+        // stage (downstream from group). The `this.drop()` above sets isDropped,
+        // which excludes the event from emitted_events (filter: !isDropped) but
+        // includes it in all_events (filter: isObject). The delta IS the savings
+        // attribution per (pattern, container).
+        return true;
     }
 }

@@ -192,6 +192,11 @@ export class RegulatorObject extends TenXObject {
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
 
-        return false;
+        // Return TRUE so the dropped event continues into the receive aggregator
+        // stage (downstream from group). The `this.drop()` above sets isDropped,
+        // which excludes the event from emitted_events (filter: !isDropped) but
+        // includes it in all_events (filter: isObject). The delta IS the savings
+        // attribution per (pattern, container).
+        return true;
     }
 }
