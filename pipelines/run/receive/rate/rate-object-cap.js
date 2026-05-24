@@ -159,6 +159,9 @@ export class rateReceiverCapObject extends TenXObject {
             TenXConsole.log("DIAG cart DROP: patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap + " share=" + share + " floor=" + floor);
         }
         this.drop();
+        if (container == "cart" && (diagSeq % 500) == 0) {
+            TenXConsole.log("DIAG cart POST-drop: this.isDropped=" + this.isDropped);
+        }
 
         return true;
     }
