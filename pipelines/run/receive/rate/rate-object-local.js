@@ -39,7 +39,9 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 //      state accumulated. Protection is strictly opt-in.
 //
 // Decision order per event (only runs when a cap IS resolved):
-//   1. Warmup: brand-new container left unregulated for `warmupMs`.
+//   1. Warmup: container left unregulated for `warmupMs` after this regulator
+//      instance first sees its events (per-instance, not per container birth --
+//      a regulator restart restarts the window). Default 5 min.
 //   2. Baseline: first `baselineCount` events of each pattern kept per
 //      window for forensic visibility.
 //   3. ABSOLUTE CAP (primary trigger): under cap -> keep.
@@ -80,7 +82,7 @@ export class rateReceiverInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 900000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
 
         if (!(warmupMs >= 0)) {
             throw new Error("the 'rateReceiverWarmupMs' argument must be >= 0, received: " + warmupMs);
@@ -121,8 +123,8 @@ export class rateReceiverObject extends TenXObject {
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return;
 
-        var containerField = TenXEnv.get("rateReceiverContainerField");
-        var container = containerField ? this.get(containerField) : "";
+        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
+        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
         if (!container) container = "__node__";
 
         // No cap-file path here -- fleet-wide env var only.
@@ -148,7 +150,7 @@ export class rateReceiverObject extends TenXObject {
             TenXCounter.getAndSet("rg_seen_" + container, now);
             return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
         if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);

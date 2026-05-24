@@ -77,11 +77,11 @@ rateReceiver:
   #  'severityFloors'.
   minRetentionThreshold: 0.1
 
-  # 'warmupMs' is the startup grace period per container: a brand-new container is
-  #  left unregulated for this long so startup transients (init logs, queue
-  #  burn-down, cache warming) are not mistaken for a dominating pattern. This is a
-  #  delay only -- no learned baseline is built.
-  warmupMs: $=parseDuration("15m")
+  # 'warmupMs' is the per-instance grace period before the regulator starts capping a
+  #  newly-seen container, giving the per-pattern sample counts time to fill. Scope is
+  #  per regulator instance, so a regulator restart restarts the window. See
+  #  https://doc.log10x.com/run/receive/rate/#warmup for the operator guide.
+  warmupMs: $=parseDuration("5m")
 
   # 'baselineCount' is the number of events of each pattern kept per window
   #  regardless of share, so even a heavily-capped pattern leaves a forensic sample.
@@ -98,8 +98,9 @@ rateReceiver:
   # active pattern is decided by its file entry (the human declaration wins), and
   # everything else is handled by the share-based regulator.
   #
-  # File format (one entry per line):
-  #   <fieldSet>=<sampleRate>:<untilEpochSec>[:<reason>]
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   fieldSet,value
+  #   <fieldSetKey>,<sampleRate>:<untilEpochSec>[:<reason>]
   #
   # sampleRate 1.0 = never sampled; <1.0 = retain at that rate. Entries self-heal
   # past 'untilEpochSec'. The severity floor still applies so a 0.0 mute never
@@ -109,8 +110,9 @@ rateReceiver:
   # configuration -- see https://doc.log10x.com/config/github/#config
   lookup:
 
-    # 'file' specifies the mute file path. Will reload on change.
-    #  Comment out to run the regulator alone (the default).
+    # 'file' specifies the mute file path. Hot-reloaded on in-place writes (the
+    #  gitops pattern); Kubernetes ConfigMap mounts won't reload. Comment out to
+    #  run the regulator alone (the default).
     # file: $=path("data/sample/mutes") + "/mutes.csv"
 
     # 'retain' specifies the period before the file is marked as stale.
@@ -133,7 +135,8 @@ rateReceiver:
   # against this file.
   capLookup:
 
-    # 'file' specifies the per-container cap file path. Will reload on change.
+    # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
+    #  writes (the gitops pattern); Kubernetes ConfigMap mounts won't reload.
     #  Comment out to use only 'absoluteCap' (or no cap if it is also unset).
     # file: $=path("data/sample/caps") + "/caps.csv"
 

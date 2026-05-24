@@ -67,8 +67,8 @@ export class rateReceiverLookupCapObject extends TenXObject {
 
         // ---- regulator path (cap-file + env-var fallback) ----
 
-        var containerField = TenXEnv.get("rateReceiverContainerField");
-        var container = containerField ? this.get(containerField) : "";
+        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
+        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
         if (!container) container = "__node__";
 
         var absoluteCap = 0;
@@ -107,7 +107,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
             TenXCounter.getAndSet("rg_seen_" + container, now);
             return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
         if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);

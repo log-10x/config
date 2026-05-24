@@ -62,7 +62,7 @@ export class rateReceiverLookupInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 900000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
 
         if (!(warmupMs >= 0)) {
             throw new Error("the 'rateReceiverWarmupMs' argument must be >= 0, received: " + warmupMs);
@@ -134,8 +134,8 @@ export class rateReceiverLookupObject extends TenXObject {
 
         // ---- regulator path (env-var cap only; no cap file in this variant) ----
 
-        var containerField = TenXEnv.get("rateReceiverContainerField");
-        var container = containerField ? this.get(containerField) : "";
+        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
+        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
         if (!container) container = "__node__";
 
         var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
@@ -155,7 +155,7 @@ export class rateReceiverLookupObject extends TenXObject {
             TenXCounter.getAndSet("rg_seen_" + container, now);
             return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
         if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
