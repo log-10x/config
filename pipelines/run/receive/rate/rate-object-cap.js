@@ -125,36 +125,40 @@ export class rateReceiverCapObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
+            if (container == "cart") TenXConsole.log("DIAG cart returnA: first-seen, return true");
             return true;
         }
         if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
+            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnB: warmup, elapsed=" + (now-firstSeen) + " warmup=" + TenXEnv.get("rateReceiverWarmupMs", 900000));
             return true;
         }
 
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
+            if (container == "cart") TenXConsole.log("DIAG cart returnC: baseline n=" + n);
             return true;
         }
 
         if ((patternBytes + bytes) <= absoluteCap) {
+            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnD: under cap patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap);
             return true;
         }
 
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
         if (share < minSharePercent) {
+            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnE: share-guard share=" + share + " min=" + minSharePercent);
             return true;
         }
 
         if (TenXMath.random() < floor) {
+            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnF: severity-floor floor=" + floor);
             return true;
         }
 
-        this.drop();
-
-        if (TenXLog.isDebug()) {
-            TenXLog.debug("drop by regulator. key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
-                key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
+        if (container == "cart" && (diagSeq % 500) == 0) {
+            TenXConsole.log("DIAG cart DROP: patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap + " share=" + share + " floor=" + floor);
         }
+        this.drop();
 
         return true;
     }
