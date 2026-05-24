@@ -66,6 +66,12 @@ export class rateReceiverCapObject extends TenXObject {
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__";
 
+        // DIAG (temporary): log dispatch + container every 500th event.
+        var diagSeq = TenXCounter.getAndInc("diag_cap_getter", 1);
+        if (diagSeq < 5 || (diagSeq % 500) == 0) {
+            TenXConsole.log("DIAG cap-getter fired #" + diagSeq + " container=" + container + " fieldSetKey=" + fieldSetKey);
+        }
+
         // ---- absolute cap resolution (per-event) ----
         // Per-container cap from `rateReceiverCapLookupFile` (loaded by
         // rateReceiverCapInput above) wins over the fleet-wide
@@ -90,6 +96,10 @@ export class rateReceiverCapObject extends TenXObject {
                 }
             }
             if (capActive) absoluteCap = capCandidate;
+        }
+        // DIAG (temporary): log resolved cap.
+        if (diagSeq < 5 || (diagSeq % 500) == 0) {
+            TenXConsole.log("DIAG cap-getter resolved: container=" + container + " capEntry=" + capEntry + " absoluteCap=" + absoluteCap);
         }
         if (absoluteCap == 0) {
             absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);

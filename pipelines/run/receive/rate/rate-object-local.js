@@ -105,6 +105,13 @@ export class rateReceiverObject extends TenXObject {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
+        // DIAG (temporary): if THIS getter fires on the demo (which has the cap
+        // file set), dispatch is broken — should be shouldRetainEventWithCap.
+        var diagSeqB = TenXCounter.getAndInc("diag_nocap_getter", 1);
+        if (diagSeqB < 5 || (diagSeqB % 500) == 0) {
+            TenXConsole.log("DIAG WRONG-GETTER no-cap shouldRetainEvent fired #" + diagSeqB + " (dispatch went to base getter)");
+        }
+
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return true;
 
