@@ -2,9 +2,9 @@
 
 # 🔟❎ 'run' compact receiver configuration
 
-# Per-event compaction decision via a declarative lookup file.
-# Each event is tagged with `_tenxEncode: "true"|"false"`; forwarder
-# output streams branch on that field to emit encode() vs fullText.
+# Per-container compaction decision via a declarative cap-file.
+# The forwarder output stream emits encode() for listed containers and
+# fullText for everyone else (or vice versa via per-container opt-out).
 # To learn more see https://doc.log10x.com/run/receive/compact/
 
 # Set the 10x pipeline to 'run'
@@ -18,21 +18,43 @@ include: run/modules/receive/compact
 
 compactReceiver:
 
-  # 'lookupFile' — path or URL to the compact-decisions file.
-  # Entry format: <fieldSet>=<encode>:<untilEpochSec>[:<reason>]
-  # Hot-reloaded every `lookupRetain` ms without engine restart.
-  # lookupFile: /etc/tenx/compact-lookup.csv
+  # 'containerField' scopes the cap-file lookup. Defaults to the k8s container
+  # name (`k8s_container`) so listed containers are stable across replicas, and
+  # a sidecar never inherits the application container's decision. Set to any
+  # event field to scope by something else (service, deployment, etc).
+  containerField: k8s_container
 
-  # 'fieldNames' — how each event's lookup key is built.
-  # Matches rate receiver's default so compact + rate entries
-  # address the same pattern identity.
-  fieldNames:
-    - $=yield TenXEnv.get("symbolMessageField")
-
-  # 'lookupRetain' — poll interval in milliseconds.
-  lookupRetain: $=parseDuration("5m")
-
-  # 'default' — fallback when no lookup entry applies.
-  #   false (default) — preserve fullText; entries opt IN to compaction
-  #   true            — compact via encode(); entries opt OUT
+  # 'default' is the fallback when no cap-file entry matches the event's
+  # container. `false` (default) preserves fullText; `true` compacts via
+  # encode(). The cap-file's per-container decision overrides this per event.
   default: false
+
+  # 'lookup' configures the per-container cap-file. (The block is named
+  # `lookup` because the engine's TenXReceiver.encodeField() helper checks
+  # the `compactReceiverLookupFile` env var to decide whether to emit
+  # `encoded=shouldEncode() ? encode() : fullText` in the forwarder output
+  # stream. The file's semantics changed from per-pattern to per-container,
+  # but the env-var name stays for engine compatibility.)
+  lookup:
+
+    # 'file' specifies the per-container cap-file path. Hot-reloaded on
+    #  in-place writes (the gitops pattern); Kubernetes ConfigMap mounts
+    #  won't reload. Comment out to disable the cap-file (every event then
+    #  follows 'default' above).
+    #
+    # File format (CSV; header row + one comma-separated entry per row):
+    #   container,value
+    #   <container>,<true|false>[:<untilEpochSec>][:<reason>]
+    #
+    # `true`  -> compact this container's events
+    # `false` -> explicitly preserve fullText for this container
+    # `untilEpochSec` -> optional TTL; past it the entry self-heals
+    # `reason` -> optional free-text for audit; no commas (would break CSV)
+    #
+    # Intended to be managed via gitops + an MCP tool that derives per-
+    # container decisions from cost attribution and opens a PR against
+    # this file.
+    # file: $=path("data/sample/compact") + "/compact-cap.csv"
+
+    # 'retain' specifies the period before the file is marked as stale.
+    retain: $=parseDuration("10m")
