@@ -53,36 +53,39 @@ export class rateReceiverCapObject extends TenXObject {
         return !TenXEnv.get("rateReceiverLookupFile") && TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // Distinct getter name from the other three variants -- method names
-    // are in a GLOBAL namespace across all parsed classes.
-    get shouldRetainEventWithCap() {
+    // CONSTRUCTOR-DROP PATTERN: every documented `this.drop()` example in the
+    // TenX engine docs is inside a constructor, never inside a `get` getter.
+    // TenXObject is immutable post-construction, so calling `this.drop()`
+    // from a getter is a no-op (confirmed empirically on the demo cluster:
+    // DIAG showed cap-getter -> over-cap -> drop fired, but immediately after,
+    // `this.isDropped` was false; the receive aggregator's `!isDropped`
+    // filter therefore never excluded the event from `emitted_events`).
+    //
+    // The fix is to run the regulator algorithm in the constructor and call
+    // `this.drop()` there. The getter just returns true so the event keeps
+    // flowing to the aggregator, which sees `isDropped=true` and excludes it
+    // from `emitted_events` while keeping it in `all_events` -- producing the
+    // delta that is the savings attribution.
+    constructor() {
 
-        if ((!this.isObject) || (this.isDropped)) return true;
+        if ((!this.isObject) || (this.isDropped)) return;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return true;
+        if (!fieldSetKey) return;
 
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__";
 
         // DIAG (temporary): log dispatch + container every 500th event.
-        var diagSeq = TenXCounter.getAndInc("diag_cap_getter", 1);
+        var diagSeq = TenXCounter.getAndInc("diag_cap_ctor", 1);
         if (diagSeq < 5 || (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cap-getter fired #" + diagSeq + " container=" + container + " fieldSetKey=" + fieldSetKey);
+            TenXConsole.log("DIAG cap-ctor fired #" + diagSeq + " container=" + container + " fieldSetKey=" + fieldSetKey);
         }
 
-        // ---- absolute cap resolution (per-event) ----
-        // Per-container cap from `rateReceiverCapLookupFile` (loaded by
-        // rateReceiverCapInput above) wins over the fleet-wide
-        // `rateReceiverAbsoluteCap` env var. If neither yields a positive cap
-        // for this container, the over-cap branch is opt-out: return true
-        // immediately with no counter state accumulated.
         var absoluteCap = 0;
         var capEntry = TenXLookup.get("rateReceiverCapLookupFile", container);
         if (capEntry) {
-            // Parse "<bytes>[:<untilEpochSec>][:<reason>]" with indexOf/substring.
-            // Array indexing on TenXString.split result does not work in the DSL.
             var capC1 = TenXString.indexOf(capEntry, ":", 0);
             var capBytesEnd = (capC1 < 0) ? TenXString.length(capEntry) : capC1;
             var capCandidate = TenXMath.parseDouble(TenXString.substring(capEntry, 0, capBytesEnd));
@@ -97,15 +100,15 @@ export class rateReceiverCapObject extends TenXObject {
             }
             if (capActive) absoluteCap = capCandidate;
         }
-        // DIAG (temporary): log resolved cap.
-        if (diagSeq < 5 || (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cap-getter resolved: container=" + container + " capEntry=" + capEntry + " absoluteCap=" + absoluteCap);
-        }
         if (absoluteCap == 0) {
             absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         }
+        // DIAG: log what cap-resolution produced
+        if (diagSeq < 5 || (diagSeq % 20) == 0) {
+            TenXConsole.log("DIAG ctor resolved #" + diagSeq + " container=" + container + " capEntry=" + capEntry + " absoluteCap=" + absoluteCap);
+        }
         if (absoluteCap == 0) {
-            return true;
+            return; // no cap configured -> opt-out
         }
 
         var key = fieldSetKey + "@" + container;
@@ -125,44 +128,43 @@ export class rateReceiverCapObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
-            if (container == "cart") TenXConsole.log("DIAG cart returnA: first-seen, return true");
-            return true;
+            return;
         }
         if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
-            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnB: warmup, elapsed=" + (now-firstSeen) + " warmup=" + TenXEnv.get("rateReceiverWarmupMs", 900000));
-            return true;
+            return;
         }
-
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
-            if (container == "cart") TenXConsole.log("DIAG cart returnC: baseline n=" + n);
-            return true;
+            return;
         }
-
+        // DIAG (temporary): log cap-comparison every 20th event so we see counter growth
+        if (diagSeq < 5 || (diagSeq % 20) == 0) {
+            TenXConsole.log("DIAG ctor cap-check #" + diagSeq + " container=" + container + " patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap + " (overcap=" + ((patternBytes + bytes) > absoluteCap) + ")");
+        }
         if ((patternBytes + bytes) <= absoluteCap) {
-            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnD: under cap patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap);
-            return true;
+            return;
         }
-
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
         if (share < minSharePercent) {
-            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnE: share-guard share=" + share + " min=" + minSharePercent);
-            return true;
+            return;
         }
-
         if (TenXMath.random() < floor) {
-            if (container == "cart" && (diagSeq % 500) == 0) TenXConsole.log("DIAG cart returnF: severity-floor floor=" + floor);
-            return true;
+            return;
         }
 
+        // Over cap AND over share guard AND severity-floor coin-flip says drop.
         if (container == "cart" && (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cart DROP: patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap + " share=" + share + " floor=" + floor);
+            TenXConsole.log("DIAG cap-ctor DROP for cart: patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap);
         }
         this.drop();
         if (container == "cart" && (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cart POST-drop: this.isDropped=" + this.isDropped);
+            TenXConsole.log("DIAG cap-ctor POST-drop: this.isDropped=" + this.isDropped);
         }
+    }
 
+    // settings.yaml groupFilters dispatches to this; constructor already
+    // marked isDropped, so the aggregator's filter handles the rest.
+    get shouldRetainEventWithCap() {
         return true;
     }
 }

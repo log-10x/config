@@ -101,19 +101,16 @@ export class rateReceiverObject extends TenXObject {
         return !TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    get shouldRetainEvent() {
+    // CONSTRUCTOR-DROP PATTERN: this.drop() only works inside a constructor,
+    // not inside a `get` getter (TenXObject is immutable post-construction).
+    // The regulator algorithm runs here; the getter just returns true so the
+    // aggregator sees the event with isDropped already set.
+    constructor() {
 
-        if ((!this.isObject) || (this.isDropped)) return true;
-
-        // DIAG (temporary): if THIS getter fires on the demo (which has the cap
-        // file set), dispatch is broken — should be shouldRetainEventWithCap.
-        var diagSeqB = TenXCounter.getAndInc("diag_nocap_getter", 1);
-        if (diagSeqB < 5 || (diagSeqB % 500) == 0) {
-            TenXConsole.log("DIAG WRONG-GETTER no-cap shouldRetainEvent fired #" + diagSeqB + " (dispatch went to base getter)");
-        }
+        if ((!this.isObject) || (this.isDropped)) return;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return true;
+        if (!fieldSetKey) return;
 
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
@@ -121,9 +118,7 @@ export class rateReceiverObject extends TenXObject {
 
         // No cap-file path here -- fleet-wide env var only.
         var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
-        if (absoluteCap == 0) {
-            return true; // no cap configured for this container -> opt-out
-        }
+        if (absoluteCap == 0) return;
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
@@ -142,37 +137,26 @@ export class rateReceiverObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
-            return true;
+            return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
-            return true;
-        }
-
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
-            return true;
-        }
-
-        if ((patternBytes + bytes) <= absoluteCap) {
-            return true;
-        }
-
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
+        if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) {
-            return true;
-        }
-
-        if (TenXMath.random() < floor) {
-            return true;
-        }
+        if (share < minSharePercent) return;
+        if (TenXMath.random() < floor) return;
 
         this.drop();
-
         if (TenXLog.isDebug()) {
             TenXLog.debug("drop by regulator. key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
+    }
 
+    // settings.yaml groupFilters dispatches to this; constructor already
+    // marked isDropped, so the aggregator's filter handles the rest.
+    get shouldRetainEvent() {
         return true;
     }
 }

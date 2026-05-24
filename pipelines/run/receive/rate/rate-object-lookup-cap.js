@@ -28,14 +28,15 @@ export class rateReceiverLookupCapObject extends TenXObject {
         return TenXEnv.get("rateReceiverLookupFile") && TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // Distinct getter name from the other three variants -- method names
-    // are in a GLOBAL namespace across all parsed classes.
-    get shouldRetainEventWithMuteAndCap() {
+    // CONSTRUCTOR-DROP PATTERN: this.drop() in a getter is a no-op
+    // (TenXObject is immutable post-construction). The getter just returns
+    // true and the constructor does the actual decision.
+    constructor() {
 
-        if ((!this.isObject) || (this.isDropped)) return true;
+        if ((!this.isObject) || (this.isDropped)) return;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return true;
+        if (!fieldSetKey) return;
 
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
@@ -59,10 +60,9 @@ export class rateReceiverLookupCapObject extends TenXObject {
                 }
             }
         }
-        if (hasActiveMute && (TenXMath.random() <= muteThreshold)) return true;
         if (hasActiveMute) {
-            this.drop();
-            return true;
+            if (TenXMath.random() > muteThreshold) this.drop();
+            return; // mute decision is terminal
         }
 
         // ---- regulator path (cap-file + env-var fallback) ----
@@ -71,8 +71,6 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__";
 
-        // Per-container cap from `rateReceiverCapLookupFile` wins over the
-        // fleet-wide env var. If neither, opt-out.
         var absoluteCap = 0;
         var capEntry = TenXLookup.get("rateReceiverCapLookupFile", container);
         if (capEntry) {
@@ -93,9 +91,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (absoluteCap == 0) {
             absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         }
-        if (absoluteCap == 0) {
-            return true;
-        }
+        if (absoluteCap == 0) return;
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
@@ -109,37 +105,26 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
-            return true;
+            return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
-            return true;
-        }
-
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
-            return true;
-        }
-
-        if ((patternBytes + bytes) <= absoluteCap) {
-            return true;
-        }
-
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
+        if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) {
-            return true;
-        }
-
-        if (TenXMath.random() < floor) {
-            return true;
-        }
+        if (share < minSharePercent) return;
+        if (TenXMath.random() < floor) return;
 
         this.drop();
-
         if (TenXLog.isDebug()) {
             TenXLog.debug("drop by regulator. key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
                 key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
+    }
 
+    // settings.yaml groupFilters dispatches to this; constructor already
+    // marked isDropped, so the aggregator's filter handles the rest.
+    get shouldRetainEventWithMuteAndCap() {
         return true;
     }
 }
