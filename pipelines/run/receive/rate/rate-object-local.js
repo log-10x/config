@@ -101,10 +101,19 @@ export class rateReceiverObject extends TenXObject {
         return !TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // CONSTRUCTOR-DROP PATTERN: this.drop() only works inside a constructor,
-    // not inside a `get` getter (TenXObject is immutable post-construction).
-    // The regulator algorithm runs here; the getter just returns true so the
-    // aggregator sees the event with isDropped already set.
+    // CONSTRUCTOR-DROP PATTERN (WS3 investigation finding): `this.drop()`
+    // only sets `isDropped` when called from a TenXObject constructor.
+    // From a `get` getter it is a no-op (verified empirically: a
+    // POST-drop `this.isDropped` log line returned false in getter context
+    // and true in constructor context on identical events). TenXObject is
+    // immutable post-construction; the engine routes getter calls against
+    // a per-class view that doesn't propagate the drop. All `this.drop()`
+    // examples in `docs/api/js.md` are inside constructors.
+    //
+    // So the regulator algorithm runs HERE in the constructor. The
+    // dispatched getter just returns true to satisfy settings.yaml's
+    // groupFilters slot; by the time the event reaches the receive
+    // aggregator, isDropped is already set.
     constructor() {
 
         if ((!this.isObject) || (this.isDropped)) return;

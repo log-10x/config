@@ -56,16 +56,23 @@ export class rateReceiverCapObject extends TenXObject {
     // CONSTRUCTOR-DROP PATTERN: every documented `this.drop()` example in the
     // TenX engine docs is inside a constructor, never inside a `get` getter.
     // TenXObject is immutable post-construction, so calling `this.drop()`
-    // from a getter is a no-op (confirmed empirically on the demo cluster:
-    // DIAG showed cap-getter -> over-cap -> drop fired, but immediately after,
-    // `this.isDropped` was false; the receive aggregator's `!isDropped`
-    // filter therefore never excluded the event from `emitted_events`).
+    // from a getter is a no-op (confirmed empirically: a POST-drop
+    // `this.isDropped` log line returned false in getter context and true in
+    // constructor context for identical events). The fix: run the full
+    // regulator algorithm in the constructor and call `this.drop()` there.
+    // The dispatched getter just returns true to satisfy settings.yaml's
+    // groupFilters slot.
     //
-    // The fix is to run the regulator algorithm in the constructor and call
-    // `this.drop()` there. The getter just returns true so the event keeps
-    // flowing to the aggregator, which sees `isDropped=true` and excludes it
-    // from `emitted_events` while keeping it in `all_events` -- producing the
-    // delta that is the savings attribution.
+    // What the fix DOES guarantee: dropped events are excluded from
+    // `BaseEventEncoder.encode()` so they never reach the downstream
+    // forwarder/SIEM -- the customer's bill is reduced as designed.
+    //
+    // OPEN ENGINE ISSUE (filed as a separate follow-up): the receive
+    // aggregator's `all_events` metric currently reports the same byte total
+    // as `emitted_events` even when drops are confirmed. The documented
+    // "savings = all_events - emitted_events" formula therefore reports
+    // zero. This affects both this cap path and the existing mute path.
+    // See WS3 REPORT, Finding 3.
     constructor() {
 
         if ((!this.isObject) || (this.isDropped)) return;
@@ -76,12 +83,6 @@ export class rateReceiverCapObject extends TenXObject {
         var containerField = TenXEnv.get("rateReceiverContainerField");
         var container = containerField ? this.get(containerField) : "";
         if (!container) container = "__node__";
-
-        // DIAG (temporary): log dispatch + container every 500th event.
-        var diagSeq = TenXCounter.getAndInc("diag_cap_ctor", 1);
-        if (diagSeq < 5 || (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cap-ctor fired #" + diagSeq + " container=" + container + " fieldSetKey=" + fieldSetKey);
-        }
 
         var absoluteCap = 0;
         var capEntry = TenXLookup.get("rateReceiverCapLookupFile", container);
@@ -103,13 +104,7 @@ export class rateReceiverCapObject extends TenXObject {
         if (absoluteCap == 0) {
             absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         }
-        // DIAG: log what cap-resolution produced
-        if (diagSeq < 5 || (diagSeq % 20) == 0) {
-            TenXConsole.log("DIAG ctor resolved #" + diagSeq + " container=" + container + " capEntry=" + capEntry + " absoluteCap=" + absoluteCap);
-        }
-        if (absoluteCap == 0) {
-            return; // no cap configured -> opt-out
-        }
+        if (absoluteCap == 0) return; // no cap configured -> opt-out
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
@@ -130,35 +125,18 @@ export class rateReceiverCapObject extends TenXObject {
             TenXCounter.getAndSet("rg_seen_" + container, now);
             return;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) {
-            return;
-        }
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) {
-            return;
-        }
-        // DIAG (temporary): log cap-comparison every 20th event so we see counter growth
-        if (diagSeq < 5 || (diagSeq % 20) == 0) {
-            TenXConsole.log("DIAG ctor cap-check #" + diagSeq + " container=" + container + " patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap + " (overcap=" + ((patternBytes + bytes) > absoluteCap) + ")");
-        }
-        if ((patternBytes + bytes) <= absoluteCap) {
-            return;
-        }
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 900000)) return;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
+        if ((patternBytes + bytes) <= absoluteCap) return;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) {
-            return;
-        }
-        if (TenXMath.random() < floor) {
-            return;
-        }
+        if (share < minSharePercent) return;
+        if (TenXMath.random() < floor) return;
 
-        // Over cap AND over share guard AND severity-floor coin-flip says drop.
-        if (container == "cart" && (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cap-ctor DROP for cart: patternBytes=" + patternBytes + " bytes=" + bytes + " cap=" + absoluteCap);
-        }
         this.drop();
-        if (container == "cart" && (diagSeq % 500) == 0) {
-            TenXConsole.log("DIAG cap-ctor POST-drop: this.isDropped=" + this.isDropped);
+        if (TenXLog.isDebug()) {
+            TenXLog.debug("drop by regulator (cap). key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
+                key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
         }
     }
 
