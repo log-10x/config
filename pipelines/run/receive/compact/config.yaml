@@ -29,31 +29,11 @@ compactReceiver:
   # encode(). The cap-file's per-container decision overrides this per event.
   default: false
 
-  # 'lookup' configures the per-container cap-file. (The block is named
-  # `lookup` because the engine's TenXReceiver.encodeField() helper checks
-  # the `compactReceiverLookupFile` env var to decide whether to emit
-  # `encoded=shouldEncode() ? encode() : fullText` in the forwarder output
-  # stream. The file's semantics changed from per-pattern to per-container,
-  # but the env-var name stays for engine compatibility.)
   lookup:
 
-    # 'file' specifies the per-container cap-file path. Hot-reloaded on
-    #  in-place writes (the gitops pattern); Kubernetes ConfigMap mounts
-    #  won't reload. Comment out to disable the cap-file (every event then
-    #  follows 'default' above).
-    #
-    # File format (CSV; header row + one comma-separated entry per row):
-    #   container,value
-    #   <container>,<true|false>[:<untilEpochSec>][:<reason>]
-    #
-    # `true`  -> compact this container's events
-    # `false` -> explicitly preserve fullText for this container
-    # `untilEpochSec` -> optional TTL; past it the entry self-heals
-    # `reason` -> optional free-text for audit; no commas (would break CSV)
-    #
-    # Intended to be managed via gitops + an MCP tool that derives per-
-    # container decisions from cost attribution and opens a PR against
-    # this file.
+    # 'file' specifies the per-container cap-file path. Hot-reloaded on in-place
+    #  writes (the gitops pattern); Kubernetes ConfigMap mounts won't reload.
+    #  Comment out to disable the cap-file (every event follows 'default' above).
     # file: $=path("data/sample/compact") + "/compact-cap.csv"
 
     # 'retain' specifies the period before the file is marked as stale.

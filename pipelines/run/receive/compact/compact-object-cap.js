@@ -4,33 +4,11 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString, Ten
 
 // Per-container compaction predicate.
 //
-// Reads a per-container cap-file that declares, for each container,
-// whether to compact via encode() or preserve fullText. Containers not
-// listed in the file fall back to `compactReceiverDefault`. The container
-// identity is the value of `compactReceiverContainerField` (defaults to
-// the k8s container name).
-//
-// The env-var that gates this module remains `compactReceiverLookupFile`
-// (the engine's `TenXReceiver.encodeField()` helper checks that name to
-// decide whether to emit `encoded=shouldEncode() ? encode() : fullText`
-// in the forwarder output stream). The file content shifted from
-// per-pattern to per-container, but the env-var contract is unchanged.
-//
-// Entry format (CSV with `container,value` header):
-//
-//     container,value
-//     <container>,<true|false>[:<untilEpochSec>][:<reason>]
-//
-// `true`           -> compact via encode()
-// `false`          -> preserve fullText (explicit per-container opt-out)
-// `untilEpochSec`  -> optional TTL; past it the entry self-heals to a no-op
-//                     and the container falls back to compactReceiverDefault
-// `reason`         -> optional free-text for audit; must not contain commas
-//
-// Hot-reloaded on in-place file writes (the gitops pattern). Do NOT source
-// this file from a Kubernetes ConfigMap mount: CM updates swap the file
-// via a symlink rename and the engine's stat-based watcher will not see
-// the change.
+// Reads a cap-file keyed by `compactReceiverContainerField` (default: the k8s
+// container name). Listed containers get the entry's `true|false` decision;
+// unlisted containers fall back to `compactReceiverDefault`. The env var
+// `compactReceiverLookupFile` is the gate the engine recognizes -- do not
+// rename it without an engine change.
 
 export class CompactInput extends TenXInput {
 
@@ -83,9 +61,7 @@ export class CompactObject extends TenXObject {
         var entry = TenXLookup.get("compactReceiverLookupFile", container);
         if (!entry) return defaultEncode;
 
-        // Entry shape: `<true|false>[:<untilEpochSec>][:<reason>]`. Parse the
-        // value and the optional TTL the same way rate-object-cap.js parses
-        // its `<bytes>[:<untilEpochSec>][:<reason>]` entries.
+        // Entry shape: `<true|false>[:<untilEpochSec>][:<reason>]`.
         var c1 = TenXString.indexOf(entry, ":", 0);
         var valueEnd = (c1 < 0) ? TenXString.length(entry) : c1;
         var entryValue = TenXString.substring(entry, 0, valueEnd);
