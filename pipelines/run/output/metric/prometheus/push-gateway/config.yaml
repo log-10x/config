@@ -21,10 +21,10 @@ prometheusPG:
     # --------------------------- Connection Options --------------------------
 
     # 'host' sets the address and port number of the push gateway
-  - host: localhost:9091 # (REQUIRED)
+  - host: $=TenXEnv.get("PUSHGATEWAY_URL", "localhost:9091")
 
     # 'job' sets the logical job name reported to the push gateway
-    job: my-10x-job
+    job: $=TenXEnv.get("PUSHGATEWAY_JOB", "my-10x-job")
 
     # ---------------------------- Counter Options ----------------------------
 
