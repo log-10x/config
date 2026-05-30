@@ -24,12 +24,29 @@ include:
 
 output:
 
-  # outputEncodeField is the per-event output field expression. Resolved at
-  # config-load by the nested ternary below:
+  # outputEncodeField is the per-event output field expression, resolved once at
+  # config-load by the `$=yield` ternary below. Written as a YAML `|-` block
+  # scalar for readability: the engine treats the newlines/indentation between
+  # tokens as ordinary whitespace, so this compiles identically to the original
+  # one-liner. (Block scalars do NOT process backslash escapes, so the `\"`
+  # below reach the expression literally — exactly what encode("field") needs.)
+  #
+  # The three resolved modes:
   #   compactReceiverLookupFile set → encoded=shouldEncode() ? encode() : fullText
   #   receiverOptimize=true         → encoded=encode()
   #   neither                       → fullText
-  encodeField: '$=yield TenXEnv.get("compactReceiverLookupFile") ? ("encoded=shouldEncode() ? " + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()") + " : " + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText")) : (TenXEnv.get("receiverOptimize") ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")) : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))'
+  # The `symbolMessageHashField` variant (when set) passes the hash field name
+  # into encode()/fullText() so a stable pattern-hash ships alongside the output.
+  encodeField: |-
+    $=yield TenXEnv.get("compactReceiverLookupFile")
+      ? ("encoded=shouldEncode() ? "
+          + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")
+          + " : "
+          + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
+      : (TenXEnv.get("receiverOptimize")
+          ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
+          : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
 
   # outputWriteTemplates = true if either compact mode is active
   writeTemplates: $=yield TenXEnv.get("compactReceiverLookupFile") || TenXEnv.get("receiverOptimize")
+

@@ -28,15 +28,17 @@ export class rateReceiverLookupCapObject extends TenXObject {
         return TenXEnv.get("rateReceiverLookupFile") && TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // CONSTRUCTOR-DROP PATTERN: this.drop() in a getter is a no-op
-    // (TenXObject is immutable post-construction). The getter just returns
-    // true and the constructor does the actual decision.
-    constructor() {
+    // The regulator algorithm runs in the groupFilter getter (post-grouping,
+    // on the whole event). `this.drop()` MARKS the event isDropped; the marked
+    // event keeps flowing (getter returns true). The encoder no longer filters
+    // marked events out of output, so each output stream's filter decides:
+    // isObject = emit (soft-drop), isObject && !this.isDropped = suppress.
+    get shouldRetainEventWithMuteAndCap() {
 
-        if ((!this.isObject) || (this.isDropped)) return;
+        if ((!this.isObject) || (this.isDropped)) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return;
+        if (!fieldSetKey) return true;
 
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
@@ -62,7 +64,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         }
         if (hasActiveMute) {
             if (TenXMath.random() > muteThreshold) this.drop();
-            return; // mute decision is terminal
+            return true; // mute decision is terminal (marked if over threshold)
         }
 
         // ---- regulator path (cap-file + env-var fallback) ----
@@ -91,7 +93,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (absoluteCap == 0) {
             absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         }
-        if (absoluteCap == 0) return;
+        if (absoluteCap == 0) return true;
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
@@ -105,26 +107,17 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
-            return;
+            return true;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return;
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
-        if ((patternBytes + bytes) <= absoluteCap) return;
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return true;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
+        if ((patternBytes + bytes) <= absoluteCap) return true;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) return;
-        if (TenXMath.random() < floor) return;
+        if (share < minSharePercent) return true;
+        if (TenXMath.random() < floor) return true;
 
         this.drop();
-        if (TenXLog.isDebug()) {
-            TenXLog.debug("drop by regulator. key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
-                key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
-        }
-    }
-
-    // settings.yaml groupFilters dispatches to this; constructor already
-    // marked isDropped, so the aggregator's filter handles the rest.
-    get shouldRetainEventWithMuteAndCap() {
         return true;
     }
 }

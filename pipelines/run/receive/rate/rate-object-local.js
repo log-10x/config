@@ -103,25 +103,20 @@ export class rateReceiverObject extends TenXObject {
         return !TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
     }
 
-    // CONSTRUCTOR-DROP PATTERN (WS3 investigation finding): `this.drop()`
-    // only sets `isDropped` when called from a TenXObject constructor.
-    // From a `get` getter it is a no-op (verified empirically: a
-    // POST-drop `this.isDropped` log line returned false in getter context
-    // and true in constructor context on identical events). TenXObject is
-    // immutable post-construction; the engine routes getter calls against
-    // a per-class view that doesn't propagate the drop. All `this.drop()`
-    // examples in `docs/api/js.md` are inside constructors.
-    //
-    // So the regulator algorithm runs HERE in the constructor. The
-    // dispatched getter just returns true to satisfy settings.yaml's
-    // groupFilters slot; by the time the event reaches the receive
-    // aggregator, isDropped is already set.
-    constructor() {
+    // The regulator algorithm runs in the groupFilter getter (the correct
+    // pipeline phase: post-grouping, on the whole event), dispatched by
+    // settings.yaml's groupFilters slot. `this.drop()` here MARKS the event
+    // isDropped; the marked event keeps flowing. The encoder no longer filters
+    // marked events out of output (engine change), so each output stream's
+    // filter decides: isObject = emit (soft-drop), isObject && !this.isDropped
+    // = suppress (hard-drop). The getter always returns true so the engine
+    // does not remove the event at the group stage -- the mark is the signal.
+    get shouldRetainEvent() {
 
-        if ((!this.isObject) || (this.isDropped)) return;
+        if ((!this.isObject) || (this.isDropped)) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
-        if (!fieldSetKey) return;
+        if (!fieldSetKey) return true;
 
         // Inline the env lookup; a local var passed to this.get() is treated as an event field.
         var container = this.get(TenXEnv.get("rateReceiverContainerField"));
@@ -129,7 +124,7 @@ export class rateReceiverObject extends TenXObject {
 
         // No cap-file path here -- fleet-wide env var only.
         var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
-        if (absoluteCap == 0) return;
+        if (absoluteCap == 0) return true;
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
@@ -148,26 +143,17 @@ export class rateReceiverObject extends TenXObject {
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
             TenXCounter.getAndSet("rg_seen_" + container, now);
-            return;
+            return true;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return;
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return;
-        if ((patternBytes + bytes) <= absoluteCap) return;
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return true;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
+        if ((patternBytes + bytes) <= absoluteCap) return true;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
         var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) return;
-        if (TenXMath.random() < floor) return;
+        if (share < minSharePercent) return true;
+        if (TenXMath.random() < floor) return true;
 
         this.drop();
-        if (TenXLog.isDebug()) {
-            TenXLog.debug("drop by regulator. key={}, patternBytes={}, cap={}, share={}, minShare={}, floor={}, level={}, bytes={}",
-                key, (patternBytes + bytes), absoluteCap, share, minSharePercent, floor, level, bytes);
-        }
-    }
-
-    // settings.yaml groupFilters dispatches to this; constructor already
-    // marked isDropped, so the aggregator's filter handles the rest.
-    get shouldRetainEvent() {
         return true;
     }
 }
