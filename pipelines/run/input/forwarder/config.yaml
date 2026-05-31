@@ -31,22 +31,32 @@ output:
   # one-liner. (Block scalars do NOT process backslash escapes, so the `\"`
   # below reach the expression literally — exactly what encode("field") needs.)
   #
-  # The three resolved modes:
-  #   compactReceiverLookupFile set → encoded=shouldEncode() ? encode() : fullText
-  #   receiverOptimize=true         → encoded=encode()
-  #   neither                       → fullText
+  # The three resolved modes (the regulator only marks isDropped; this picks the
+  # output FORMAT, while `outputSoftDrop` also flips the stream filter):
+  #   receiverOptimize=true   → encoded=encode()                     (compact every event)
+  #   outputSoftDrop truthy   → encoded=isDropped ? encode() : fullText  (compact the dropped)
+  #   neither                 → fullText                             (receive / hard-drop)
   # The `symbolMessageHashField` variant (when set) passes the hash field name
   # into encode()/fullText() so a stable pattern-hash ships alongside the output.
   encodeField: |-
-    $=yield TenXEnv.get("compactReceiverLookupFile")
-      ? ("encoded=shouldEncode() ? "
-          + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")
-          + " : "
-          + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
-      : (TenXEnv.get("receiverOptimize")
-          ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
+    $=yield TenXEnv.get("receiverOptimize")
+      ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
+      : (TenXEnv.get("outputSoftDrop")
+          ? ("encoded=isDropped ? "
+              + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")
+              + " : "
+              + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
           : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
 
-  # outputWriteTemplates = true if either compact mode is active
-  writeTemplates: $=yield TenXEnv.get("compactReceiverLookupFile") || TenXEnv.get("receiverOptimize")
+  # outputWriteTemplates = true whenever events are encoded (compact-all or soft-drop)
+  writeTemplates: $=yield TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")
+
+  # outputDropFilter decides whether a (possibly regulator-marked) object is written.
+  # Resolved ONCE here so the soft/hard logic lives next to encodeField instead of
+  # being duplicated in every output stream; streams just reference $?outputDropFilter.
+  # (Named outputDropFilter, not outputFilter -- the latter is a built-in per-stream
+  # engine option and would collide.)
+  #   outputSoftDrop truthy → "isObject"                     (write all; the field compacts the dropped)
+  #   unset (hard, default) → "isObject && !this.isDropped"  (omit dropped objects)
+  dropFilter: '$=yield TenXEnv.get("outputSoftDrop") ? "isObject" : "isObject && !this.isDropped"'
 
