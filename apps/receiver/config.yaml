@@ -20,7 +20,7 @@ runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReceiver")
 
 # =========================== Load App Modules ================================
 
-# Uncomment and edit selected config.yaml files (e.g., run/input/forwarder/filebeat/report)
+# Uncomment and edit selected config.yaml files (e.g., run/input/forwarder/fluentbit)
 
 include:
 
