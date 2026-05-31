@@ -20,7 +20,13 @@ stdout:
   - target: SYSTEM_OUT
     filter: isObject
     fields:
+      - encodedPrefix="encoded="
       - encode()
+      - patternPrefix="pattern="
+      - $=yield TenXEnv.get("symbolMessageField")
+      - patternHashPrefix="patternHash="
+      - $=yield TenXEnv.get("symbolMessageHashField")
+
 
   # Template output — JSON `{"templateHash":"...","template":"..."}`
   - target: SYSTEM_OUT
