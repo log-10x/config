@@ -2,9 +2,9 @@
 
 # 🔟❎ 'run' compact receiver configuration
 
-# Per-container compaction decision via a declarative cap-file.
-# The forwarder output stream emits encode() for listed containers and
-# fullText for everyone else (or vice versa via per-container opt-out).
+# Per-pattern compaction decision via a declarative cap-file.
+# The forwarder output stream emits encode() for listed patterns and
+# fullText for everyone else (or vice versa via per-pattern opt-out).
 # To learn more see https://doc.log10x.com/run/receive/compact/
 
 # Set the 10x pipeline to 'run'
@@ -18,20 +18,21 @@ include: run/modules/receive/compact
 
 compactReceiver:
 
-  # 'containerField' scopes the cap-file lookup. Defaults to the k8s container
-  # name (`k8s_container`) so listed containers are stable across replicas, and
-  # a sidecar never inherits the application container's decision. Set to any
-  # event field to scope by something else (service, deployment, etc).
-  containerField: k8s_container
+  # 'fieldNames' defines the TenXObject fields joined with underscores to form
+  # each event's lookup key. Defaults to [symbolMessage], matching the rate
+  # receiver's rateReceiverFieldNames so MCP-authored entries address the same
+  # pattern_hash the Reporter attributes cost to.
+  fieldNames:
+    - symbolMessage
 
   # 'default' is the fallback when no cap-file entry matches the event's
-  # container. `false` (default) preserves fullText; `true` compacts via
-  # encode(). The cap-file's per-container decision overrides this per event.
+  # pattern. `false` (default) preserves fullText; `true` compacts via
+  # encode(). The cap-file's per-pattern decision overrides this per event.
   default: false
 
   lookup:
 
-    # 'file' specifies the per-container cap-file path. Hot-reloaded on in-place
+    # 'file' specifies the per-pattern cap-file path. Hot-reloaded on in-place
     #  writes (the gitops pattern); Kubernetes ConfigMap mounts won't reload.
     #  Comment out to disable the cap-file (every event follows 'default' above).
     # file: $=path("data/sample/compact") + "/compact-cap.csv"

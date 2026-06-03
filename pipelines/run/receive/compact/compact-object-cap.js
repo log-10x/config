@@ -2,13 +2,18 @@
 
 import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString, TenXMath, TenXLog } from '@tenx/tenx'
 
-// Per-container compaction predicate.
+// Per-pattern compaction predicate.
 //
-// Reads a cap-file keyed by `compactReceiverContainerField` (default: the k8s
-// container name). Listed containers get the entry's `true|false` decision;
-// unlisted containers fall back to `compactReceiverDefault`. The env var
-// `compactReceiverLookupFile` is the gate the engine recognizes -- do not
-// rename it without an engine change.
+// Reads a cap-file keyed by `fieldSetKey` (joined from
+// `compactReceiverFieldNames`, default `symbolMessage`). Listed patterns get
+// the entry's `true|false` decision; unlisted patterns fall back to
+// `compactReceiverDefault`.
+//
+// CSV format: pattern_hash,<true|false>[:<untilEpochSec>[:<reason>]]
+//   e.g.  payment_retry_timeout,true:1745856000:OPS-5123
+//
+// The env var `compactReceiverLookupFile` is the gate the engine recognises —
+// do not rename it without an engine change.
 
 export class CompactInput extends TenXInput {
 
@@ -54,11 +59,13 @@ export class CompactObject extends TenXObject {
         var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
         var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
 
-        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
-        var container = this.get(TenXEnv.get("compactReceiverContainerField"));
-        if (!container) return defaultEncode;
+        // Key on the pattern identity (default: symbolMessage), matching the
+        // rate receiver's rateReceiverFieldNames key so MCP-authored entries
+        // address the same pattern_hash the Reporter attributes cost to.
+        var fieldSetKey = this.joinFields("_", TenXEnv.get("compactReceiverFieldNames"));
+        if (!fieldSetKey) return defaultEncode;
 
-        var entry = TenXLookup.get("compactReceiverLookupFile", container);
+        var entry = TenXLookup.get("compactReceiverLookupFile", fieldSetKey);
         if (!entry) return defaultEncode;
 
         // Entry shape: `<true|false>[:<untilEpochSec>][:<reason>]`.
