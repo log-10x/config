@@ -108,10 +108,7 @@
             ],
             "markdownDescription" : "AWS CloudWatch namespace\n\nDefines the target AWS CloudWatch namespace. To learn more see [CloudWatch namespaces](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#Namespace)"
           }
-        },
-        "required" : [
-          "namespace"
-        ]
+        }
       }
     }
   },

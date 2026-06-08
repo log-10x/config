@@ -88,4 +88,8 @@ include:
   # - run/output/metric/datadog                    # https://doc.log10x.com/run/output/metric/datadog
   # - run/output/metric/elastic                    # https://doc.log10x.com/run/output/metric/elastic
   # - run/output/metric/signalFx                   # https://doc.log10x.com/run/output/metric/signalFx
-  # - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log
+  - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log
+
+groupFilters: drop()
+enrichmentFields: 
+  - isDropped=isSummary?l1e_isDropped:isDropped

@@ -21,13 +21,15 @@ prometheusRW:
     # --------------------------- Connection Options --------------------------
 
     # 'host' sets the Prometheus remote write endpoint
-  - host: http://localhost:9090/api/v1/write # (REQUIRED)
+    #  'PROMETHEUS_REMOTE_WRITE_URL' works for any remote-write-compatible backend
+    #  (Grafana Cloud, Mimir, Thanos, VictoriaMetrics, Cortex).
+  - host: $=TenXEnv.get("PROMETHEUS_REMOTE_WRITE_URL", "http://localhost:9090/api/v1/write")
 
     # 'user' for authentication
-    user: null # (REQUIRED)
+    user: $=TenXEnv.get("PROMETHEUS_REMOTE_WRITE_USERNAME") # (EnvVar REQUIRED)
 
     # 'password' for authentication
-    password: null # (REQUIRED)
+    password: $=TenXEnv.get("PROMETHEUS_REMOTE_WRITE_PASSWORD") # (EnvVar REQUIRED)
 
     # ---------------------------- Counter Options ----------------------------
 

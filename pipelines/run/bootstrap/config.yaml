@@ -18,10 +18,10 @@ licenseKey: $=TenXEnv.get("TENX_LICENSE_KEY", "NO-LICENSE")
 # Preferred over 'licenseKey' on production hosts: the token does not appear in 'ps' output.
 licenseFile: $=TenXEnv.get("TENX_LICENSE_FILE")
 
-# 'offline' runs the engine airgapped: the license is verified locally against the embedded
+# 'airgapped' suppresses every call to the 10x SaaS gateway: the license is verified locally against the embedded
 # public key, and ALL outbound calls to the 10x SaaS gateway are suppressed (no DNS, no TCP).
 # Use for deployments where security review forbids vendor phone-home.
-offline: $=TenXEnv.get("TENX_OFFLINE", "false")
+airgapped: $=TenXEnv.get("TENX_AIRGAPPED", "false")
 
 # 'includePaths' specifies folders on disk for resolving relative config file/folder references in addition to the working folder
 includePaths: []

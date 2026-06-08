@@ -136,9 +136,16 @@ rateReceiver:
   capLookup:
 
     # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
-    #  writes (the gitops pattern); Kubernetes ConfigMap mounts won't reload.
-    #  Comment out to use only 'absoluteCap' (or no cap if it is also unset).
-    # file: $=path("data/sample/caps") + "/caps.csv"
+    #  writes (the gitops pattern); also hot-reloaded when the file is replaced
+    #  via ATOMIC_MOVE (the kubernetes ConfigMap pull driver pattern).
+    #
+    # Default points at the stable destination written by the engine's
+    # kubernetes ConfigMap pull driver:
+    #   ${java.io.tmpdir}/tenx/kubernetes/<namespace>/<configMap>/caps.csv
+    #
+    # CAP_LOOKUP_FILE env var overrides this for non-k8s deployments or for
+    # operators who prefer a fixed absolute path (gitops-managed file on disk).
+    file: $=TenXEnv.get("CAP_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/caps.csv")
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
