@@ -40,3 +40,49 @@ include:
       # 'syncInterval' specifies an interval by which check to check the remote branch for updates (null to disable).
       # This interval works in conjunction with: https://doc.log10x.com/run/reload
       syncInterval: $=TenXEnv.get("GH_SYNC_INTERVAL", "30s")
+
+# ---------------------------------------------------------------------------
+# Alternative source: kubernetes ConfigMap (uncomment to use instead of github)
+#
+# Pulls regulator CSV / lookup files from a kube-apiserver ConfigMap. Same
+# polling cadence + atomic write semantics as the github lane, but the
+# source-of-truth lives in the cluster rather than a remote repo. Useful
+# for air-gapped deployments and for tooling that already writes intent
+# (e.g. log10x-mcp configure_regulator) directly into kubernetes.
+#
+# Auth uses the pod's mounted service-account token (re-read each poll so
+# BoundServiceAccountTokenVolume rotation is honored). CA cert is re-loaded
+# on mtime change. Atomic file replacement via temp + Files.move.
+#
+#  - source: kubernetes
+#
+#    options:
+#      # Env-var overrides: K8S_ENABLED, K8S_NAMESPACE, K8S_CONFIGMAP,
+#      # K8S_SYNC_INTERVAL, K8S_API_SERVER, K8S_TOKEN_PATH, K8S_CA_PATH.
+#      enabled: $=TenXEnv.get("K8S_ENABLED", false)
+#
+#      # 'namespace' defaults to the pod's namespace (read from the mounted
+#      # service-account token volume). Override for cross-namespace pulls.
+#      namespace: $=TenXEnv.get("K8S_NAMESPACE")
+#
+#      # 'configMap' is the ConfigMap name to pull from.
+#      configMap: $=TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent")
+#
+#      # 'keys' is a list of glob patterns over the ConfigMap data + binaryData
+#      # keys. Only keys matching at least one glob are written to disk.
+#      keys:
+#        - "*.csv"
+#        - "*.json"
+#
+#      # 'syncInterval' — floored to 60s by the scheduler (mirrors github lane).
+#      syncInterval: $=TenXEnv.get("K8S_SYNC_INTERVAL", "30s")
+#
+#      # 'apiServer' default is the in-cluster URL. Override for out-of-cluster
+#      # smoke tests (e.g., https://127.0.0.1:6443 via kubectl proxy).
+#      apiServer: $=TenXEnv.get("K8S_API_SERVER", "https://kubernetes.default.svc")
+#
+#      # Paths to the projected service-account token + CA cert. Defaults are
+#      # the standard in-cluster mount points; override only for non-standard
+#      # service-account volume layouts.
+#      tokenPath: $=TenXEnv.get("K8S_TOKEN_PATH", "/var/run/secrets/kubernetes.io/serviceaccount/token")
+#      caPath: $=TenXEnv.get("K8S_CA_PATH", "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")

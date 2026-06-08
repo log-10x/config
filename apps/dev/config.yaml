@@ -62,12 +62,14 @@ include:
   - run/initialize/k8s          # https://doc.log10x.com/run/initialize/k8s
   # - run/initialize/geoIP        # https://doc.log10x.com/run/initialize/geoIP
 
+
+
 # --------------------------- Output TenXObjects -------------------------------
 
   # Uncomment and edit to write TenXObjects summaries to output(s):
 
   - run/output/event/file          # https://doc.log10x.com/run/output/event/file
-  - run/output/event/dev           # https://doc.log10x.com/run/output/event/dev
+  # - run/output/event/dev           # https://doc.log10x.com/run/output/event/dev
   # - run/output/event/stdout      # https://doc.log10x.com/run/output/event/stdout
   # - run/output/event/process     # https://doc.log10x.com/run/output/event/process
   # - run/output/event/http        # https://doc.log10x.com/run/output/event/http
@@ -86,4 +88,8 @@ include:
   # - run/output/metric/datadog                    # https://doc.log10x.com/run/output/metric/datadog
   # - run/output/metric/elastic                    # https://doc.log10x.com/run/output/metric/elastic
   # - run/output/metric/signalFx                   # https://doc.log10x.com/run/output/metric/signalFx
-  # - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log
+  - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log
+
+groupFilters: drop()
+enrichmentFields: 
+  - isDropped=isSummary?l1e_isDropped:isDropped

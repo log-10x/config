@@ -1,9 +1,12 @@
 # yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/receive/rate/schema.json
 
-# 🔟❎ 'run' rate receiver configuration
+# 🔟❎ 'run' rate regulator configuration
 
-# rate receivers utilize cost-based sampling to filter noisy telemetry from event outputs (e.g., Splunk)
-# Enforces spending limits by tracking byte volume and ingestion costs per event type
+# The rate regulator prevents any single log pattern from dominating a container's
+# volume. For each event it computes the pattern's share of its container's recent
+# bytes and trims the pattern back once it crosses a fixed cap. Severity floors keep
+# errors/warnings flowing; an optional mute file overrides the regulator for
+# explicitly declared patterns.
 # To learn more see https://doc.log10x.com/run/receive/rate/
 
 # Set the 10x pipeline to 'run'
@@ -17,76 +20,132 @@ include: run/modules/receive/rate
 
 rateReceiver:
 
-  # 'fieldNames' specifies the list of TenXObject fields to identify rate counter buckets
-  #  The list usually contains the symbolMessage field from message enrichment
-  #  Can include additional fields like container (k8s app), country (GeoIP), httpCode, etc.
+  # 'fieldNames' identifies the log PATTERN (the numerator bucket). Usually the
+  #  symbolMessage field from message enrichment. The container is configured
+  #  separately via 'containerField' below -- it is the denominator and is keyed
+  #  on its own, so a pattern's share is measured per container.
   fieldNames:
-    - $=yield TenXEnv.get("symbolMessageField")  # Matches lookup keys
+    - $=yield TenXEnv.get("symbolMessageField")
 
-  # 'resetIntervalMs' specifies reset interval for rate counters in milliseconds
-  #  Default of 5 minutes provides stable cost averages while remaining responsive
-  #  Trade-offs: 1min (reactive/noisy) vs 5min (balanced) vs 10min+ (stable/slow)
-  resetIntervalMs: $=parseDuration("5m")
+  # 'containerField' names the field whose value scopes the share denominator
+  #  (the per-container total). Defaults to the k8s container name, which is
+  #  stable across pod replicas (never the pod). When the field is absent on an
+  #  event (non-k8s input), the regulator falls back to a single node-wide bucket.
+  containerField: $=yield TenXEnv.get("k8sContainerNameField")
 
-  # 'minRetentionThreshold' specifies minimum retantion threshold for high-spend events (0.0 to 1.0)
-  #  Ensures some events are always retained even when budget is exceeded
-  #  Example: 0.1 = minimum 10% retention even for very high-spend patterns
+  # 'resetIntervalMs' is the window over which recent share is measured. The
+  #  engine caps counter reset intervals at 255 seconds, so the effective maximum
+  #  window is ~4.25 minutes.
+  resetIntervalMs: $=parseDuration("4m")
+
+  # 'absoluteCap' is the fleet-wide trigger (HEADLINE GUARANTEE): the maximum bytes
+  #  of a single pattern that may accumulate per container within the current
+  #  window. No single pattern can exceed this many bytes per container per window;
+  #  customers can compute their worst-case per-pattern-per-container spend from
+  #  this number directly.
+  #
+  #  Default 0 = disabled. Three customer configurations are first-class:
+  #    - Per-container only: leave 'absoluteCap' unset, set 'capLookupFile' below.
+  #      Listed containers get the file's cap; unlisted containers are
+  #      unregulated by the absolute cap. Most selective.
+  #    - Fleet-wide only: set 'absoluteCap' to a positive integer (e.g., 10485760
+  #      for 10 MB). Applies to every container the regulator sees.
+  #    - Both: per-container entries in 'capLookupFile' override the fleet-wide
+  #      cap; unlisted containers fall back to the fleet-wide cap (safety floor).
+  # absoluteCap: 10485760   # 10 MB
+
+  # 'minSharePercent' is the sanity guard against false positives on legitimately
+  #  high-volume containers. If a pattern is over `absoluteCap` BUT below this
+  #  share of its container's volume, it is left alone -- the pattern is a small
+  #  fraction of a chatty container, not an outlier.
+  minSharePercent: 0.05
+
+  # 'severityFloors' is the minimum retention per severity level, applied as an
+  #  absolute floor that BEATS the share cap: even a pattern over its cap keeps at
+  #  least this fraction of each level. Floor-map keys must match the level
+  #  vocabulary emitted by the level enrichment.
+  severityFloors:
+    - TRACE=0.1
+    - DEBUG=0.1
+    - INFO=0.1
+    - WARN=0.3
+    - ERROR=0.5
+    - CRITICAL=0.5   # the level enrichment maps fatal/critical -> CRITICAL
+    - FATAL=0.5      # kept for forwarders whose level vocabulary emits FATAL
+
+  # 'minRetentionThreshold' is the floor used for any level not present in
+  #  'severityFloors'.
   minRetentionThreshold: 0.1
 
-  # 'levelBoost' specifies severity level boost mapping for sampling rates
-  #  Higher severity events can be given higher retention rates through boost values
-  #  Example: ERROR=2.0 means ERROR events are twice as likely to be retained
-  levelBoost:
-    - TRACE=0.25
-    - DEBUG=0.5
-    - INFO=1
-    - WARN=1.5
-    - ERROR=2
-    - FATAL=3
+  # 'warmupMs' is the per-instance grace period before the regulator starts capping a
+  #  newly-seen container, giving the per-pattern sample counts time to fill. Scope is
+  #  per regulator instance, so a regulator restart restarts the window. See
+  #  https://doc.log10x.com/run/receive/rate/#warmup for the operator guide.
+  warmupMs: $=parseDuration("5m")
 
-  # ----------------------------- Budget Options ------------------------------
+  # 'baselineCount' is the number of events of each pattern kept per window
+  #  regardless of share, so even a heavily-capped pattern leaves a forensic sample.
+  baselineCount: 5
 
-  # 'budgetPerHour' specifies target spending budget per hour in USD
-  #  Soft target for total cost across all event types on this node
-  #  Actual spend may exceed by 10-20% due to soft enforcement
-  #  Examples: $1.50/hour (~$36/day), $0.10/hour (dev/test), $0.02/hour (minimal)
-  budgetPerHour: 1.50
-
-  # 'maxSharePerFieldSet' specifies maximum % of total spend any single field set can consume
-  #  Enforced independently of budget—prevents noisy field sets from dominating even when under budget
-  #  Example: 0.2 means no single event type can exceed 20% of total spend
-  #  In global mode, enforced cluster-wide based on aggregate spend data from lookup
-  maxSharePerFieldSet: 0.2
-
-  # 'ingestionCostPerGB' specifies vendor ingestion cost per GB in USD
-  #  Used to calculate per-event costs based on byte size (per-node budget mode only)
-  #  Common values: Splunk $1.50/GB, Datadog $0.10-$0.25/GB, Elastic $0.109/GB
+  # 'ingestionCostPerGB' is used only to render savings metrics in dollars; it does
+  #  not affect the keep/drop decision (the decision is share-based).
   ingestionCostPerGB: 1.5
 
   # ---------------------------- Mute File Options ----------------------------
 
-  # Declarative mute file keyed by the joined field-set defined in 'fieldNames'.
-  # When 'file' is set, the receiver switches from per-node budget sampling to
-  # mute-file mode: per-event decisions are driven entirely by entries in the file.
+  # Optional declarative mute file keyed by the joined 'fieldNames'. Unlike before,
+  # the mute file COMPOSES with the regulator rather than replacing it: a listed,
+  # active pattern is decided by its file entry (the human declaration wins), and
+  # everything else is handled by the share-based regulator.
   #
-  # File format (one entry per line):
-  #   <fieldSet>=<sampleRate>:<untilEpochSec>[:<reason>]
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   fieldSet,value
+  #   <fieldSetKey>,<sampleRate>:<untilEpochSec>[:<reason>]
   #
-  # Example (with fieldNames: [symbolMessage]):
-  #   Error_syncing_pod=0.10:1744848000:pod error spam OPS-4821
-  #   heartbeat_debug=0.00:1744416000:k8s liveness 200s
-  #
-  # Entries self-heal past 'untilEpochSec'. Severity boost still applies as a floor
-  # so ERROR/FATAL are never fully suppressed even under a 0.0 mute.
+  # sampleRate 1.0 = never sampled; <1.0 = retain at that rate. Entries self-heal
+  # past 'untilEpochSec'. The severity floor still applies so a 0.0 mute never
+  # silences ERROR/FATAL.
   #
   # Periodically pulling the mute file to keep it fresh is done via the gitops
-  # configuration — see https://doc.log10x.com/config/github/#config
-  #
+  # configuration -- see https://doc.log10x.com/config/github/#config
   lookup:
 
-    # 'file' specifies the mute file path. Will reload on change.
-    #  Comment out to use per-node budget sampling (default).
+    # 'file' specifies the mute file path. Hot-reloaded on in-place writes (the
+    #  gitops pattern); Kubernetes ConfigMap mounts won't reload. Comment out to
+    #  run the regulator alone (the default).
     # file: $=path("data/sample/mutes") + "/mutes.csv"
+
+    # 'retain' specifies the period before the file is marked as stale.
+    retain: $=parseDuration("10m")
+
+  # ---------------------------- Cap File Options -----------------------------
+
+  # Optional declarative per-container cap file keyed by the value of
+  # 'containerField' (the k8s container name by default). Each entry assigns a
+  # byte cap to a specific container; the file wins per-event over 'absoluteCap'
+  # above. Listed containers get the file's cap; unlisted containers fall back
+  # to 'absoluteCap' (or to no cap, when 'absoluteCap' is unset/0).
+  #
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   container,cap
+  #   <container>,<bytes>[:<untilEpochSec>][:<reason>]
+  #
+  # Intended to be managed via GitOps + the log10x_configure_regulator MCP tool,
+  # which derives per-container caps from a monthly dollar budget and opens a PR
+  # against this file.
+  capLookup:
+
+    # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
+    #  writes (the gitops pattern); also hot-reloaded when the file is replaced
+    #  via ATOMIC_MOVE (the kubernetes ConfigMap pull driver pattern).
+    #
+    # Default points at the stable destination written by the engine's
+    # kubernetes ConfigMap pull driver:
+    #   ${java.io.tmpdir}/tenx/kubernetes/<namespace>/<configMap>/caps.csv
+    #
+    # CAP_LOOKUP_FILE env var overrides this for non-k8s deployments or for
+    # operators who prefer a fixed absolute path (gitops-managed file on disk).
+    file: $=TenXEnv.get("CAP_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/caps.csv")
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
