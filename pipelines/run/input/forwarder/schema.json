@@ -29,6 +29,14 @@
           ],
           "markdownDescription" : "Whether the forwarder emits new TenXTemplates alongside encoded events\n\nTrue for encoding modes (compact-all, compact-lookup) so decoders can reconstruct events from templateHash + vars. False for receive mode (no encoding → no templates needed). (Default: false)",
           "default" : "false"
+        },
+        "dropFilter" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The filter expression each forwarder output stream uses to decide whether a (possibly regulator-marked) object is written\n\nResolved once by the user-facing config.yaml from the `outputSoftDrop` flag, so the soft/hard logic lives in one place instead of being duplicated per stream: - **hard** (default): `isObject && !this.isDropped` — regulator-dropped objects are NOT written - **soft** (`outputSoftDrop` truthy): `isObject` — everything is written; the output field compacts the dropped ones  Streams reference it via `$?outputDropFilter` (named so to avoid colliding with the built-in per-stream `outputFilter` option). (Default: isObject && !this.isDropped)",
+          "default" : "isObject && !this.isDropped"
         }
       }
     }

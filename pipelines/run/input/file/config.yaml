@@ -36,6 +36,8 @@ inputFile:
     #  used to capture and redact event values from 'path' to transform 
     #  into TenXObjects. To learn more see: https://doc.log10x.com/run/input/extract         
     extractors: [  
+    #  fluentd,
+    #  fluentK8s
     ]
  
     # 'sourcePattern' defines a regex pattern that captures a 'source' value

@@ -32,57 +32,173 @@ symbol:
     - "nil"
     - "true"
     - "false"
-    # stopwords
-    - "to"
-    - "the"
+    # stopwords (articles, conjunctions, prepositions)
     - "a"
+    - "an"
+    - "the"
+    - "to"
+    - "of"
+    - "in"
+    - "on"
     - "at"
+    - "by"
     - "for"
+    - "from"
+    - "with"
+    - "and"
+    - "or"
+    - "as"
+    - "is"
     # generic log words
     - "log"
-    - "info"
+    - "logger"
+    - "logs"
     - "http"
-    # severity levels
+    - "https"
+    # severity levels — uppercase
     - TRACE
     - DEBUG
     - INFO
     - NOTICE
     - WARN
+    - WARNING
     - ERROR
+    - ERR
     - CRITICAL
+    - CRIT
     - ALERT
     - EMERGENCY
-    # stopwords
-    - "with"
-    - "in"
-    - "on"
-    - "of"
-    - "from"
-    - "by"
-    # structured / envelope keys
-    - "service"
-    - "instance"
-    - "component"
-    - "signal"
-    - "exporter"
-    - "resource"
-    - "scope"
-    - "attributes"
+    - EMERG
+    - FATAL
+    - PANIC
+    # severity levels — lowercase (engine matching is case-sensitive).
+    # Note. The token "error" is intentionally NOT reserved here.
+    # Verification against 3254 demo events (2026-05-20) found 1280
+    # signal hits where the "error" key carries the actual message
+    # body the pattern groups; reserving it would collapse distinct
+    # error patterns into one.
+    # Note. The token "emergency" is also intentionally NOT reserved
+    # — sample showed only prose hits, no envelope use observed.
     - "trace"
+    - "debug"
+    - "info"
+    - "notice"
+    - "warn"
+    - "warning"
+    - "err"
+    - "critical"
+    - "crit"
+    - "alert"
+    - "fatal"
+    - "panic"
+    # severity-equivalent envelope keys
+    - "level"
+    - "levelname"
+    - "severity"
+    # envelope time keys
+    - "time"
+    - "timestamp"
+    - "ts"
+    - "msg"
+    - "message"
+    # OpenTelemetry / collector envelope (these tokens leak from the
+    # otelcol's Go-package logging into pattern names)
+    - "otel"
+    - "otelcol"
+    - "opentelemetry"
+    - "collector"
+    - "contrib"
+    - "processor"
+    - "processors"
+    - "receiver"
+    - "receivers"
+    - "exporter"
+    - "exporters"
+    - "pipeline"
+    - "pipelines"
+    # structured / envelope keys (singular + plural — engine matcher
+    # is exact, no stem; both forms appear in real otel logs).
+    # Note: "trace" is already reserved above under lowercase severity.
+    - "service"
+    - "services"
+    - "instance"
+    - "instances"
+    - "component"
+    - "components"
+    - "signal"
+    - "signals"
+    - "resource"
+    - "resources"
+    - "scope"
+    - "scopes"
+    - "attribute"
+    - "attributes"
+    - "traces"
     - "span"
+    - "spans"
+    - "flag"
     - "flags"
     - "context"
+    - "contexts"
     - "baggage"
-    - "severity"
-    - "timestamp"
-    # tokenizer artifact
-    - "t"
-    # k8s / structured keys
-    - "pod"
-    - "container"
+    # K8s audit / Kubernetes API envelope (verified zero signal in
+    # the 2026-05-20 sample — every occurrence was a JSON metadata
+    # key or audit field)
+    - "metadata"
     - "namespace"
-    - "logger"
-    - "level"
+    - "verb"
+    - "uid"
+    - "identity"
+    - "protocol"
+    - "priority"
+    - "encoding"
+    - "headers"
+    - "duration"
+    # HTTP / request envelope (verified safe — appear only as
+    # klog field markers or JSON keys, not as message content)
+    - "path"
+    - "status"
+    # generic identity keys (very common envelope tokens in JSON logs)
+    - "id"
+    - "name"
+    - "kind"
+    - "version"
+    - "type"
+    # source-location envelope (Go / Java / Python loggers leak these)
+    - "caller"
+    - "func"
+    - "function"
+    - "file"
+    - "line"
+    - "module"
+    - "package"
+    - "class"
+    - "method"
+    - "stack"
+    - "stacktrace"
+    # process / runtime context.
+    # Note. The token "host" is intentionally NOT reserved — 1018 of
+    # 1024 occurrences in the verification corpus were the content
+    # phrase "no such host" inside DNS-failure messages; reserving
+    # it would collapse every "no such host" pattern into one.
+    # Note. The token "app" is intentionally NOT reserved — 42 of 44
+    # occurrences were the Flask logger-name discriminator in
+    # "INFO in app:" lines; reserving it would collapse Python-app
+    # logger structure.
+    - "pid"
+    - "tid"
+    - "process"
+    - "thread"
+    - "hostname"
+    - "application"
+    # package-qualifier prefixes (Go / Java loggers embed these in
+    # source-path tokens like `com.foo.bar.MyLogger`)
+    - "com"
+    - "org"
+    - "io"
+    - "net"
+    # tokenizer artifacts
+    - "t"
 
   # ----------------------------- Debug Options -------------------------------
   

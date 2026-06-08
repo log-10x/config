@@ -29,3 +29,27 @@ symbol:
 
   # 'maxLen' specifies the max char len of the output messageField
   maxLen: 120
+
+# ============================== Message Options ==============================
+
+# 'negators' specifies patterns that mark a log line as boilerplate/continuation (stack trace frames,
+# indented detail, banners) so the message-template skips its own message-pattern compute for them.
+# The check fires only for templates that don't already pass the (groupSize > 1) || groupHead arms —
+# i.e., for single-event templates with no head signal. A non-negator line in that case (e.g., bare
+# "Hello World", "Heartbeat received from node-7") still gets a pattern; a negator-matching orphan
+# (e.g., a lone "\tat com.foo.Bar(...)") does not.
+message:
+  negators:
+    - " "                 # any indented line (stack frames, indented app detail, multi-line JSON, banners)
+    - "\t"                # real tab byte — for msgpack/forward inputs that preserve raw whitespace
+    - "\\t"               # literal backslash+t — for file/JSON inputs that keep escape sequences raw
+    - "Caused by: "       # Java chained exception (column 0)
+    - "Suppressed: "      # Java suppressed exception (column 0)
+    - "--- End of "       # .NET inner exception marker (column 0)
+    - "created by "       # Go goroutine creator (column 0)
+    - "#0 "               # PHP stack frame depth 0
+    - "#1 "               # PHP stack frame depth 1
+    - "#2 "               # PHP stack frame depth 2
+    - "#3 "               # PHP stack frame depth 3
+    - "#4 "               # PHP stack frame depth 4
+    - "#5 "               # PHP stack frame depth 5

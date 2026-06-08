@@ -1,153 +1,159 @@
 // @loader: tenx
 
-import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole } from '@tenx/tenx'
+import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConsole, TenXDate } from '@tenx/tenx'
 
-// Known design limits (intentional, not bugs):
-//  - Per-node only: each engine instance enforces its own budget; with N
-//    receivers the effective spend is ~N * rateReceiverBudgetPerHour. No
-//    fleet coordination.
-//  - Sawtooth window: counters hard-reset every rateReceiverResetIntervalMs
-//    with no carryover, so a burst can overshoot inside a window.
-//  - Value-blind beyond rateReceiverLevelBoost: shedding is probabilistic
-//    across everything over budget, signal included.
-// NOTE: the tenx script parser only accepts class/import/static at module
-// top level — no top-level const/let/var. The min-retention default is
-// inlined as the literal 0.1 in both read sites below; keep them in sync.
+// Per-container noise regulator -- NO-MUTE, NO-CAP-FILE variant.
+//
+// This is one of FOUR regulator-decision classes split across the (mute,
+// cap) cartesian. Each variant has its own getter name dispatched by
+// settings.yaml's groupFilters 4-way ternary, because TenXLookup.get is
+// parse-validated against runtime-registered tables -- a class that
+// references a lookup table that may not be loaded fails engine init.
+//
+//   shouldLoad gates:                           Getter:
+//   - rateReceiverObject:             !mute && !cap   shouldRetainEvent
+//   - rateReceiverCapObject:          !mute &&  cap   shouldRetainEventWithCap
+//   - rateReceiverLookupObject:        mute && !cap   shouldRetainEventWithMute
+//   - rateReceiverLookupCapObject:     mute &&  cap   shouldRetainEventWithMuteAndCap
+//
+// This file is the NO-MUTE NO-CAP-FILE variant: no lookups at all, cap
+// comes from the fleet-wide `rateReceiverAbsoluteCap` env var only. If the
+// env var is 0 (default), the regulator does nothing.
+//
+// Cross-class composition was attempted first (a per-event getter
+// `rateReceiverResolvedCap` on a separate cap-class read via
+// `this.rateReceiverResolvedCap`) and verified BROKEN on the demo cluster:
+// the getter never fired from this class's regulator. TenX DSL does not
+// compose property-style getters across separately-declared TenXObject
+// classes the way the aspect model suggested. Inlining the lookup didn't
+// work either: parse-validation walks every loaded class and rejects
+// TenXLookup.get when the table is not registered, regardless of runtime
+// if-guards. The 4-class cartesian is the structurally honest answer.
+//
+// HEADLINE GUARANTEE (the cap variants): no single log pattern can exceed
+// its resolved cap bytes per container per `rateReceiverResetIntervalMs`
+// window. Cap resolution priority:
+//   1. `rateReceiverCapLookupFile` (cap-file variants only)
+//   2. `rateReceiverAbsoluteCap` env var (this variant)
+//   3. No cap: the over-cap branch is skipped, event retained, no counter
+//      state accumulated. Protection is strictly opt-in.
+//
+// Decision order per event (only runs when a cap IS resolved):
+//   1. Warmup: container left unregulated for `warmupMs` after this regulator
+//      instance first sees its events (per-instance, not per container birth --
+//      a regulator restart restarts the window). Default 5 min.
+//   2. Baseline: first `baselineCount` events of each pattern kept per
+//      window for forensic visibility.
+//   3. ABSOLUTE CAP (primary trigger): under cap -> keep.
+//   4. SHARE GUARD: pattern is small share of a chatty container -> keep.
+//   5. Severity floor wins over cap: keep with probability = floor.
+//
+// ENGINE NOTES:
+//   - Counter keyspace is bounded by AtomicCounterRegistry (~262K LRU);
+//     evicted counters re-baseline gracefully.
+//   - Counter increments only happen when a cap is resolved, so unprotected
+//     containers accumulate zero counter cardinality.
+//   - Fail-open: an exception in a receive-stage filter must result in
+//     retain. Engine-wide policy.
 
-export class LocalReceiverInput extends TenXInput {
+export class rateReceiverInput extends TenXInput {
 
-    // only load class if a global lookup file is not available
-    // https://doc.log10x.com/api/js/#TenXEngine.shouldLoad
+    // Validation runs whenever there is no mute file; this Input is shared by
+    // both the no-cap (rate-object-local.js) and with-cap (rate-object-cap.js)
+    // regulator-object classes -- we don't want to validate twice or split
+    // the validation across files.
     static shouldLoad(config) {
-       return !TenXEnv.get("rateReceiverLookupFile");
+        return !TenXEnv.get("rateReceiverLookupFile");
     }
 
     constructor() {
 
         if (!TenXEnv.get("quiet")) {
-            TenXConsole.log("🚦 Applying local rate receiver to: " + this.inputName);
+            TenXConsole.log("🚦 Applying rate regulator to: " + this.inputName);
         }
 
         if (!TenXEnv.get("levelField")) {
             throw new Error("the rate receiver module requires 'level' enrichment: https://doc.log10x.com/run/initialize/level/");
         }
 
-        var resetIntervalMs = TenXEnv.get("rateReceiverResetIntervalMs", 300000);
+        var resetIntervalMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
 
         if (!(resetIntervalMs >= 60000)) {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
 
-        if (!(minRetentionThreshold >= 0.01)) {
-            throw new Error("the 'rateReceiverMinRetentionThreshold' argument must be at least 0.01, received: " + minRetentionThreshold);
+        if (!(warmupMs >= 0)) {
+            throw new Error("the 'rateReceiverWarmupMs' argument must be >= 0, received: " + warmupMs);
+        }
+
+        var maxShare = TenXEnv.get("rateReceiverMaxSharePerFieldSet", 0.2);
+
+        if (!((maxShare > 0) && (maxShare <= 1))) {
+            throw new Error("the 'rateReceiverMaxSharePerFieldSet' argument must be in (0, 1], received: " + maxShare);
         }
     }
 }
 
-export class LocalReceiverObject extends TenXObject {
+export class rateReceiverObject extends TenXObject {
 
-    get shouldRetainEventWithoutLookup() {
+    // No mute file AND no cap file: pure env-var cap path.
+    static shouldLoad(config) {
+        return !TenXEnv.get("rateReceiverLookupFile") && !TenXEnv.get("rateReceiverCapLookupFile");
+    }
+
+    // The regulator algorithm runs in the groupFilter getter (the correct
+    // pipeline phase: post-grouping, on the whole event), dispatched by
+    // settings.yaml's groupFilters slot. `this.drop()` here MARKS the event
+    // isDropped; the marked event keeps flowing. The encoder no longer filters
+    // marked events out of output (engine change), so each output stream's
+    // filter decides: isObject = emit (soft-drop), isObject && !this.isDropped
+    // = suppress (hard-drop). The getter always returns true so the engine
+    // does not remove the event at the group stage -- the mark is the signal.
+    get shouldRetainEvent() {
 
         if ((!this.isObject) || (this.isDropped)) return true;
 
-        var ingestionCostPerGB = TenXEnv.get("rateReceiverIngestionCostPerGB", 1.5);
-        var maxSharePerFieldSet = TenXEnv.get("rateReceiverMaxSharePerFieldSet", 0.2);
-        var budgetPerHour = TenXEnv.get("rateReceiverBudgetPerHour", 1);
+        var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
+        if (!fieldSetKey) return true;
 
-        // Calculate event cost based on byte size and ingestion cost per GB
-        var utf8Size = this.utf8Size();
-        var eventCost = utf8Size * ingestionCostPerGB / 1e9;
+        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
+        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
+        if (!container) container = "__node__";
 
-        if (TenXLog.isDebug()) {
-            TenXLog.debug("utf8Size: {}, eventCost: {}", utf8Size, eventCost);
-        }
+        // No cap-file path here -- fleet-wide env var only.
+        var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
+        if (absoluteCap == 0) return true;
 
-        var retentionThreshold = 1;
-        var localFieldSetSuffix = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
+        var key = fieldSetKey + "@" + container;
+        var bytes = this.utf8Size();
 
-        var resetIntervalMs = TenXEnv.get("rateReceiverResetIntervalMs", 300000); // 5min default
+        var level = this.get(TenXEnv.get("levelField"));
+        var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
+        var floorRaw = TenXMap.get(floorMap, level, "");
+        var floor = floorRaw ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
-        // Track spending per field set (e.g., per event type identified by symbolMessage)
-        // fieldSetSpend = -1 indicates no field set tracking (fieldNames not configured, or event lacks values for them)
-        var fieldSetSpend = -1;
+        var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
+        var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
+        var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
+        var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
-        if (localFieldSetSuffix) {
-            // Increment field set counter and get value before increment
-            // Counter resets every resetIntervalMs, tracking spend per field set
-            fieldSetSpend = TenXCounter.getAndInc("LocalReceiver_" + localFieldSetSuffix, eventCost, resetIntervalMs);
-        }
-
-        // Track global spending across all events
-        // Counter resets every resetIntervalMs, tracking total spend in current window
-        var totalSpend = TenXCounter.getAndInc("LocalReceiver_global_cost_total", eventCost, resetIntervalMs);
-
-        // Always retain the first event in a window (for both global and field set counters)
-        // This ensures we never drop the very first event, which helps establish baseline metrics
-        if ((totalSpend == 0) || (fieldSetSpend == 0)) {
+        var now = TenXDate.now();
+        var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
+        if (firstSeen == 0) {
+            TenXCounter.getAndSet("rg_seen_" + container, now);
             return true;
         }
+        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return true;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
+        if ((patternBytes + bytes) <= absoluteCap) return true;
+        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
+        var share = (patternBytes + bytes) / (containerBytes + bytes);
+        if (share < minSharePercent) return true;
+        if (TenXMath.random() < floor) return true;
 
-        // Calculate projected spending if we retain this event
-        // This accounts for the current event cost to prevent overspending
-        var projectedGlobalSpend = totalSpend + eventCost;
-        var budgetPerWindow = ((budgetPerHour * resetIntervalMs) / 3600000);
-
-        var globalBudgetUtilization = TenXMath.min(projectedGlobalSpend / budgetPerWindow, 1);
-
-        // Probability-based throttling: inversely proportional to remaining budget
-        // retentionThreshold represents the threshold above which we drop events
-        // At 0% utilization → retentionThreshold = 1.0 → never drop (random() > 1.0 never true)
-        // At 100% utilization → retentionThreshold = 0.0 → always drop (random() > 0.0 always true)
-        retentionThreshold = 1 - globalBudgetUtilization;
-
-        // Apply field set budget limit if possible
-        // Prevents any single field set from consuming more than maxSharePerFieldSet of total budget
-        var fieldSetBudgetUtilization = -1; // -1 indicates field set tracking not used
-        
-        if (fieldSetSpend > 0) {
-            var projectedFieldSetSpend = fieldSetSpend + eventCost;
-            var fieldSetBudgetPerWindow = budgetPerWindow * maxSharePerFieldSet;
-
-            fieldSetBudgetUtilization = TenXMath.min(projectedFieldSetSpend / fieldSetBudgetPerWindow, 1);
-
-            // Use the more restrictive (lower) retention threshold
-            // This ensures we throttle if EITHER global or field set budget is exceeded
-            var fieldSetRetentionThreshold = 1 - fieldSetBudgetUtilization;
-            retentionThreshold = TenXMath.min(retentionThreshold, fieldSetRetentionThreshold);
-        }
-
-        // Apply minimum retention threshold to ensure critical events are always retained
-        // Boost multiplier only applies to the minimum threshold, not the entire threshold
-        // This prevents boost values < 1.0 from reducing retention when under budget
-        var minRetentionThreshold = TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
-        var boostMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverLevelBoost"));
-        var level = this.get(TenXEnv.get("levelField"));
-        var boost = TenXMap.get(boostMap, level, 1);
-        
-        // Ensure retentionThreshold never falls below minimum retention threshold (adjusted by boost)
-        // Boost only affects the minimum floor: higher severity events get higher minimum retention
-        // The calculated threshold (based on budget) is unaffected by boost
-        retentionThreshold = TenXMath.max(retentionThreshold, minRetentionThreshold * boost);
-
-        // Probabilistic drop decision
-        // retentionThreshold is the threshold: drop when random() > retentionThreshold
-        // Higher retentionThreshold → lower drop rate → more retention
-        if (TenXMath.random() > retentionThreshold) {
-            this.drop();
-
-            if (TenXLog.isDebug()) {
-                TenXLog.debug("drop by cost (local). fieldSetSuffix={}, totalSpend={}, budgetPerWindow={}, globalBudgetUtilization={}, fieldSetBudgetUtilization={}, retentionThreshold={}, boost={}, eventCost={}",
-                    localFieldSetSuffix, totalSpend, budgetPerWindow, globalBudgetUtilization, fieldSetBudgetUtilization, retentionThreshold, boost, eventCost);
-            }
-        } else {
-            if (TenXLog.isDebug()) {
-                TenXLog.debug("retained (local). fieldSetSuffix={}, totalSpend={}, budgetPerWindow={}, globalBudgetUtilization={}, retentionThreshold={}, boost={}, eventCost={}", 
-                    localFieldSetSuffix, totalSpend, budgetPerWindow, globalBudgetUtilization, retentionThreshold, boost, eventCost);
-            }
-        }
-
+        this.drop();
         return true;
     }
 }

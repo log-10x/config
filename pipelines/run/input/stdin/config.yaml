@@ -17,6 +17,8 @@ include: run/modules/input/stdin
 
 stdin:
 
+  enabled: true
+
   # ---------------------------- Parsing Options ----------------------------
 
     # 'extractors' defines a list of JSON/regex extractor names

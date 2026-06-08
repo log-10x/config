@@ -25,5 +25,10 @@ k8s:
   # 'containerNameField' specifies the name of the field in which to assign an extracted k8 container name status code, if found
   containerNameField: k8s_container
 
-  # 'podNameField' specifies the name of the field in which to assign an extracted k8 pod name status code, if found
-  podNameField: k8s_pod
+  # 'podNameField' specifies the name of the field in which to assign an extracted k8 pod name.
+  # Default empty. Pod names churn on every deploy (each restart mints a new pod ID), so
+  # surfacing pod name as a metric-label dimension causes unbounded TSDB active-series growth.
+  # The stable 'k8s_namespace' + 'k8s_container' enrichments above cover the common per-app
+  # attribution case without the deploy-churn cost. To opt in to per-pod resolution, set this
+  # to a concrete field name (e.g. 'k8s_pod'); the 'tenx_user_process' alias activates with it.
+  podNameField: ""

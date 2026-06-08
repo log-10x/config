@@ -16,8 +16,59 @@ include:
 # The Receiver app picks the encoding mode based on user flags:
 #   default                      → emit events verbatim (`fullText`)
 #   receiverOptimize=true        → compact-all (lossless compaction of every event)
-#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision)
+#   compactReceiverLookupFile=…  → compact-lookup (per-container decision)
 #
+# `symbolMessageHashField` (optional) adds a stable pattern-hash field
+# alongside the encoded/fullText output: when set, encode() and fullText
+# are called as `encode("<field>")` / `fullText("<field>")`.
+
 output:
-  encodeField: $=yield TenXReceiver.encodeField()
-  writeTemplates: $=yield TenXReceiver.writeTemplates()
+
+  # outputEncodeField is the per-event output field expression, resolved once at
+  # config-load by the `$=yield` ternary below. Written as a YAML `|-` block
+  # scalar for readability: the engine treats the newlines/indentation between
+  # tokens as ordinary whitespace, so this compiles identically to the original
+  # one-liner. (Block scalars do NOT process backslash escapes, so the `\"`
+  # below reach the expression literally — exactly what encode("field") needs.)
+  #
+  # The three resolved modes (the regulator only marks isDropped; this picks the
+  # output FORMAT, while `outputSoftDrop` also flips the stream filter):
+  #   receiverOptimize=true   → encoded=encode()                                              (compact every event)
+  #   outputOffload truthy    → fullText("isDropped")                                         (FULL text + marker; for S3 offload, never compacted)
+  #   outputSoftDrop truthy   → encoded=isDropped ? encode("isDropped") : fullText("isDropped")  (compact the dropped, for SIEM down-tier)
+  #   neither                 → fullText                                                      (receive / hard-drop)
+  # The `symbolMessageHashField` variant (when set) passes the hash field name
+  # into encode()/fullText() so a stable pattern-hash ships alongside the output.
+  #
+  # OFFLOAD MARKER: outputOffload and outputSoftDrop both splice the `isDropped`
+  # field onto every forwarded event so a downstream forwarder can route by it
+  # (the dropped slice to the customer's own S3, the rest to the SIEM). offload
+  # ships those events FULL (lossless, the form the retriever indexes); soft-drop
+  # ships them losslessly compacted for SIEM down-tier. The splice writes a JSON
+  # boolean UNQUOTED (`"isDropped":true` / `"isDropped":false`), so a forwarder
+  # match must be `== true` / truthiness, never the string "true". hard-drop omits
+  # dropped events entirely, so it emits no marker (nothing to route).
+  encodeField: |-
+    $=yield TenXEnv.get("receiverOptimize")
+      ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
+      : (TenXEnv.get("outputOffload")
+          ? (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"isDropped\")") : "fullText(\"isDropped\")")
+          : (TenXEnv.get("outputSoftDrop")
+              ? ("encoded=isDropped ? "
+                  + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"isDropped\")") : "encode(\"isDropped\")")
+                  + " : "
+                  + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"isDropped\")") : "fullText(\"isDropped\")"))
+              : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText")))
+
+  # outputWriteTemplates = true whenever events are encoded (compact-all or soft-drop)
+  writeTemplates: $=yield TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")
+
+  # outputDropFilter decides whether a (possibly regulator-marked) object is written.
+  # Resolved ONCE here so the soft/hard logic lives next to encodeField instead of
+  # being duplicated in every output stream; streams just reference $?outputDropFilter.
+  # (Named outputDropFilter, not outputFilter -- the latter is a built-in per-stream
+  # engine option and would collide.)
+  #   outputSoftDrop or outputOffload truthy → "isObject"                    (write all; dropped events flow for routing/compaction)
+  #   unset (hard, default)                  → "isObject && !this.isDropped" (omit dropped objects)
+  dropFilter: '$=yield (TenXEnv.get("outputSoftDrop") || TenXEnv.get("outputOffload")) ? "isObject" : "isObject && !this.isDropped"'
+

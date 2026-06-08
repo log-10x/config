@@ -64,7 +64,6 @@ include:
 
 # Force stdin + stdout on by default. Both can still be toggled from the
 # command line (`-stdinEnabled false`, `-stdoutWriteObjects false`).
-stdinEnabled: true
 stdoutTarget: SYSTEM_OUT
 stdoutWriteObjects: true
 
