@@ -73,7 +73,6 @@ Application configs are entry points that include pipeline modules. Edit these t
 
 | Application | Config Path | Documentation |
 |-------------|-------------|---------------|
-| **Edge Optimizer** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
 | **Edge Receiver** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
 | **Edge Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Cloud Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
@@ -179,7 +178,7 @@ This repository is designed for you to fork and customize. You are free to:
 | What's Open Source | What Requires License |
 |-------------------|----------------------|
 | Configuration files in this repo | Log10x engine/runtime |
-| Module definitions | Log10x apps (Reporter, Optimizer, etc.) |
+| Module definitions | Log10x apps (Reporter, Receiver, Retriever) |
 | YAML/JSON schemas | Executing pipelines |
 
 The configuration files in this repository are designed for use with the Log10x
