@@ -85,6 +85,29 @@
             }
           }
         },
+        "capLookup" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "file" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Declarative per-container byte cap file, keyed by the `rateReceiverContainerField` value\n\nDefines the path to a declarative **per-container cap file**. Each entry assigns a byte cap to a specific container (the value of `rateReceiverContainerField`, which defaults to the k8s container name). The file's cap wins per-event over `rateReceiverAbsoluteCap`: listed containers get the file's cap, unlisted containers fall back to the fleet-wide cap (or to no cap, if `rateReceiverAbsoluteCap` is `0`).  **File format** (CSV; header row + one comma-separated entry per row):  ``` container,cap <container>,<bytes>[:<untilEpochSec>][:<reason>] ```  - `container` — value of `rateReceiverContainerField` for the events to cap. In k8s this is   the k8s container name, stable across pod replicas. - `bytes` — integer byte cap per pattern per container per window. `0` exempts the   container from the absolute cap entirely (the over-cap branch is skipped for it). - `untilEpochSec` — optional Unix-epoch (seconds) expiry. Past that, the entry becomes a   no-op and the fallback cap applies. - `reason` — optional free-text string for audit. Not used at runtime. Must not contain   commas (would break CSV parsing).  **Example**:  ``` container,cap payment-service,4194304:1735689600:annual budget protection PAY-101 auth-service,2097152 istio-proxy,0:1735689600:exempt platform sidecar PLAT-42 ```  **Why this shape**:  - **Container-keyed**, matching the regulator's container axis. The file's key is the same   value the regulator's counters are bucketed by, so listed caps map 1:1 to counters without   translation. - **Git-friendly**: a human-readable declaration that lives in a config repo, reviewed via   PR, `git blame`-d for who/why. - **Self-healing**: every entry can carry an explicit expiry, so forgotten caps eventually   stop filtering instead of silently dropping production data forever. - **AI-editable**: an operator can ask an assistant (e.g., Claude Code via the Log10x MCP   `configure_regulator` tool) to derive a cap from a monthly dollar budget, append the   entry, and open a PR. The cap file is the interface.  **Severity floor still applies.** Even at a tight cap the regulator's `rateReceiverSeverityFloors` retain ERROR/CRITICAL events at their floor fraction, so a tight cap never fully silences high-severity traffic.  When `rateReceiverCapLookupFile` is **unset**, every container falls back to `rateReceiverAbsoluteCap` (which itself defaults to `0` = disabled).  The file is hot-reloaded on in-place writes (the gitops pattern); a Kubernetes `ConfigMap` mount won't reload because the CM swap is a symlink rename, not an in-place write. (Default: )",
+              "default" : ""
+            },
+            "retain" : {
+              "type" : [
+                "number",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Retention period for the per-container cap file before it is considered stale\n\nDefines the retention period (in milliseconds) for the cap file (`rateReceiverCapLookupFile`). If the file's last modified time is older than this period, a warning is logged. The cap entries continue to apply; the staleness check is advisory so operators notice when an automated tooling pipeline has stopped updating the file.  **Validation:** Must be greater than 60000 milliseconds. (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
+              "default" : 300000
+            }
+          }
+        },
         "warmupMs" : {
           "type" : [
             "number",
@@ -129,23 +152,6 @@
           ],
           "markdownDescription" : "Vendor ingestion cost per GB in USD, for rendering savings in dollars\n\nDefines the cost per GB charged by your observability vendor for log ingestion. Used **only** to render savings metrics in dollars (dropped bytes × cost per GB); it does **not** affect the keep/drop decision, which is share-based.  **Common vendor pricing (2025):** - **Splunk Cloud**: ~$1.50/GB (varies by contract, SKU) - **Datadog Logs**: ~$0.10-$0.25/GB (depends on tier: standard, flex, online archives) - **Elastic Cloud**: ~$0.109/GB (standard logging tier) - **New Relic**: ~$0.30/GB (Data Plus) - **Sumo Logic**: ~$1.50/GB (depends on plan) - **AWS CloudWatch Logs**: ~$0.50/GB ingestion + $0.03/GB storage (Accepts number or string with $= prefix for runtime evaluation) (Default: 1)",
           "default" : 1
-        },
-        "capLookupFile" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Declarative per-container byte cap file, keyed by the `rateReceiverContainerField` value\n\nDefines the path to a declarative **per-container cap file**. Each entry assigns a byte cap to a specific container (the value of `rateReceiverContainerField`, which defaults to the k8s container name). The file's cap wins per-event over `rateReceiverAbsoluteCap`: listed containers get the file's cap, unlisted containers fall back to the fleet-wide cap (or to no cap, if `rateReceiverAbsoluteCap` is `0`).  **File format** (CSV; header row + one comma-separated entry per row):  ``` container,cap <container>,<bytes>[:<untilEpochSec>][:<reason>] ```  - `container` — value of `rateReceiverContainerField` for the events to cap. In k8s this is   the k8s container name, stable across pod replicas. - `bytes` — integer byte cap per pattern per container per window. `0` exempts the   container from the absolute cap entirely (the over-cap branch is skipped for it). - `untilEpochSec` — optional Unix-epoch (seconds) expiry. Past that, the entry becomes a   no-op and the fallback cap applies. - `reason` — optional free-text string for audit. Not used at runtime. Must not contain   commas (would break CSV parsing).  **Example**:  ``` container,cap payment-service,4194304:1735689600:annual budget protection PAY-101 auth-service,2097152 istio-proxy,0:1735689600:exempt platform sidecar PLAT-42 ```  **Why this shape**:  - **Container-keyed**, matching the regulator's container axis. The file's key is the same   value the regulator's counters are bucketed by, so listed caps map 1:1 to counters without   translation. - **Git-friendly**: a human-readable declaration that lives in a config repo, reviewed via   PR, `git blame`-d for who/why. - **Self-healing**: every entry can carry an explicit expiry, so forgotten caps eventually   stop filtering instead of silently dropping production data forever. - **AI-editable**: an operator can ask an assistant (e.g., Claude Code via the Log10x MCP   `configure_regulator` tool) to derive a cap from a monthly dollar budget, append the   entry, and open a PR. The cap file is the interface.  **Severity floor still applies.** Even at a tight cap the regulator's `rateReceiverSeverityFloors` retain ERROR/CRITICAL events at their floor fraction, so a tight cap never fully silences high-severity traffic.  When `rateReceiverCapLookupFile` is **unset**, every container falls back to `rateReceiverAbsoluteCap` (which itself defaults to `0` = disabled).  The file is hot-reloaded on in-place writes (the gitops pattern); a Kubernetes `ConfigMap` mount won't reload because the CM swap is a symlink rename, not an in-place write. (Default: )",
-          "default" : ""
-        },
-        "capLookupRetain" : {
-          "type" : [
-            "number",
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Retention period for the per-container cap file before it is considered stale\n\nDefines the retention period (in milliseconds) for the cap file (`rateReceiverCapLookupFile`). If the file's last modified time is older than this period, a warning is logged. The cap entries continue to apply; the staleness check is advisory so operators notice when an automated tooling pipeline has stopped updating the file.  **Validation:** Must be greater than 60000 milliseconds. (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
-          "default" : 300000
         }
       }
     }

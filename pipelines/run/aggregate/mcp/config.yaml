@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/aggregate/dev/schema.json
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/aggregate/mcp/schema.json
 
 # 🔟❎ 'run' MCP app aggregator config
 

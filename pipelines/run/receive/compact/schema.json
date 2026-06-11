@@ -11,35 +11,35 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "lookupFile" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Path or URL to a compact decisions lookup file\n\nPoints the engine at a lookup file whose entries express per-pattern compaction decisions. **Entry format**:      <fieldSet>=<encode>:<untilEpochSec>[:<reason>]  `encode` is `true` (compact via `encode()`) or `false` (preserve `fullText`). `untilEpochSec` is a Unix epoch timestamp after which the entry self-heals to `compactReceiverDefault`.  **Example** (with `compactReceiverFieldNames: [symbolMessage]`):      payment_retry_gateway_timeout=true:1745856000:OPS-5123 spike mitigation     auth_audit_trail=false:1745856000:compliance — keep verbose  Entries express deviations from `compactReceiverDefault`. An expired entry falls back to the default exactly like a rate-receiver mute does.  The engine polls the file on the interval set by `compactReceiverLookupRetain` — changes take effect without a restart, so this plays cleanly with a GitOps workflow where the MCP authors entries via PR."
+        "lookup" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "file" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Path or URL to a per-container compact decisions cap-file\n\nPoints the engine at a cap-file whose entries decide whether each container's events are compacted via `encode()` or preserved as `fullText`. Containers not listed fall back to `compactReceiverDefault`.  The container identity is the value of `compactReceiverContainerField` (defaults to the k8s container name), so listed entries are stable across pod replicas.  **File format** (CSV; header row + one comma-separated entry per row):  ``` container,value <container>,<true|false>[:<untilEpochSec>][:<reason>] ```  - `container` — value of `compactReceiverContainerField` for the events   to act on. In k8s this is the k8s container name. - `value` — `true` (compact via `encode()`) or `false` (explicitly   preserve `fullText` for this container, beating the default). - `untilEpochSec` — optional Unix-epoch (seconds) expiry. Past it the   entry becomes a no-op and the container falls back to   `compactReceiverDefault`. - `reason` — optional free-text for audit. Must not contain commas   (would break CSV parsing).  **Example**:  ``` container,value payment-service,true:1735689600:high-volume PAY-101 auth-service,true istio-proxy,false:1735689600:keep verbose during incident PLAT-42 ```  The file is hot-reloaded on in-place writes (the gitops pattern); a Kubernetes `ConfigMap` mount won't reload because the CM swap is a symlink rename, not an in-place write."
+            },
+            "retain" : {
+              "type" : [
+                "number",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Retention period for the per-container cap-file before it is considered stale\n\nDefines the retention period (in milliseconds) for the cap-file (`compactReceiverLookupFile`). If the file's last modified time is older than this period, a warning is logged. The cap entries continue to apply; the staleness check is advisory so operators notice when an automated tooling pipeline has stopped updating the file.  **Validation**: must be greater than 60000ms (1 minute). (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
+              "default" : 300000
+            }
+          }
         },
-        "fieldNames" : {
+        "containerField" : {
           "type" : [
-            "array",
             "string",
             "null"
           ],
-          "markdownDescription" : "List of TenXObject fields used to key compact lookup entries\n\nDefines the list of TenXObject field names joined with underscores to form each event's lookup key. The key format matches the rate receiver's `rateReceiverFieldNames`, so an entry in the compact lookup targets the same pattern identity the Reporter attributes cost to. **Default**: `[symbolMessage]` (same as the rate receiver's default).  **Multi-dimensional compaction** (e.g., \"compact this pattern only for tenants X, Y\"):  ```yaml compactReceiverFieldNames:   - symbolMessage   - tenantId ```  Changing this field set currently requires an engine restart — a future enhancement will allow hot-swapping via a bootstrap key inside the lookup file. (Default: [\"symbolMessage\"])",
-          "items" : {
-            "type" : "string"
-          },
-          "default" : [
-            "symbolMessage"
-          ]
-        },
-        "lookupRetain" : {
-          "type" : [
-            "number",
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Lookup file poll interval in milliseconds\n\nDefines how often the engine re-reads `compactReceiverLookupFile` to pick up new/changed entries. Default of 5 minutes (300000ms) aligns with the rate receiver's `rateReceiverLookupRetain`. Shorter values make GitOps changes take effect faster at the cost of more file I/O. Longer values reduce I/O but delay effect.  **Validation**: must be at least 60000ms (1 minute). (Accepts number or string with $= prefix for runtime evaluation) (Default: 300000)",
-          "default" : 300000
+          "markdownDescription" : "Event field whose value scopes the cap-file lookup\n\nDefines the event field whose value is used as the cap-file lookup key. Defaults to the k8s container name (`k8s_container`), so listed entries are stable across pod replicas and a sidecar never inherits the application container's compaction decision.  Set to any extracted field to scope by something else (service, deployment, tenant, etc.). The same value should appear both as the first column of `compactReceiverLookupFile` entries and as a field on every event the receiver sees. (Default: k8s_container)",
+          "default" : "k8s_container"
         },
         "default" : {
           "type" : [
@@ -47,7 +47,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Default compaction decision when no lookup entry applies\n\nControls the fallback decision when no lookup file is loaded, no entry matches an event's field-set, or a matching entry has expired. - `false` (default) — preserve `fullText`. Lookup entries opt specific patterns INTO compaction. - `true` — compact via `encode()`. Lookup entries opt specific patterns OUT (e.g., audit/compliance patterns that must stay verbose).  Flipping this value is a policy-level decision (affects every event), not a lookup edit. Changing it requires a pod rollout. The lookup handles pattern-level overrides without restart. (Accepts boolean or string with $= prefix for runtime evaluation)"
+          "markdownDescription" : "Fallback compaction decision when no cap-file entry applies\n\nControls the fallback decision when no cap-file is loaded, no entry matches an event's container, or a matching entry has expired.  - `false` (default) — preserve `fullText`. Cap-file entries opt   specific containers INTO compaction. - `true` — compact via `encode()`. Cap-file entries opt specific   containers OUT (e.g., audit/compliance containers that must stay   verbose).  Flipping this value is a policy-level decision (affects every event), not a cap-file edit. Changing it requires a pod rollout. The cap-file handles per-container overrides without restart. (Accepts boolean or string with $= prefix for runtime evaluation)"
         }
       }
     }
