@@ -28,21 +28,27 @@
           "markdownDescription" : "Max number of output chars\n\nSpecifies the max number of chars of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield). Set 0 to unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
           "default" : 0
         },
-        "messageField" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).  For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
-          "default" : "symbolMessage"
-        },
-        "messageHashField" : {
-          "type" : [
-            "string",
-            "null"
-          ],
-          "markdownDescription" : "Field name to assign with the hash of the symbol sequence value\n\nSpecifies the name of the field to assign a stable, URL-safe hash of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield) value, computed via [TenXString.patternHash](https://doc.log10x.com/api/js/#TenXString.patternHash).  The value is an 11-character base64url identifier (xxHash64 of the UTF-8 bytes, big-endian, no padding). It is one-way and reproduces byte-for-byte outside the engine, so it is safe to use directly as a deduplication key, metric dimension, SIEM query term, or forwarder filter key.  Defaults to `tenx_hash`. Set to an empty value to disable. (Default: tenx_hash)",
-          "default" : "tenx_hash"
+        "message" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "field" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).  For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
+              "default" : "symbolMessage"
+            },
+            "hashField" : {
+              "type" : [
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Field name to assign with the hash of the symbol sequence value\n\nSpecifies the name of the field to assign a stable, URL-safe hash of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield) value, computed via [TenXString.hash](https://doc.log10x.com/api/js/#TenXString.hash).  The value is an 11-character base64url identifier (xxHash64 of the UTF-8 bytes, big-endian, no padding). It is one-way and reproduces byte-for-byte outside the engine, so it is safe to use directly as a deduplication key, metric dimension, SIEM query term, or forwarder filter key.  Defaults to `tenx_hash`. Set to an empty value to disable. (Default: tenx_hash)",
+              "default" : "tenx_hash"
+            }
+          }
         },
         "originField" : {
           "type" : [
@@ -52,6 +58,17 @@
           "markdownDescription" : "Field name to assign with symbol message origin file\n\nSpecifies the name of the field to assign the return value of [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: )",
           "default" : ""
         }
+      }
+    },
+    "messageNegators" : {
+      "type" : [
+        "array",
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "List of strings that, when matched at the start of a log line's text, mark it as low-value continuation/boilerplate that does NOT receive its own message pattern.\n\nA list of strings that, when matched at the start of a log line's text, mark it as a known continuation pattern (e.g., stack trace frame, indented detail, banner) that should not receive its own message pattern.  Negators are evaluated by the message template's gate when the event is neither part of a multi-event group (groupSize > 1) nor a group head: in that case, an event still receives a pattern unless it matches a negator. This is the \"Hello World vs orphan stack frame\" discriminator.  - ` ` - any indented line (universal continuation signal). - `\t` - any tab-prefixed line (Java/Go stack frames etc.). - `Caused by: ` - Java chained exception (column 0). - `Suppressed: ` - Java suppressed exception (column 0). - `--- End of ` - .NET inner exception marker. - `created by ` - Go goroutine creator. - `#0 `..`#5 ` - PHP stack frames (depth 0-5).",
+      "items" : {
+        "type" : "string"
       }
     }
   },

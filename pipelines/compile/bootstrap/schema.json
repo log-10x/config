@@ -6,7 +6,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "Name of pipeline to execute\n\nTarget [pipeline](https://doc.log10x.com/engine/pipeline/) to execute. For example, to specify the [run](https://doc.log10x.com/run/) pipeline and a [YAML](https://doc.log10x.com/config/yaml/) config file containing launch arguments, use:  ``` console $ tenx run @~/my.yaml ``` The YAML file may specify the pipeline name via a 'tenx' entry, allowing the 'pipeline' argument to be omitted from the command line.  For example (my.yaml):  ``` yaml tenx: run # set the pipeline to 'run' apiKey: <my-key> ... ```  Allows for launching the run pipeline via: ``` console $ tenx @~/my.yaml ```"
+      "markdownDescription" : "Name of pipeline to execute\n\nTarget [pipeline](https://doc.log10x.com/engine/pipeline/) to execute. For example, to specify the [run](https://doc.log10x.com/run/) pipeline and a [YAML](https://doc.log10x.com/config/yaml/) config file containing launch arguments, use:  ``` console $ tenx run @~/my.yaml ``` The YAML file may specify the pipeline name via a 'tenx' entry, allowing the 'pipeline' argument to be omitted from the command line.  For example (my.yaml):  ``` yaml tenx: run # set the pipeline to 'run' licenseKey: <my-license-jwt> ... ```  Allows for launching the run pipeline via: ``` console $ tenx @~/my.yaml ```"
     },
     "license" : {
       "type" : "object",
