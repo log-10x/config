@@ -149,3 +149,29 @@ rateReceiver:
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
+
+  # --------------------------- Action File Options ---------------------------
+
+  # Optional declarative per-SERVICE action file, keyed by the value of
+  # 'containerField' (the k8s container name = the service). Each entry assigns
+  # the disposition of that service's regulator-identified excess: 'drop'
+  # (default), 'offload' (to customer S3), 'tier_down' (SIEM cheap tier),
+  # 'compact' (lossless encode), 'sample', or 'pass'. The byte cap above still
+  # bounds the excess; the action only decides what happens to it. Unlisted
+  # services default to 'drop' (the original regulator behavior).
+  #
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   container,action
+  #   <container>,<action>[:<untilEpochSec>][:<reason>]
+  #
+  # Managed via GitOps + the log10x_configure_engine MCP tool, which derives the
+  # per-service action from the per-pattern action plan and opens a PR against
+  # this file (a sibling of the cap file in the same ConfigMap).
+  # 'actionLookupFile' is the per-service action file path. Declared as a FLAT
+  #  key (like 'fieldNames' / 'minSharePercent') so it maps to the
+  #  rateReceiverActionLookupFile option -- a new nested sub-group (e.g.
+  #  actionLookup.file) is NOT recognized by the config-to-option mapper, even
+  #  though capLookup.file is (capLookup is special-cased). Always set (default
+  #  below, sibling to the cap file) so the cap-variant regulator can read it.
+  #  ACTION_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
+  actionLookupFile: $=TenXEnv.get("ACTION_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")

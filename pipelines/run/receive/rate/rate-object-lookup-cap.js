@@ -117,7 +117,30 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (share < minSharePercent) return true;
         if (TenXMath.random() < floor) return true;
 
-        this.route("drop");
+        // Over-budget: the per-service action lookup (keyed by the same
+        // container as the cap) decides the disposition of the excess. Default
+        // "drop" preserves the original regulator behavior exactly. The
+        // forwarder recipe + the output encodeField honor offload/tier_down/
+        // compact/sample; the byte cap above stays the safety backstop.
+        // Entry shape (mirrors the cap entry): <action>[:<untilEpochSec>[:<reason>]].
+        var action = "drop";
+        if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
+            var actionEntry = TenXLookup.get("rateReceiverActionLookupFile", container);
+            if (actionEntry) {
+                var aC1 = TenXString.indexOf(actionEntry, ":", 0);
+                var actionEnd = (aC1 < 0) ? TenXString.length(actionEntry) : aC1;
+                var actionActive = true;
+                if (aC1 >= 0) {
+                    var aC2 = TenXString.indexOf(actionEntry, ":", aC1 + 1);
+                    var aUntilEnd = (aC2 < 0) ? TenXString.length(actionEntry) : aC2;
+                    var aUntil = TenXMath.parseDouble(TenXString.substring(actionEntry, aC1 + 1, aUntilEnd));
+                    if (aUntil > 0 && (TenXDate.now() / 1000) > aUntil) actionActive = false;
+                }
+                if (actionActive) action = TenXString.substring(actionEntry, 0, actionEnd);
+            }
+        }
+
+        this.route(action);
         return true;
     }
 }

@@ -31,32 +31,32 @@ output:
   # one-liner. (Block scalars do NOT process backslash escapes, so the `\"`
   # below reach the expression literally — exactly what encode("field") needs.)
   #
-  # The three resolved modes (the regulator marks routeState via route("drop");
-  # this picks the output FORMAT, while `outputSoftDrop` also flips the stream filter):
-  #   receiverOptimize=true   → encoded=encode()                                                  (compact every event)
-  #   outputOffload truthy    → fullText("routeState")                                            (FULL text + marker; for S3 offload, never compacted)
-  #   outputSoftDrop truthy   → encoded=isRoute("drop") ? encode("routeState") : fullText("routeState")  (compact the dropped, for SIEM down-tier)
-  #   neither                 → fullText                                                          (receive / hard-drop)
+  # The three resolved modes (the regulator marks routeState via route(action),
+  # where action is the per-service disposition: drop/offload/tier_down/compact/
+  # sample/pass; this picks the output FORMAT, while `outputSoftDrop` also flips
+  # the stream filter):
+  #   receiverOptimize=true   → encoded=encode()                                                     (compact every event)
+  #   outputOffload truthy    → fullText("routeState")                                               (FULL text + marker; for S3 offload, never compacted)
+  #   outputSoftDrop truthy   → encoded=isRoute("compact") ? encode("routeState") : fullText("routeState")  (compact the compact-marked slice; every other action stays fullText so the forwarder routes it by routeState)
+  #   neither                 → fullText                                                             (receive / hard-drop)
   # The `symbolMessageHashField` variant (when set) passes the hash field name
   # into encode()/fullText() so a stable pattern-hash ships alongside the output.
   #
   # ROUTE MARKER: outputOffload and outputSoftDrop both splice the `routeState`
-  # field onto every forwarded event so a downstream forwarder can route by it
-  # (the dropped slice to the customer's own S3, the rest to the SIEM). offload
-  # ships those events FULL (lossless, the form the retriever indexes); soft-drop
-  # ships them losslessly compacted for SIEM down-tier. The splice writes the
-  # route NAME as a JSON STRING (`"routeState":"drop"` / `"routeState":"pass"`),
-  # so a forwarder match must be `== "drop"` string-equality, NOT boolean
-  # truthiness. hard-drop omits dropped events entirely, so it emits no marker
-  # (nothing to route). (The marked slice is "drop" today; a distinct "offload"
-  # value awaits the D1b setter — see the routeState refactor contract.)
+  # field onto every forwarded event so the downstream forwarder can route by the
+  # per-service action name (offload → the customer's own S3, tier_down → the SIEM
+  # cheap tier, compact → encoded bytes to the SIEM, pass/sample → the SIEM, drop →
+  # suppressed). The splice writes the route NAME as a JSON STRING (e.g.
+  # `"routeState":"offload"` / `"routeState":"pass"`), so a forwarder match must be
+  # string-equality against the action name, NOT boolean truthiness. hard-drop
+  # omits dropped events entirely, so it emits no marker (nothing to route).
   encodeField: |-
     $=yield TenXEnv.get("receiverOptimize")
       ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
       : (TenXEnv.get("outputOffload")
           ? (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")")
           : (TenXEnv.get("outputSoftDrop")
-              ? ("encoded=isRoute(\"drop\") ? "
+              ? ("encoded=isRoute(\"compact\") ? "
                   + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "encode(\"routeState\")")
                   + " : "
                   + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")"))
