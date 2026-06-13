@@ -20,7 +20,7 @@ aggregator:
 
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to be aggregated.
     #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
-    filter: "this.isObject && !this.isDropped"
+    filter: "this.isObject && !this.isRoute(\"drop\")"
 
     # 'values' set the names of intrinsic/extracted/calculated fields whose combined values
     #  identify a unique row within the aggregator's in-mem table for

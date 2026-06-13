@@ -105,15 +105,15 @@ export class rateReceiverObject extends TenXObject {
 
     // The regulator algorithm runs in the groupFilter getter (the correct
     // pipeline phase: post-grouping, on the whole event), dispatched by
-    // settings.yaml's groupFilters slot. `this.drop()` here MARKS the event
-    // isDropped; the marked event keeps flowing. The encoder no longer filters
+    // settings.yaml's groupFilters slot. `this.route("drop")` here MARKS the event
+    // routeState="drop"; the marked event keeps flowing. The encoder no longer filters
     // marked events out of output (engine change), so each output stream's
-    // filter decides: isObject = emit (soft-drop), isObject && !this.isDropped
+    // filter decides: isObject = emit (soft-drop), isObject && !this.isRoute("drop")
     // = suppress (hard-drop). The getter always returns true so the engine
     // does not remove the event at the group stage -- the mark is the signal.
     get shouldRetainEvent() {
 
-        if ((!this.isObject) || (this.isDropped)) return true;
+        if ((!this.isObject) || (this.isRoute("drop"))) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return true;
@@ -153,7 +153,7 @@ export class rateReceiverObject extends TenXObject {
         if (share < minSharePercent) return true;
         if (TenXMath.random() < floor) return true;
 
-        this.drop();
+        this.route("drop");
         return true;
     }
 }

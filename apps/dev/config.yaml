@@ -92,4 +92,4 @@ include:
 
 groupFilters: drop()
 enrichmentFields: 
-  - isDropped=isSummary?l1e_isDropped:isDropped
+  - routeState=isSummary?l1e_routeState:routeState

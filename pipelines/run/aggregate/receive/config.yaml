@@ -24,11 +24,11 @@ aggregator:
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to be aggregated.
     #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     #
-    # This filter excludes dropped events by checking the 'isDropped' property,
+    # This filter excludes dropped events by checking isRoute("drop"),
     # ensuring only emitted events are tracked.
     #
     # For more info, see https://doc.log10x.com/api/js/#TenXBaseObject+dropped
-    filter: "this.isObject && !this.isDropped"
+    filter: "this.isObject && !this.isRoute(\"drop\")"
 
     # 'fields' set the names of intrinsic/extracted/calculated fields whose combined values
     #  identify a unique row within the aggregator's in-mem table for

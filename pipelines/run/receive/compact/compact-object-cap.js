@@ -54,7 +54,7 @@ export class CompactObject extends TenXObject {
     // compactReceiverLookupFile is set.
     get shouldEncode() {
 
-        if ((!this.isObject) || (this.isDropped)) return false;
+        if ((!this.isObject) || (this.isRoute("drop"))) return false;
 
         var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
         var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");

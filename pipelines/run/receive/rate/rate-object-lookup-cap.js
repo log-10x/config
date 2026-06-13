@@ -29,13 +29,13 @@ export class rateReceiverLookupCapObject extends TenXObject {
     }
 
     // The regulator algorithm runs in the groupFilter getter (post-grouping,
-    // on the whole event). `this.drop()` MARKS the event isDropped; the marked
+    // on the whole event). `this.route("drop")` MARKS the event routeState="drop"; the marked
     // event keeps flowing (getter returns true). The encoder no longer filters
     // marked events out of output, so each output stream's filter decides:
-    // isObject = emit (soft-drop), isObject && !this.isDropped = suppress.
+    // isObject = emit (soft-drop), isObject && !this.isRoute("drop") = suppress.
     get shouldRetainEventWithMuteAndCap() {
 
-        if ((!this.isObject) || (this.isDropped)) return true;
+        if ((!this.isObject) || (this.isRoute("drop"))) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return true;
@@ -63,7 +63,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
             }
         }
         if (hasActiveMute) {
-            if (TenXMath.random() > muteThreshold) this.drop();
+            if (TenXMath.random() > muteThreshold) this.route("drop");
             return true; // mute decision is terminal (marked if over threshold)
         }
 
@@ -117,7 +117,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (share < minSharePercent) return true;
         if (TenXMath.random() < floor) return true;
 
-        this.drop();
+        this.route("drop");
         return true;
     }
 }
