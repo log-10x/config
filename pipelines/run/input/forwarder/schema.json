@@ -35,8 +35,8 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The filter expression each output stream uses to decide whether a marked object is written\n\nResolved once by the customer-facing config.yaml from `emit_dropped`, so the emit/hard-drop logic lives in one place instead of being duplicated per stream:  - **hard-drop** (default): `isObject && !this.isDropped` — dropped objects not written - **emit** (`emit_dropped` truthy): `isObject` — everything written; routing   decision moves downstream to the forwarder based on the wire-level   `isDropped` field.  Each output stream references it via `$?outputDropFilter`. Named outputDropFilter rather than outputFilter, which is a built-in per-stream engine option. (Default: isObject && !this.isDropped)",
-          "default" : "isObject && !this.isDropped"
+          "markdownDescription" : "The filter expression each output stream uses to decide whether a marked object is written\n\nResolved once by the customer-facing config.yaml from `emit_dropped`, so the emit/hard-drop logic lives in one place instead of being duplicated per stream:  - **hard-drop** (default): `isObject && !isRoute(\"drop\")` — dropped objects not written - **emit** (`emit_dropped` truthy): `isObject` — everything written; routing   decision moves downstream to the forwarder based on the wire-level   `routeState` field.  Each output stream references it via `$?outputDropFilter`. Named outputDropFilter rather than outputFilter, which is a built-in per-stream engine option. (Default: isObject && !isRoute(\"drop\"))",
+          "default" : "isObject && !isRoute(\"drop\")"
         }
       }
     },
@@ -45,7 +45,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "Whether regulator-marked (`isDropped=true`) events survive the output filter\n\nSingle boolean controlling whether the regulator-dropped slice reaches the forwarder. Orthogonal to `compact_emitted`.  - **unset (default) = hard-drop**: outputDropFilter resolves to   `isObject && !this.isDropped`, dropped events never leave the engine. - **truthy = emit**: outputDropFilter resolves to `isObject`, all events   flow. The downstream forwarder routes by the wire-level `isDropped`   record field.  Use truthiness (engine string `==` is identity compare): set a non-empty value (e.g. `true`) to emit dropped events, leave unset to hard-drop."
+      "markdownDescription" : "Whether regulator-marked (`routeState=\"drop\"`) events survive the output filter\n\nSingle boolean controlling whether the regulator-dropped slice reaches the forwarder. Orthogonal to `compact_emitted`.  - **unset (default) = hard-drop**: outputDropFilter resolves to   `isObject && !isRoute(\"drop\")`, dropped events never leave the engine. - **truthy = emit**: outputDropFilter resolves to `isObject`, all events   flow. The downstream forwarder routes by the wire-level `routeState`   record field.  Use truthiness (engine string `==` is identity compare): set a non-empty value (e.g. `true`) to emit dropped events, leave unset to hard-drop."
     },
     "compact" : {
       "type" : [
