@@ -1,4 +1,4 @@
-# Workstream 3 — Per-Container Cap Lookup: Investigation Report
+# Workstream 3, Per-Container Cap Lookup: Investigation Report
 
 **Status**: cap-engagement working end-to-end; metric-attribution carries a pre-existing engine issue documented below.
 
@@ -22,15 +22,15 @@ the broader rate/regulator surface (not just this new feature).
 | ~23:20 | v2 cap=10240: 0% drop |
 | ~23:45 | v2 cap=1 byte: 0% drop. Cross-class confirmed broken, but split alone not enough |
 | ~00:46 | v3 dev build with `TenXConsole.log` DIAG in cap getter |
-| ~01:01 | v3 DIAG: cap-getter fires, capEntry=1, absoluteCap=1 — cap-resolution works |
+| ~01:01 | v3 DIAG: cap-getter fires, capEntry=1, absoluteCap=1, cap-resolution works |
 | ~01:24 | v4 dev build with per-return-path DIAG; revealed `n` (baseline counter) cycling artifact (later refuted) |
-| ~01:35 | v5 dev build with POST-drop DIAG: `this.isDropped=false` immediately after `this.drop()` in getter — drop primitive is no-op in getter context |
+| ~01:35 | v5 dev build with POST-drop DIAG: `this.isDropped=false` immediately after `this.drop()` in getter, drop primitive is no-op in getter context |
 | ~02:20 | v6 dev build with constructor-drop pattern across all 4 regulator classes |
-| ~02:28 | v6 DIAG: `cap-ctor DROP for cart` fires; `POST-drop: this.isDropped=true` — fix proven |
-| ~02:28 | v6 Prometheus: emitted_events == all_events for cart — metric-attribution issue surfaces |
+| ~02:28 | v6 DIAG: `cap-ctor DROP for cart` fires; `POST-drop: this.isDropped=true`, fix proven |
+| ~02:28 | v6 Prometheus: emitted_events == all_events for cart, metric-attribution issue surfaces |
 | local | Engine code inspection + local repro of metric-attribution gap |
 
-## Findings — each with hard proof
+## Findings, each with hard proof
 
 ### Finding 1: cross-class `this.X` getter composition does NOT work in TenX DSL
 
@@ -64,7 +64,7 @@ that property is declared on a different class (rateReceiverCapObject)
 which is a separate object identity at the DSL layer.
 
 **Fix**: 4-class cartesian split (rate-object-local, rate-object-cap,
-rate-object-lookup, rate-object-lookup-cap) — each gated on its
+rate-object-lookup, rate-object-lookup-cap), each gated on its
 combination of (mute, cap) env vars, each with the full regulator logic
 inlined. settings.yaml dispatches via a 4-way ternary.
 
@@ -131,7 +131,7 @@ inside a getter.
 
 **Fix**: move the regulator algorithm (and the drop call) into the
 constructor of each regulator class. The dispatched getter just
-`return true` — it exists only because settings.yaml's groupFilters
+`return true`, it exists only because settings.yaml's groupFilters
 slot requires a callable.
 
 **Pre-existing scope**: the existing mute-file path
@@ -140,7 +140,7 @@ same `this.drop(); return true;` pattern, which by this analysis also
 never actually dropped events. The autotest_hybrid T3 report from the
 prior workstream claimed mute drops worked, but in light of this
 finding the previous result was likely measuring something other than
-the receive-aggregator metric — possibly an output filter that
+the receive-aggregator metric, possibly an output filter that
 naturally excludes events that returned false from the getter, which
 would NOT include events that were just `this.drop()`'d. **The mute
 file's drops in this engine version are likely also broken at the
@@ -177,8 +177,8 @@ two metrics differ only in their filter, but in practice they emit the
 same bytes.
 
 **What this means in practice**: the documented "savings attribution"
-metric — `all_events_summaryBytes_total - emitted_events_summaryBytes_total
-= bytes saved per pattern per container per window` — is zero even when
+metric, `all_events_summaryBytes_total - emitted_events_summaryBytes_total
+= bytes saved per pattern per container per window`, is zero even when
 real drops are happening. The customer-facing savings dashboard would
 show "$0 saved" for a configuration that is in fact saving real bytes.
 
@@ -296,21 +296,21 @@ in WS3); image rolls back to `dev-msgneg-20260519-2328`.
 
 ## Open items / follow-ups
 
-1. **Aggregator metric-attribution gap (Finding 3)** — engine team
+1. **Aggregator metric-attribution gap (Finding 3)**, engine team
    investigation needed. Affects savings dashboard for both cap and
    mute features.
-2. **Mute file regression test** — verify whether the existing mute path
+2. **Mute file regression test**, verify whether the existing mute path
    still drops events with the v6 constructor-drop fix (it likely does
-   for the bill but not for the savings metric — same gap as
+   for the bill but not for the savings metric, same gap as
    Finding 3).
-3. **TenXObject getter context** — engine documentation should make
+3. **TenXObject getter context**, engine documentation should make
    clear that `this.drop()` only works inside a constructor, not inside
    a `get` accessor. The existing example in rate-object-local.js's old
    header comment was misleading.
-4. **DIAG cleanup commit** — remove the temporary `TenXConsole.log` DIAG
+4. **DIAG cleanup commit**, remove the temporary `TenXConsole.log` DIAG
    lines from rate-object-cap.js and rate-object-local.js before any
    production-image rebuild.
-5. **Demo restore** — kubectl set image back to `dev-msgneg-20260519-2328`
+5. **Demo restore**, kubectl set image back to `dev-msgneg-20260519-2328`
    and delete the two ConfigMap overrides when demo testing is done.
 
 ## How to reproduce each finding locally
@@ -355,4 +355,4 @@ EOF
 
 Check out commit `1fd86ca` of the config repo
 (`pipelines/run/receive/rate/rate-object-{local,lookup,cap}.js`):
-re-run the same input. Encoded count will be 201 — no drops.
+re-run the same input. Encoded count will be 201, no drops.

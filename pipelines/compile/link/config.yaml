@@ -25,7 +25,7 @@ outputSymbolLibraryFile: $=TenXEnv.get("TENX_OUTPUT_SYMBOL_LIBRARY_FILE", path("
 
 symbol:
 
-  # 'fileNameFilters' — exclude test files from symbol library
+  # 'fileNameFilters', exclude test files from symbol library
   fileNameFilters:
 
     # ── Java ───────────────────────────────────────
@@ -53,7 +53,7 @@ symbol:
     # ── C++ ───────────────────────────────────────
     - ^.*(_test|Test|Tests)s?\.(cpp|cc|cxx|hpp|h|hxx)$  # *_test.cpp, *Test.hpp, *Tests.cpp
 
-  # 'folderFilters' — patterns to exclude files by folder
+  # 'folderFilters', patterns to exclude files by folder
   # Plain name (e.g., "test") → matches direct parent folder only
   # Regex (e.g., "[/\\]vendor[/\\]") → matches anywhere in full path
   folderFilters:

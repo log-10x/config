@@ -95,7 +95,7 @@ httpCode:
   #
   #  Without this check, any numeric variable that happens to hold a value
   #  in 100..599 on the first observed event gets wrongly bound as the HTTP
-  #  code position — e.g. a kafka config limit `max.request.size = 200`, a
+  #  code position, e.g. a kafka config limit `max.request.size = 200`, a
   #  JVM `-Dclk.tck=100`, or any framework metric that emits counts in the
   #  low hundreds. Subsequent events at the same variable position then
   #  carry arbitrary non-HTTP values (1, 2, 2000, ...) that get emitted as
@@ -122,7 +122,7 @@ httpCode:
     - TCP_MISS          # Squid hierarchy code prefix (always followed by "/<code>").
     - response          # HTTP response marker.
     - Response          # Title case variant.
-    - GET               # HTTP method verbs — always appear in request-log entries with codes.
+    - GET               # HTTP method verbs, always appear in request-log entries with codes.
     - POST
     - PUT
     - DELETE

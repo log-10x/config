@@ -50,6 +50,6 @@ fluentbit:
 
     # 'encodeType' is the on-wire format for the Forward record.
     #  - 'delimited': each top-level field of the rendered record becomes its
-    #    own Forward record field — preserves the original record's structure.
+    #    own Forward record field, preserves the original record's structure.
     #  - 'json': the whole record is wrapped as one stringified field.
     encodeType: delimited
