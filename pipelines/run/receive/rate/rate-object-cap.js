@@ -79,7 +79,8 @@ export class rateReceiverCapObject extends TenXObject {
         var container = this.get(TenXEnv.get("rateReceiverContainerField"));
         if (!container) container = "__node__";
 
-        var absoluteCap = -1; // -1 = no active cap entry (opt-out); 0 = whole service overflows; N = budget
+        var absoluteCap = 0;
+        var capSet = 0; // 0 = no active cap entry (opt-out); 1 = a per-service/global cap applies (cap 0 = whole service overflows)
         var capEntry = TenXLookup.get("rateReceiverCapLookupFile", container);
         if (capEntry) {
             var capC1 = TenXString.indexOf(capEntry, ":", 0);
@@ -94,12 +95,17 @@ export class rateReceiverCapObject extends TenXObject {
                     capActive = false;
                 }
             }
-            if (capActive) absoluteCap = capCandidate;
+            if (capActive) {
+                absoluteCap = capCandidate;
+                capSet = 1;
+            }
         }
-        if (absoluteCap < 0) {
-            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", -1);
+        if (capSet == 0) {
+            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
+            if (absoluteCap == 0) return true; // no per-service cap entry and no global cap -> opt-out (don't perform)
+            capSet = 1;
         }
-        if (absoluteCap < 0) return true; // no per-service cap entry and no global cap -> opt-out (don't perform); an explicit per-service cap (incl. 0 = whole service) opts in above
+        // capSet == 1: absoluteCap is the budget; an explicit per-service cap of 0 means the whole service overflows (action on all)
 
         var key = fieldSetKey + "@" + container;
         var bytes = this.utf8Size();
