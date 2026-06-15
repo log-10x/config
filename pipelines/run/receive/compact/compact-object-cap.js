@@ -55,6 +55,7 @@ export class CompactObject extends TenXObject {
     get shouldEncode() {
 
         if ((!this.isObject) || (this.isRoute("drop"))) return false;
+        if (this.isRoute("compact")) return true; // regulator stamped routeState=compact -> encode (unified action path)
 
         var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
         var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
