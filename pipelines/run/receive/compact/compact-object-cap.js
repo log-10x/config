@@ -12,8 +12,8 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString, Ten
 // CSV format: pattern_hash,<true|false>[:<untilEpochSec>[:<reason>]]
 //   e.g.  payment_retry_timeout,true:1745856000:OPS-5123
 //
-// The env var `compactReceiverLookupFile` is the gate the engine recognises —
-// do not rename it without an engine change.
+// The env var `compactReceiverLookupFile` is the gate the engine recognises.
+// Do not rename it without an engine change.
 
 export class CompactInput extends TenXInput {
 

@@ -29,7 +29,7 @@ output:
   # scalar for readability: the engine treats the newlines/indentation between
   # tokens as ordinary whitespace, so this compiles identically to the original
   # one-liner. (Block scalars do NOT process backslash escapes, so the `\"`
-  # below reach the expression literally — exactly what encode("field") needs.)
+  # below reach the expression literally, exactly what encode("field") needs.)
   #
   # The three resolved modes (the regulator marks routeState via route(action),
   # where action is the per-service disposition: drop/offload/tier_down/compact/

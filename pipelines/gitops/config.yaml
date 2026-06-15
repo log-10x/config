@@ -17,7 +17,7 @@ include:
 
     options:
       # Env-var overrides: GH_ENABLED, GH_REPO, GH_BRANCH, GH_PATH, GH_SYNC_INTERVAL.
-      # Defaults below are for the compact-receiver GitOps reload test —
+      # Defaults below are for the compact-receiver GitOps reload test:
       # they pull test/compact-lookup.csv from talwgx/test every 30s.
       # For a real deployment, set GH_ENABLED=false OR override the repo.
       enabled: $=TenXEnv.get("GH_ENABLED", false)
@@ -74,7 +74,7 @@ include:
 #        - "*.csv"
 #        - "*.json"
 #
-#      # 'syncInterval' — floored to 60s by the scheduler (mirrors github lane).
+#      # 'syncInterval', floored to 60s by the scheduler (mirrors github lane).
 #      syncInterval: $=TenXEnv.get("K8S_SYNC_INTERVAL", "30s")
 #
 #      # 'apiServer' default is the in-cluster URL. Override for out-of-cluster
