@@ -32,7 +32,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Fluentd's `out_forward` with `<transport unix>` + a matching `path`. Ignored on Windows."
+              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP, useful on Linux/macOS to avoid TCP overhead. Configure Fluentd's `out_forward` with `<transport unix>` + a matching `path`. Ignored on Windows."
             },
             "messageField" : {
               "type" : [
@@ -70,14 +70,14 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Unix domain socket path of the Fluentd in_forward source (Linux/macOS)\n\nOptional Unix domain socket path for the Fluentd `in_forward` source. When set, takes precedence over `fluentdOutputHost` / `fluentdOutputPort`. Linux/macOS only — ignored on Windows."
+              "markdownDescription" : "Unix domain socket path of the Fluentd in_forward source (Linux/macOS)\n\nOptional Unix domain socket path for the Fluentd `in_forward` source. When set, takes precedence over `fluentdOutputHost` / `fluentdOutputPort`. Linux/macOS only, ignored on Windows."
             },
             "encodeType" : {
               "type" : [
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Output format for the Forward record. Possible values: [json, delimited]\n\nHow the rendered event field(s) are encoded on the outgoing Forward record. Possible values: - **delimited**: each top-level field of the rendered record becomes   its own Forward record field — preserves the original record's   structure on the wire. - **json**: the whole rendered record is wrapped as one stringified   field. Defaults to `delimited`, which is almost always what you want. (Default: delimited)",
+              "markdownDescription" : "Output format for the Forward record. Possible values: [json, delimited]\n\nHow the rendered event field(s) are encoded on the outgoing Forward record. Possible values: - **delimited**: each top-level field of the rendered record becomes   its own Forward record field, preserves the original record's   structure on the wire. - **json**: the whole rendered record is wrapped as one stringified   field. Defaults to `delimited`, which is almost always what you want. (Default: delimited)",
               "default" : "delimited"
             }
           }

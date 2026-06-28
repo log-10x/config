@@ -32,7 +32,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Vector's `socket` sink with `mode: unix` and a matching `path`. Ignored on Windows."
+              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP, useful on Linux/macOS to avoid TCP overhead. Configure Vector's `socket` sink with `mode: unix` and a matching `path`. Ignored on Windows."
             },
             "messageField" : {
               "type" : [
@@ -70,7 +70,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Unix domain socket path of the Vector fluent source (Linux/macOS)\n\nOptional Unix domain socket path for Vector's `fluent` source. When set, takes precedence over `vectorOutputHost` / `vectorOutputPort`. Linux/macOS only — ignored on Windows."
+              "markdownDescription" : "Unix domain socket path of the Vector fluent source (Linux/macOS)\n\nOptional Unix domain socket path for Vector's `fluent` source. When set, takes precedence over `vectorOutputHost` / `vectorOutputPort`. Linux/macOS only, ignored on Windows."
             },
             "encodeType" : {
               "type" : [

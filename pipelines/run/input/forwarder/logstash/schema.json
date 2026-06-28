@@ -32,7 +32,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP — useful on Linux/macOS to avoid TCP overhead. Configure Logstash's `unix` output plugin with `codec => json_lines` and a matching `path`. Ignored on Windows."
+              "markdownDescription" : "Unix domain socket path to listen on (Linux/macOS)\n\nWhen set, Log10x listens on a Unix domain socket instead of TCP, useful on Linux/macOS to avoid TCP overhead. Configure Logstash's `unix` output plugin with `codec => json_lines` and a matching `path`. Ignored on Windows."
             },
             "messageField" : {
               "type" : [

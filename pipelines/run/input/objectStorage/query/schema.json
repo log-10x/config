@@ -70,6 +70,13 @@
             ],
             "markdownDescription" : "Logical prefix to filter index objects by\n\nSpecifies a logical name associated with the search target. This value identifies the app that produced the queried events (e.g., `acme-client`).  This value corresponds with the [indexWriteTarget](https://doc.log10x.com/run/input/objectStorage/index/#indexwritetarget) argument."
           },
+          "resultTarget" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Optional Tier-1 result-sink redirect prefix for query OUTPUT\n\nOptional bare-token prefix under which query RESULT objects (`qr/`, `qrs/`, `q/` markers, `_DONE.json`) are written, inside the SAME index container as `queryTarget`. When omitted or blank, results are written under `queryTarget`, byte-identical to legacy behavior. Must match `[A-Za-z0-9_-]+` (no slashes, separators, or `..`); a violating value fails the query closed. The READ path for the durable index (templates, byte ranges, reverse index) is unaffected and always uses `queryTarget`."
+          },
           "search" : {
             "type" : [
               "string",
