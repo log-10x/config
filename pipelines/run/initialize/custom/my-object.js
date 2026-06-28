@@ -28,7 +28,7 @@ export class MyInput extends TenXInput {
         return true;
     }
 
-    constructor() {     
+    constructor() {
         // your code here
     }
 }

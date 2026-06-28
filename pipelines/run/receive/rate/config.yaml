@@ -150,6 +150,25 @@ rateReceiver:
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
 
+  # =========================== Config-Version Stamp ============================
+  #
+  # 'configGeneration.file' points at the config-generation.csv the MCP control
+  # plane (log10x_configure_engine) writes as a SIBLING of the cap file in the
+  # cap ConfigMap. The receiver reads its `generation` value (a hash of the cap
+  # policy) and stamps it on every event as the `tenx_config_version` metric
+  # label, so the running engine advertises which config generation it loaded and
+  # the MCP can verify the policy it wrote is live (the config-generation closed
+  # loop). Hot-reloaded like the cap file.
+  #
+  # OPT-IN, decoupled from caps: unset by default, so the stamp is emitted ONLY
+  # when this points at a file. A receiver running the regulator WITHOUT the MCP
+  # closed loop (GitOps-managed caps) leaves it unset and never loads the file --
+  # no dependency, no init failure on a missing file. Set CONFIG_GENERATION_FILE
+  # (or this) to the sibling of caps.csv, e.g.:
+  #   ${java.io.tmpdir}/tenx/kubernetes/<namespace>/<configMap>/config-generation.csv
+  configGeneration:
+    file: $=TenXEnv.get("CONFIG_GENERATION_FILE", "")
+
   # --------------------------- Action File Options ---------------------------
 
   # Optional declarative per-SERVICE action file, keyed by the value of
