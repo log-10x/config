@@ -29,16 +29,7 @@ export class MyInput extends TenXInput {
     }
 
     constructor() {
-        // Load the MCP-written config-generation lookup by its bare filename.
-        // TenXLookup.load wants a string LITERAL (no computed path), but it
-        // resolves a relative filename against the pipeline's include paths --
-        // and the @kubernetes ConfigMap pull adds the pulled dir
-        // (java.io.tmpdir/tenx/kubernetes/<ns>/<configMap>/) to those paths. So a
-        // bare "config-generation.csv" resolves there on any install, no
-        // namespace/ConfigMap hardcoding. configure_engine writes the file next
-        // to caps.csv; load raises if it is absent, so configure_engine always
-        // writes a generation (and terraform seeds a bootstrap row).
-        TenXLookup.load("config-generation.csv", true, "key", "value");
+        // your code here
     }
 }
 
@@ -61,15 +52,7 @@ export class MyObject extends TenXObject {
     }
 
     constructor() {
-        // Stamp the running config generation onto every event. Listed in
-        // enrichmentFields (run/modules/receive/rate/settings.yaml), it rides the
-        // summary metrics as the `tenx_config_version` label, so the engine
-        // advertises which generation it loaded and the MCP can verify the policy
-        // it wrote is live. Value = the `generation` row of the MCP-written
-        // config-generation lookup (table name = file basename); "unset" only
-        // when that row is absent.
-        var g = TenXLookup.get("config-generation", "generation", "key", "value");
-        this.tenx_config_version = g ? g : "unset";
+        // your code here to enrich/filter TenXObject instances
      }
 }
 
