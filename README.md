@@ -1,6 +1,6 @@
 # Log10x Configuration
 
-Runtime configuration files for Log10x applications and pipelines. This is the main working directory where you configure and customize Log10x deployments.
+Runtime configuration files for [Log10x](https://www.log10x.com/?utm_source=github&utm_medium=readme&utm_campaign=config&utm_content=hero) applications and pipelines. This is the main working directory where you configure and customize Log10x deployments.
 
 **Full Documentation**: [doc.log10x.com/config](https://doc.log10x.com/config/)
 
