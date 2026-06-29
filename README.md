@@ -186,6 +186,6 @@ engine. Think of this like Kubernetes manifests - the YAML is freely available,
 but you need a cluster to run it.
 
 **Get a Log10x License:**
-- [Pricing](https://log10x.com/pricing)
+- [Pricing](https://www.log10x.com/pricing?utm_source=github&utm_medium=readme&utm_campaign=config&utm_content=footer)
 - [Documentation](https://doc.log10x.com)
 - [Contact Sales](mailto:sales@log10x.com)
