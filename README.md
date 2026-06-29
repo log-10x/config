@@ -89,7 +89,7 @@ Application configs are entry points that include pipeline modules. Edit these t
 | **Pull/GitHub** | `pipelines/compile/pull/github/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
 | **Pull/Docker** | `pipelines/compile/pull/docker/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
 | **Pull/Helm** | `pipelines/compile/pull/helm/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
-| **Scanners** | `pipelines/compile/scanners/` | [Scanner Modules](https://doc.log10x.com/compile/scanner/) |
+| **Scanners** | `pipelines/compile/scanners/` | [Scanner Modules](https://doc.log10x.com/compile/scan/) |
 | **Link** | `pipelines/compile/link/` | [Compile Pipeline](https://doc.log10x.com/compile/) |
 | **Push** | `pipelines/compile/push/` | [Compile Pipeline](https://doc.log10x.com/compile/) |
 
@@ -102,7 +102,7 @@ Application configs are entry points that include pipeline modules. Edit these t
 | **Input/Object Storage** | `pipelines/run/input/objectStorage/` | [Object Storage](https://doc.log10x.com/run/input/objectStorage/) |
 | **Initialize** | `pipelines/run/initialize/` | [Initialize](https://doc.log10x.com/run/initialize/) |
 | **Aggregate** | `pipelines/run/aggregate/` | [Aggregate](https://doc.log10x.com/run/aggregate/) |
-| **Receive** | `pipelines/run/receive/` | [Receive](https://doc.log10x.com/run/receive/) |
+| **Receive** | `pipelines/run/receive/` | [Receive](https://doc.log10x.com/apps/receiver/) |
 | **Output/Event** | `pipelines/run/output/event/` | [Event Output](https://doc.log10x.com/run/output/event/) |
 | **Output/Metric** | `pipelines/run/output/metric/` | [Metric Output](https://doc.log10x.com/run/output/metric/) |
 | **Transform** | `pipelines/run/transform/` | [Transform](https://doc.log10x.com/run/transform/) |
