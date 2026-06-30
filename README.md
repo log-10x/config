@@ -1,6 +1,6 @@
 # Log10x Configuration
 
-Runtime configuration files for Log10x applications and pipelines. This is the main working directory where you configure and customize Log10x deployments.
+Runtime configuration files for [Log10x](https://www.log10x.com/?utm_source=github&utm_medium=readme&utm_campaign=config&utm_content=hero) applications and pipelines. This is the main working directory where you configure and customize Log10x deployments.
 
 **Full Documentation**: [doc.log10x.com/config](https://doc.log10x.com/config/)
 
@@ -89,7 +89,7 @@ Application configs are entry points that include pipeline modules. Edit these t
 | **Pull/GitHub** | `pipelines/compile/pull/github/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
 | **Pull/Docker** | `pipelines/compile/pull/docker/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
 | **Pull/Helm** | `pipelines/compile/pull/helm/` | [Pull Modules](https://doc.log10x.com/compile/pull/) |
-| **Scanners** | `pipelines/compile/scanners/` | [Scanner Modules](https://doc.log10x.com/compile/scanner/) |
+| **Scanners** | `pipelines/compile/scanners/` | [Scanner Modules](https://doc.log10x.com/compile/scan/) |
 | **Link** | `pipelines/compile/link/` | [Compile Pipeline](https://doc.log10x.com/compile/) |
 | **Push** | `pipelines/compile/push/` | [Compile Pipeline](https://doc.log10x.com/compile/) |
 
@@ -102,7 +102,7 @@ Application configs are entry points that include pipeline modules. Edit these t
 | **Input/Object Storage** | `pipelines/run/input/objectStorage/` | [Object Storage](https://doc.log10x.com/run/input/objectStorage/) |
 | **Initialize** | `pipelines/run/initialize/` | [Initialize](https://doc.log10x.com/run/initialize/) |
 | **Aggregate** | `pipelines/run/aggregate/` | [Aggregate](https://doc.log10x.com/run/aggregate/) |
-| **Receive** | `pipelines/run/receive/` | [Receive](https://doc.log10x.com/run/receive/) |
+| **Receive** | `pipelines/run/receive/` | [Receive](https://doc.log10x.com/apps/receiver/) |
 | **Output/Event** | `pipelines/run/output/event/` | [Event Output](https://doc.log10x.com/run/output/event/) |
 | **Output/Metric** | `pipelines/run/output/metric/` | [Metric Output](https://doc.log10x.com/run/output/metric/) |
 | **Transform** | `pipelines/run/transform/` | [Transform](https://doc.log10x.com/run/transform/) |
@@ -186,6 +186,6 @@ engine. Think of this like Kubernetes manifests - the YAML is freely available,
 but you need a cluster to run it.
 
 **Get a Log10x License:**
-- [Pricing](https://log10x.com/pricing)
+- [Pricing](https://www.log10x.com/pricing?utm_source=github&utm_medium=readme&utm_campaign=config&utm_content=footer)
 - [Documentation](https://doc.log10x.com)
 - [Contact Sales](mailto:sales@log10x.com)

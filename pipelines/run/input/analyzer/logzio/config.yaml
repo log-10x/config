@@ -3,7 +3,7 @@
 # 🔟❎ 'run' Logz.io ElasticSearch input configuration
 
 # Configures a Logz.io ElasticSearch event input
-# To learn more see https://doc.log10x.com/run/input/analyzer/elastic/
+# To learn more see https://doc.log10x.com/run/input/analyzer/elasticsearch/
 
 # Set the 10x pipeline to 'run'
 tenx: run

@@ -41,7 +41,7 @@ include:
   # Uncomment to read events from a remote log analyzer for reporting/analysis:
 
   # - run/input/analyzer/splunk           # https://doc.log10x.com/run/input/analyzer/splunk
-  # - run/input/analyzer/elastic          # https://doc.log10x.com/run/input/analyzer/elastic
+  # - run/input/analyzer/elastic          # https://doc.log10x.com/run/input/analyzer/elasticsearch
   # - run/input/analyzer/logzio           # https://doc.log10x.com/run/input/analyzer/logzio
   # - run/input/analyzer/coralogix        # https://doc.log10x.com/run/input/analyzer/coralogix
   # - run/input/analyzer/cloudwatchLogs   # https://doc.log10x.com/run/input/analyzer/cloudwatchLogs

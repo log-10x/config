@@ -66,7 +66,7 @@
               "boolean",
               "null"
             ],
-            "markdownDescription" : "If true, TenXObject field values specified by [outputStreamFields](https://doc.log10x.com/run/output/event/outputstream/#outputstreamfields) are encoded to this output\n\nDetermine whether to write [outputStreamFields](https://doc.log10x.com/run/output/event/outputstream/#outputstreamfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   outputStreamWriteObjects: $=TenXEnv.get(\"myOutputStreamClass\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
+            "markdownDescription" : "If true, TenXObject field values specified by [outputStreamFields](https://doc.log10x.com/run/output/event/outputStream/#outputstreamfields) are encoded to this output\n\nDetermine whether to write [outputStreamFields](https://doc.log10x.com/run/output/event/outputStream/#outputstreamfields) values of an TenXObject passed to this output. This configuration is typically defined using a JavaScript expression.  To enable/disable the output depending on whether a launch argument, environment variable, or JVM -D option evaluates as truthy, use: ``` yaml   outputStreamWriteObjects: $=TenXEnv.get(\"myOutputStreamClass\") ``` To learn more see [TenXEnv.get](https://doc.log10x.com/api/js/#TenXEnv.get). (Default: true)",
             "default" : "true"
           },
           "writeTemplates" : {
