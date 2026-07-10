@@ -90,6 +90,3 @@ include:
   # - run/output/metric/signalFx                   # https://doc.log10x.com/run/output/metric/signalFx
   - run/output/metric/log                        # https://doc.log10x.com/run/output/metric/log
 
-groupFilters: drop()
-enrichmentFields: 
-  - routeState=isSummary?l1e_routeState:routeState
