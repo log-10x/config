@@ -73,6 +73,13 @@
               "null"
             ],
             "markdownDescription" : "Sets whether this input prints throughput stats to the console\n\nSets whether this input prints throughput stats to the console (Accepts boolean or string with $= prefix for runtime evaluation)"
+          },
+          "charset" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Charset used to decode bytes read from this input\n\nSets the charset used to decode bytes read from this input into characters. Defaults to UTF-8."
           }
         }
       }

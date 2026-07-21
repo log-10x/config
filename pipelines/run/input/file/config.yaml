@@ -53,5 +53,8 @@ inputFile:
 
     # --------------------------- Ancillary Options ---------------------------
 
-    # 'printProgress' controls whether a progress gage is printed to the console    
+    # 'printProgress' controls whether a progress gage is printed to the console
     printProgress: true
+
+    # 'charset' sets the charset used to decode bytes read from this input. Defaults to UTF-8.
+    charset: UTF-8
