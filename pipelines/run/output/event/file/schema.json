@@ -38,6 +38,13 @@
             ],
             "markdownDescription" : "Header value to write to file\n\nSpecifies a header file to write to file in [outputFileAppend](https://doc.log10x.com/run/output/event/file/#outputfileappend) is false."
           },
+          "charset" : {
+            "type" : [
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Charset used to encode text written to this file\n\nSets the charset used to encode characters written to this file. Defaults to UTF-8."
+          },
           "writeObjects" : {
             "type" : [
               "string",

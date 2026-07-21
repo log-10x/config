@@ -30,9 +30,12 @@ outputFile:
     filter: null
 
     # 'fields' defines the fields to write for each TenXObject sent to this output.
-    #  To learn more see https://doc.log10x.com/run/output/stream/#outputfields  
-    fields: 
+    #  To learn more see https://doc.log10x.com/run/output/stream/#outputfields
+    fields:
       - encode() # https://doc.log10x.com/api/js/#TenXObject+encode
+
+    # 'charset' sets the charset used to encode text written to this file. Defaults to UTF-8.
+    charset: UTF-8
 
   # ----------------------------- Decode Output ------------------------------
 
