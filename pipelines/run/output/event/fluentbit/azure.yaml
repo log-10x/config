@@ -148,43 +148,29 @@ fluentbitOut:
     #  https://docs.fluentbit.io/manual/pipeline/inputs/standard-input
     #  The 'text' argument below could be replaced by any list of intrinsic/calculated/extracted fields.
     #  The "" delimiter instructs 'joinFields' to produce JSON output.
-    #  'routeState' is emitted alongside 'text' so the tier_down rewrite_tag (see
-    #  below) can route on it, and so it lands in the table's routeState column.
-    #  Without routeState in the payload the tier_down split matches nothing and
-    #  silently no-ops (everything bills at the Analytics rate).
     fields:  #
       - open="["
       - timestamp=dateFormat("+%s.%N")
       - separator=","
-      - fields=joinFields("", "text", "routeState")
+      - fields=joinFields("", "text")
       - close="]"
 
 # =============================== tier_down ==================================
 #
-# The recipe above ships every event to a single Analytics-plan table. To
-# down-tier the slice the engine marks with routeState == "tier_down" (Azure's
-# analog of CloudWatch Infrequent Access), route that slice to a table on the
-# cheaper Basic or Auxiliary plan:
+# This base recipe ships every event to ONE Analytics-plan table, exactly as
+# cloudwatch.yaml ships to one CloudWatch log group. It does NOT tier down on
+# its own — a direct engine -> Fluent Bit -> Azure output has no return path to
+# route on.
 #
-#   1. Pre-provision a Basic/Auxiliary-plan table + a DCR stream for it. The plan
-#      is a create-time table property; ingestion still goes through the same DCE.
-#      NAMING CONTRACT (both sides required): the DCR streamDeclarations key is
-#      Custom-<table> (WITH the prefix, e.g. Custom-Tenx_Offload_CL), while the
-#      forwarder's table_name in step 3 is the BARE table name (Tenx_Offload_CL).
-#      The azure_logs_ingestion plugin derives the Custom-<table> stream itself, so
-#      a Custom- prefix on either the table_name OR a bare stream key in the DCR
-#      both yield HTTP 400 InvalidStream. See https://doc.log10x.com/apps/mcp for
-#      the generated provisioning recipe.
-#   2. The 'fields' block above already emits routeState, so add a rewrite_tag rule
-#      to fluentbit-10x-input.conf keyed on it:
-#         [FILTER]
-#             Name        rewrite_tag
-#             Match       input
-#             Rule        $routeState "^tier_down$" tierdown false
-#   3. Add a third output block below with `-m tierdown` whose table_name is the
-#      BARE Basic/Auxiliary-plan table name, while the `-m input` output above
-#      keeps the Analytics-plan table for un-marked events.
-#
-# HARDENING: a stamp-miss falls back to the `-m input` (Analytics) output and
-# bills at the full Analytics rate; monitor Analytics-table ingest to catch
-# stamp gaps. Never default un-marked traffic to the cheap plan.
+# tier_down (Azure's analog of CloudWatch Infrequent Access) is a FORWARDER
+# return-path feature, not a base-output-recipe one. The receiver runs with
+# `outputOffload true`, so it stamps each event's per-service routeState and
+# flows full-text events back to the forwarder; a forwarder recipe then keeps
+# the `routeState == "tier_down"` slice (matched as a JSON STRING) and routes it
+# to a Basic/Auxiliary-plan table while everything else stays on Analytics. The
+# log10x MCP generates that forwarder recipe (Vector / Fluentd / Fluent Bit /
+# OTel Collector) together with the Basic/Auxiliary table + DCR provisioning —
+# see https://doc.log10x.com/apps/mcp and the Azure Monitor stack page at
+# https://doc.log10x.com/faq/stacks/azure-monitor. The same routeState split
+# powers CloudWatch IA and Datadog Flex; Azure only differs in the destination
+# (a cheaper table plan reached through the DCE/DCR, not a second log group).
