@@ -148,11 +148,15 @@ fluentbitOut:
     #  https://docs.fluentbit.io/manual/pipeline/inputs/standard-input
     #  The 'text' argument below could be replaced by any list of intrinsic/calculated/extracted fields.
     #  The "" delimiter instructs 'joinFields' to produce JSON output.
+    #  'routeState' is emitted alongside 'text' so the tier_down rewrite_tag (see
+    #  below) can route on it, and so it lands in the table's routeState column.
+    #  Without routeState in the payload the tier_down split matches nothing and
+    #  silently no-ops (everything bills at the Analytics rate).
     fields:  #
       - open="["
       - timestamp=dateFormat("+%s.%N")
       - separator=","
-      - fields=joinFields("", "text")
+      - fields=joinFields("", "text", "routeState")
       - close="]"
 
 # =============================== tier_down ==================================
@@ -162,19 +166,24 @@ fluentbitOut:
 # analog of CloudWatch Infrequent Access), route that slice to a table on the
 # cheaper Basic or Auxiliary plan:
 #
-#   1. Pre-provision a Basic/Auxiliary-plan table + its own DCR stream. The plan
-#      is a create-time table property; ingestion still goes through the same
-#      DCE. See https://doc.log10x.com/apps/mcp for the generated provisioning
-#      recipe (az monitor log-analytics workspace table create --plan Basic/Auxiliary).
-#   2. Add a rewrite_tag rule to fluentbit-10x-input.conf keyed on the stamped
-#      routeState field, e.g.:
+#   1. Pre-provision a Basic/Auxiliary-plan table + a DCR stream for it. The plan
+#      is a create-time table property; ingestion still goes through the same DCE.
+#      NAMING CONTRACT (both sides required): the DCR streamDeclarations key is
+#      Custom-<table> (WITH the prefix, e.g. Custom-Tenx_Offload_CL), while the
+#      forwarder's table_name in step 3 is the BARE table name (Tenx_Offload_CL).
+#      The azure_logs_ingestion plugin derives the Custom-<table> stream itself, so
+#      a Custom- prefix on either the table_name OR a bare stream key in the DCR
+#      both yield HTTP 400 InvalidStream. See https://doc.log10x.com/apps/mcp for
+#      the generated provisioning recipe.
+#   2. The 'fields' block above already emits routeState, so add a rewrite_tag rule
+#      to fluentbit-10x-input.conf keyed on it:
 #         [FILTER]
 #             Name        rewrite_tag
 #             Match       input
 #             Rule        $routeState "^tier_down$" tierdown false
-#   3. Add a third output block below with `-m tierdown` whose AZURE_STREAM_NAME
-#      / table_name points at the Basic/Auxiliary-plan stream, while the `-m input`
-#      output above keeps the Analytics-plan stream for un-marked events.
+#   3. Add a third output block below with `-m tierdown` whose table_name is the
+#      BARE Basic/Auxiliary-plan table name, while the `-m input` output above
+#      keeps the Analytics-plan table for un-marked events.
 #
 # HARDENING: a stamp-miss falls back to the `-m input` (Analytics) output and
 # bills at the full Analytics rate; monitor Analytics-table ingest to catch
