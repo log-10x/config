@@ -55,8 +55,10 @@ fluentbitOut:
     #   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
     #   AZURE_DCE_URL           - Data Collection Endpoint logs-ingestion URI
     #   AZURE_DCR_ID            - immutable Data Collection Rule id
-    #   AZURE_STREAM_NAME       - DCR stream for events (e.g. Custom-Tenx_CL)
-    #   AZURE_TEMPLATES_STREAM_NAME - DCR stream for templates
+    #   AZURE_STREAM_NAME       - events table name, e.g. Tenx_CL. NOTE: the plugin
+    #                             sends to the DCR stream Custom-<table_name>, so pass
+    #                             the BARE table name (Tenx_CL), NOT Custom-Tenx_CL.
+    #   AZURE_TEMPLATES_STREAM_NAME - templates table name, e.g. TenxTemplates_CL
     #
     outputArgs:
       ############### Events output ###############
