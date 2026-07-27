@@ -16,12 +16,15 @@ include: run/modules/initialize/message
 
 symbol:
 
-  # 'types' specifies the types of symbols to search for; if the first type does not yield a result, the next one is tried etc.
+  # 'types' specifies the types of symbols that participate in the origin search. The listed
+  #  contexts are evaluated in a single pass, so list order acts as a filter rather than a precedence chain.
   #  Supported values (case insensitive), PACKAGE, CLASS, METHOD, LOG, ENUM, CONST, TEXT, EXEC, ANY
   #  To learn more see https://doc.log10x.com/run/transform/symbol/#contexts
   contexts: log,exec
 
-  # 'messageField' specifies the field name to assign the source/binary origin file name to target TenXObjects
+  # 'messageField' specifies the field name to assign the message pattern to target TenXObjects: the symbol
+  #  tokens of the origin ranked highest by coverage, meaning the count of distinct library-known tokens it
+  #  explains. Span length is the last tiebreak. The origin file name itself goes to 'originField'.
   messageField: message_pattern
 
   # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key. Set empty to disable.
