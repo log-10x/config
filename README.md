@@ -163,7 +163,7 @@ For detailed setup instructions, see the documentation for each application.
 
 ## License
 
-This repository is licensed under the [Apache License 2.0](LICENSE).
+This repository is licensed under the [MIT License](LICENSE).
 
 ### Fork-Friendly, License Required to Run
 
