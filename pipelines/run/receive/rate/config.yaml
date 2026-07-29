@@ -145,7 +145,19 @@ rateReceiver:
     #
     # CAP_LOOKUP_FILE env var overrides this for non-k8s deployments or for
     # operators who prefer a fixed absolute path (gitops-managed file on disk).
-    file: $=TenXEnv.get("CAP_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/caps.csv")
+    # Unset unless CAP_LOOKUP_FILE is supplied, mirroring the actions `lookup`
+    # block above. A computed default here is always non-empty, so
+    # rateReceiverCapInput.shouldLoad always passed and TenXLookup.load always
+    # ran -- hard-failing the whole pipeline when the cap CSV was not mounted:
+    #
+    #   error initializing pipeline unit #3: 'readStream(stream:fluentbit)'
+    #     error processing script: .../run/receive/rate/rate-object-cap.js
+    #     could not parse function: 'TenXLookup_load'
+    #
+    # That broke the documented receiver install out of the box, since the CSV
+    # arrives later via GitOps/configure_engine. With this unset, the module
+    # falls back to the fleet-wide absoluteCap, exactly as module.yaml documents.
+    file: $=TenXEnv.get("CAP_LOOKUP_FILE")
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
