@@ -89,7 +89,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "Jar files to load\n\nSpecifies a list of .jar files to load into the host JVM for use by [compile](https://doc.log10x.com/api/compile/), [input](https://doc.log10x.com/api/input/) and [output](https://doc.log10x.com/api/output/) API extensions.  !!! note \"\"      This argument is not supported in the [edge](https://doc.log10x.com/engine/flavors/#edge) runtime flavor.",
+      "markdownDescription" : "Jar files to load\n\nSpecifies a list of .jar files to load into the host JVM for use by [compile](https://doc.log10x.com/api/compile/), [input](https://doc.log10x.com/api/input/) and [output](https://doc.log10x.com/api/output/) API extensions.  !!! note \"\"      This argument is not supported in the [Runtime](https://doc.log10x.com/engine/flavors/#runtime) flavor.",
       "items" : {
         "type" : "string"
       }
