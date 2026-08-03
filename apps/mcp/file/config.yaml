@@ -52,7 +52,11 @@ outputFile:
       - patternPrefix="pattern="
       - $=yield TenXEnv.get("symbolMessageField")
       - patternHashPrefix="patternHash="
-      - $=yield TenXEnv.get("symbolMessageHashField")
+      # `symbolMessageHashField` is unset by default; the enrichment field keeps its
+      # internal name `tenx_hash`, so name that here as the fallback. Without the
+      # fallback the MCP artifacts would lose the pattern hash the moment the option
+      # stopped defaulting.
+      - $=yield TenXEnv.get("symbolMessageHashField", "tenx_hash")
 
   # ---------------------------- Template Output ----------------------------
 
