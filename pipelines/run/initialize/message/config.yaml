@@ -27,8 +27,15 @@ symbol:
   #  explains. Span length is the last tiebreak. The origin file name itself goes to 'originField'.
   messageField: message_pattern
 
-  # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key. Set empty to disable.
-  messageHashField: tenx_hash
+  # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key.
+  #
+  #  Left unset on purpose. The hash enrichment is always computed and carried on the TenXObject under
+  #  its internal name 'tenx_hash', so metric dimensions, the aggregation key and the MCP artifacts are
+  #  unaffected. Setting this key is what names the field on the wire, and on the forwarder receive path
+  #  that is also what puts it on the record returned to the forwarder; leave it unset and the forwarder
+  #  gets its record back byte-for-byte. Uncomment and name a field to opt in:
+  #
+  # messageHashField: tenx_hash
 
   # 'maxLen' specifies the max char len of the output messageField
   maxLen: 120

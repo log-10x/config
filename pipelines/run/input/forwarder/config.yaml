@@ -18,9 +18,16 @@ include:
 #   receiverOptimize=true        → compact-all (lossless compaction of every event)
 #   compactReceiverLookupFile=…  → compact-lookup (per-container decision)
 #
-# `symbolMessageHashField` (optional) adds a stable pattern-hash field
-# alongside the encoded/fullText output: when set, encode() and fullText
-# are called as `encode("<field>")` / `fullText("<field>")`.
+# `symbolMessageHashField` (optional, unset by default) adds a stable
+# pattern-hash field alongside the encoded/fullText output: when set, encode()
+# and fullText are called as `encode("<field>")` / `fullText("<field>")`.
+#
+# Unset is the receive-path default and it means VERBATIM: the record the
+# forwarder gets back is the record it sent, byte for byte, with no field added.
+# The hash is still computed and still rides the TenXObject internally as
+# `tenx_hash` for metrics and aggregation, it just does not reach the wire.
+# `symbolMessageHashField my_custom_hash` (CLI arg or env var) opts in and names
+# the field.
 
 output:
 
