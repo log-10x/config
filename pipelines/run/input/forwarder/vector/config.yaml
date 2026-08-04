@@ -2,6 +2,12 @@
 
 # 🔟❎ 'run' Vector receiver configuration
 #
+# Every endpoint setting below reads an environment variable first and falls
+# back to the shipped default, so a deployment can move a port, a host or a
+# socket path without editing this file. The variable name is the launch
+# option name in upper snake case with a TENX_ prefix, for example the
+# `vectorInputPort` option reads TENX_VECTOR_INPUT_PORT.
+#
 # To learn more see https://doc.log10x.com/run/input/forwarder/vector/
 
 tenx: run
@@ -23,11 +29,13 @@ vector:
     # 'port' specifies the TCP port to listen on for events from Vector's
     #  `socket` sink (`mode: tcp`, `encoding.codec: json`,
     #  `framing.method: newline_delimited`).
-    port: 9000
+    #  Env var: TENX_VECTOR_INPUT_PORT
+    port: $=TenXEnv.get("TENX_VECTOR_INPUT_PORT", 9000)
 
     # 'path' switches the input to a Unix domain socket instead of TCP.
-    #  When set, takes precedence over 'port'.
-    # path: /tmp/tenx-vector-in.sock
+    #  When set, takes precedence over 'port'. Empty means TCP.
+    #  Env var: TENX_VECTOR_INPUT_PATH
+    path: $=TenXEnv.get("TENX_VECTOR_INPUT_PATH", "")
 
     # 'messageField' is the name of the JSON field in each Vector record
     #  carrying the log line text.
@@ -39,15 +47,18 @@ vector:
 
     # 'host' specifies the TCP host of Vector's `fluent` source receiving
     #  processed events from Log10x.
-    host: 127.0.0.1
+    #  Env var: TENX_VECTOR_OUTPUT_HOST
+    host: $=TenXEnv.get("TENX_VECTOR_OUTPUT_HOST", "127.0.0.1")
 
     # 'port' specifies the TCP port of Vector's `fluent` source. MUST differ
     #  from input.port or the two would collide on the same listener.
-    port: 9001
+    #  Env var: TENX_VECTOR_OUTPUT_PORT
+    port: $=TenXEnv.get("TENX_VECTOR_OUTPUT_PORT", 9001)
 
     # 'path' switches the output to a Unix domain socket instead of TCP.
-    #  When set, takes precedence over 'host'/'port'.
-    # path: /tmp/tenx-vector-out.sock
+    #  When set, takes precedence over 'host'/'port'. Empty means TCP.
+    #  Env var: TENX_VECTOR_OUTPUT_PATH
+    path: $=TenXEnv.get("TENX_VECTOR_OUTPUT_PATH", "")
 
     # 'encodeType' is the on-wire format for the Forward record.
     #  - 'delimited': each top-level field of the rendered record becomes its

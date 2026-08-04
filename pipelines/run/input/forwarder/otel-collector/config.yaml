@@ -2,6 +2,12 @@
 
 # 🔟❎ 'run' OpenTelemetry Collector receiver configuration
 #
+# Every endpoint setting below reads an environment variable first and falls
+# back to the shipped default, so a deployment can move a port or a host
+# without editing this file. The variable name is the launch option name in
+# upper snake case with a TENX_ prefix, for example the `otelCollectorInputPort`
+# option reads TENX_OTEL_COLLECTOR_INPUT_PORT.
+#
 # To learn more see https://doc.log10x.com/run/input/forwarder/otel-collector/
 
 tenx: run
@@ -22,7 +28,8 @@ otelCollector:
 
     # 'port' specifies the TCP port to listen on for OTLP/gRPC events from the
     #  OpenTelemetry Collector's `otlp` exporter.
-    port: 4317
+    #  Env var: TENX_OTEL_COLLECTOR_INPUT_PORT
+    port: $=TenXEnv.get("TENX_OTEL_COLLECTOR_INPUT_PORT", 4317)
 
     # 'messageField' is the name of the JSON field on the rendered record
     #  carrying the log line text.
@@ -34,11 +41,13 @@ otelCollector:
 
     # 'host' specifies the TCP host of the OpenTelemetry Collector's `otlp`
     #  receiver receiving processed events from Log10x.
-    host: 127.0.0.1
+    #  Env var: TENX_OTEL_COLLECTOR_OUTPUT_HOST
+    host: $=TenXEnv.get("TENX_OTEL_COLLECTOR_OUTPUT_HOST", "127.0.0.1")
 
     # 'port' specifies the TCP port of the Collector's `otlp` receiver. MUST
     #  differ from input.port or the two would collide on the same listener.
-    port: 24225
+    #  Env var: TENX_OTEL_COLLECTOR_OUTPUT_PORT
+    port: $=TenXEnv.get("TENX_OTEL_COLLECTOR_OUTPUT_PORT", 24225)
 
     # 'encodeType' is the on-wire encoding for the rendered record.
     #  - 'delimited': each top-level field of the rendered record becomes an
