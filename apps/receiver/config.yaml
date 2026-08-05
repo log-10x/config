@@ -16,6 +16,11 @@
 
 tenx: run
 
+# Where the engine validates its licence (/api/v1/agent/whoami) and ships
+# its metrics (/api/v1/write). One endpoint drives BOTH: repointing it for
+# licensing also repoints metrics delivery. Unset, everything goes to the
+# production backend, exactly as before this line existed.
+backendEndpoint: $=TenXEnv.get("TENX_BACKEND_ENDPOINT", "https://prometheus.log10x.com/")
 runtimeName: $=TenXEnv.get("TENX_RUNTIME_NAME", "myReceiver")
 
 # =========================== Load App Modules ================================
