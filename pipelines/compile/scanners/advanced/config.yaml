@@ -23,7 +23,7 @@ tokenDelims: "<>|. ][:-+/*=\\,{}_();'\"$\t\n@"
 
 # 'fileExtStringFormats' controls which characters identify the start of a format specifier (https://en.wikipedia.org/wiki/Printf#Format_specifier). 
 fileExtStringFormats: 
-  - .java:%
+  - .java:{
   - .py:{
   - .js:${
   - .php:$
