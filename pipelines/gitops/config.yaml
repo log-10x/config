@@ -46,7 +46,9 @@ include:
       # mtime refreshed every sync). The pull cache itself lives under a
       # sha-addressed temp folder whose path changes per commit -- options
       # like rateReceiverLookupFile must point HERE, not into the cache:
-      #   GH_DEST=/policy  +  rateReceiverLookupFile=/policy/test/mutes.csv
+      #   GH_DEST=/tmp/policy  +  rateReceiverLookupFile=/tmp/policy/test/mutes.csv
+      # The folder must be writable by the engine user: the shipped container
+      # runs as uid 1000, so a root-level path like /policy fails the launch.
       # Unset = no mirror (prior behavior). Requires engine >= 1.1.69.
       destination: $=TenXEnv.get("GH_DEST")
 
