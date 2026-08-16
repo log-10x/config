@@ -41,6 +41,15 @@ include:
       # This interval works in conjunction with: https://doc.log10x.com/run/reload
       syncInterval: $=TenXEnv.get("GH_SYNC_INTERVAL", "30s")
 
+      # 'destination' mirrors pulled content into a stable absolute folder,
+      # after the initial pull and after every sync (atomic per-file writes,
+      # mtime refreshed every sync). The pull cache itself lives under a
+      # sha-addressed temp folder whose path changes per commit -- options
+      # like rateReceiverLookupFile must point HERE, not into the cache:
+      #   GH_DEST=/policy  +  rateReceiverLookupFile=/policy/test/mutes.csv
+      # Unset = no mirror (prior behavior). Requires engine >= 1.1.69.
+      destination: $=TenXEnv.get("GH_DEST")
+
 # ---------------------------------------------------------------------------
 # Alternative source: kubernetes ConfigMap
 #
