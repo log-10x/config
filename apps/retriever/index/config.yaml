@@ -59,7 +59,6 @@ include:
   #
   # NOTE - in order to use the public Log10x grafana dashboards, log10x must be enabled
 
-  - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
   # - run/output/metric/prometheus/scrape        # https://doc.log10x.com/run/output/metric/prometheus/scrape
   # - run/output/metric/prometheus/push-gateway  # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
   # - run/output/metric/prometheus/remote-write  # https://doc.log10x.com/run/output/metric/prometheus/remote-write
