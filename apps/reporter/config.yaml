@@ -61,9 +61,10 @@ include:
 
 # -------------------------- Select Metric Outputs ----------------------------
 
-  #  Uncomment and edit to publish aggregated TenXSummary instances to metric outputs:
+  #  Uncomment ONE to publish aggregated TenXSummary instances, or pass it at
+  #  launch (e.g. "@run/output/metric/prometheus/remote-write"). Metrics go to a
+  #  backend you own; the install wizard asks which one and wires it for you.
 
-  - run/output/metric/log10x                     # https://doc.log10x.com/run/output/metric/log10x
   # - run/output/metric/prometheus/scrape        # https://doc.log10x.com/run/output/metric/prometheus/scrape
   # - run/output/metric/prometheus/push-gateway  # https://doc.log10x.com/run/output/metric/prometheus/push-gateway
   # - run/output/metric/prometheus/remote-write  # https://doc.log10x.com/run/output/metric/prometheus/remote-write
