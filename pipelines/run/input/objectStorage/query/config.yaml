@@ -28,18 +28,24 @@ query:
 
     # 'objectStorage' selects the underlying storage (e.g., S3). To learn more see: https://doc.log10x.com/run/input/objectStorage
 
-    # Authentication is made via the default provider credentials chain:
+    # 'objectStorageName' selects the storage accessor alias registered by 'objectStorageClassName' (AWS or Azure).
+    #  Set TENX_OBJECT_STORAGE_NAME to Azure to target Azure Blob Storage. Defaults to AWS.
+
+    # AWS authentication is made via the default provider credentials chain:
     # https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/auth/credentials/DefaultCredentialsProvider.html
 
-    # Region selection is made via the default region provider chain:
+    # AWS region selection is made via the default region provider chain:
     # https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/regions/providers/DefaultAwsRegionProviderChain.html
 
-    objectStorageName: AWS
+    # Azure resolves the storage account from the first segment of 'indexContainer' (account/container/path),
+    # or from AZURE_STORAGE_ACCOUNT when 'indexContainer' is container/path. 'readContainer' is a bare container name.
 
-    # 'readContainer' specifies the container (e.g., S3 bucket) in which to search
+    objectStorageName: $=TenXEnv.get("TENX_OBJECT_STORAGE_NAME", "AWS")
+
+    # 'readContainer' specifies the container (e.g., S3 bucket, Azure Blob container) in which to search
     readContainer: $=TenXEnv.get("TENX_STREAMER_INPUT_BUCKET", "")  # (REQUIRED)
 
-    # 'indexContainer' specifies the container (e.g., S3 bucket) in which index objects created by the 'index' module reside.
+    # 'indexContainer' specifies the container (e.g., S3 bucket, Azure account/container/path) in which index objects created by the 'index' module reside.
     indexContainer: $=TenXEnv.get("TENX_STREAMER_INDEX_BUCKET", "") # (REQUIRED)
 
     # ----------------------------- Search Options ----------------------------
@@ -192,5 +198,9 @@ query:
     # ------------------------------ Storage Options --------------------------
 
     # 'objectStorageArgs' provides arguments to the constructor of the class defined by 'objectStorageName'.
-    # Setting [invoke, sqs] configures the storage accessor to route pipeline invocations via SQS messages.
-    objectStorageArgs: [invoke, sqs]
+    # The 'invoke' argument sets how the storage accessor routes pipeline invocations.
+    #  AWS accepts sqs, lambda or http. Azure accepts queue (Storage Queue) or http.
+    #  Set TENX_OBJECT_STORAGE_INVOKE to override the default of sqs. An unknown value fails the accessor at construction.
+    objectStorageArgs:
+      - invoke
+      - $=TenXEnv.get("TENX_OBJECT_STORAGE_INVOKE", "sqs")
