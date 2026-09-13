@@ -16,7 +16,8 @@ include: run/modules/input/objectStorage/index/delete
 
 indexDelete:
 
-  # 'objectStorage' is set to target AWS S3.
+  # 'objectStorageName' selects the storage accessor alias registered by 'objectStorageClassName' (AWS or Azure).
+  #  Set TENX_OBJECT_STORAGE_NAME to Azure to target Azure Blob Storage. Defaults to AWS.
   #  To learn more about configuring Object storage, see: https://doc.log10x.com/run/input/objectStorage
 
   # AWS Authentication is made via the default provider credentials chain:
@@ -25,14 +26,22 @@ indexDelete:
   # AWS Region selection is made via the default region provider chain:
   # https://sdk.amazonaws.com/java/api/latest/software/amazon/awssdk/regions/providers/DefaultAwsRegionProviderChain.html
 
-  - objectStorageName: AWS
+  - objectStorageName: $=TenXEnv.get("TENX_OBJECT_STORAGE_NAME", "AWS")
 
     # 'objectStorageArgs' provides arguments to the constructor of the class defined by 'objectStorageName'.
-    # Setting [invoke, sqs] configures the storage accessor to route pipeline invocations via SQS messages.
-    objectStorageArgs: [invoke, sqs]
+    # The 'invoke' argument sets how the storage accessor routes pipeline invocations.
+    #  AWS accepts sqs, lambda or http. Azure accepts queue (Storage Queue) or http.
+    #  Set TENX_OBJECT_STORAGE_INVOKE to override the default of sqs. An unknown value fails the accessor at construction.
+    objectStorageArgs:
+      - invoke
+      - $=TenXEnv.get("TENX_OBJECT_STORAGE_INVOKE", "sqs")
 
     # 'container' specifies the container in which index objects created by the 'index' module reside.
-    container: $=TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.bucket.name")
+    #  On AWS the S3 event notification in TENX_LAMBDA_INPUT carries the bucket name at Records[0].s3.bucket.name.
+    #  On Azure the Event Grid BlobCreated event in TENX_LAMBDA_INPUT carries the blob URL at data.url as
+    #  https://{account}.blob.core.windows.net/{container}/{blob}. The container is the path segment after the host:
+    #  the first '/' found from index 8 closes the host (index 8 skips the scheme), the next '/' closes the container.
+    container: '$=TenXEnv.get("TENX_OBJECT_STORAGE_NAME", "AWS") == "Azure" ? TenXString.substring(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), TenXString.indexOf(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), "/", 8) + 1, TenXString.indexOf(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), "/", TenXString.indexOf(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), "/", 8) + 1)) : TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.bucket.name")'
 
     # 'target' sets a logical name under which output index objects reside.
     #  This commonly refers to the name of the application/service which generated
@@ -40,4 +49,5 @@ indexDelete:
     target: app
 
     # 'targetObject' points to the blob (e.g., log file) within being deleted
-    object: $=TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.object.key")
+    #  On AWS this is Records[0].s3.object.key. On Azure it is the rest of data.url after the container segment.
+    object: '$=TenXEnv.get("TENX_OBJECT_STORAGE_NAME", "AWS") == "Azure" ? TenXString.substring(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), TenXString.indexOf(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), "/", TenXString.indexOf(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"), "/", 8) + 1) + 1, TenXString.length(TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.data.url"))) : TenXString.jsonpath(TenXEnv.get("TENX_LAMBDA_INPUT"), "$.Records[0].s3.object.key")'
