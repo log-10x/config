@@ -38,11 +38,14 @@ rateReceiver:
   #  window is ~4.25 minutes.
   resetIntervalMs: $=parseDuration("4m")
 
-  # 'absoluteCap' is the fleet-wide trigger (HEADLINE GUARANTEE): the maximum bytes
-  #  of a single pattern that may accumulate per container within the current
-  #  window. No single pattern can exceed this many bytes per container per window;
-  #  customers can compute their worst-case per-pattern-per-container spend from
-  #  this number directly.
+  # 'absoluteCap' is the fleet-wide trigger: the byte budget for a single pattern
+  #  per container within the current window, past which the regulator engages.
+  #
+  #  The cap is NOT a hard bound. The severity floor check below runs after the cap
+  #  check, so above the cap a flood still passes at the floor rate (ERROR and
+  #  CRITICAL half, WARN three tenths, everything else a tenth). The worst case for
+  #  one pattern in one container per window is the cap plus the floor share of
+  #  everything above it.
   #
   #  Default 0 = disabled. Three customer configurations are first-class:
   #    - Per-container only: leave 'absoluteCap' unset, set 'capLookupFile' below.
@@ -62,7 +65,8 @@ rateReceiver:
 
   # 'severityFloors' is the minimum retention per severity level, applied as an
   #  absolute floor that BEATS the share cap: even a pattern over its cap keeps at
-  #  least this fraction of each level. Floor-map keys must match the level
+  #  least this fraction of each level. That floor share of the excess is what makes
+  #  the cap a trigger rather than a bound. Floor-map keys must match the level
   #  vocabulary emitted by the level enrichment.
   severityFloors:
     - TRACE=0.1
@@ -188,8 +192,8 @@ rateReceiver:
   # the disposition of that service's regulator-identified excess: 'drop'
   # (default), 'offload' (to customer S3), 'tier_down' (SIEM cheap tier),
   # 'compact' (lossless encode), 'sample', or 'pass'. The byte cap above still
-  # bounds the excess; the action only decides what happens to it. Unlisted
-  # services default to 'drop' (the original regulator behavior).
+  # decides where the excess starts; the action only decides what happens to it.
+  # Unlisted services default to 'drop' (the original regulator behavior).
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,action
