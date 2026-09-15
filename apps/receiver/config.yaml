@@ -4,7 +4,7 @@
 # Loads the required modules for a Receiver app instance.
 # The receiver filters noisy events and optionally encodes them for volume reduction.
 #
-# To enable optimization (encode events for 50-80% volume reduction), set:
+# To enable optimization (encode events for volume reduction where the destination supports it), set:
 #   receiverOptimize: true
 # or pass receiverOptimize true on the command line.
 #

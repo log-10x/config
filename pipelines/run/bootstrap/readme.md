@@ -1,6 +1,6 @@
-## 1️⃣0️⃣❎ Pipeline Bootstrapper config
+## 1️⃣0️⃣❎ Dev config
 
-This is the run configuration for the Pipeline Bootstrapper unit.
+This is the bootstrap configuration for the Dev app.
 
-To learn more see the [Pipeline Bootstrapper](https://doc.log10x.com/compile/bootstrap "Authenticate the log10x account and launch a target pipeline") unit documentation
+To learn more see the [Dev](https://doc.log10x.com/apps/dev "Test and validate log, symbol library and config files locally") app documentation
 
