@@ -19,9 +19,13 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 //      Dispatched via `shouldRetainEventWithMute()` from settings.yaml's
 //      groupFilters 4-way ternary.
 //
-// HEADLINE GUARANTEE (cap variants): no single log pattern can exceed its
-// resolved cap bytes per container per `rateReceiverResetIntervalMs`
-// window, UNLESS a mute file entry overrides for that pattern (file wins).
+// WHAT THE CAP DOES (cap variants): once a log pattern has spent its resolved
+// cap bytes in a container within the `rateReceiverResetIntervalMs` window,
+// the regulator engages for that pattern, UNLESS a mute file entry overrides
+// for that pattern (file wins). The cap is NOT a hard bound: the severity
+// floor (step 7 below) runs after the cap (step 5), so above the cap a flood
+// still passes at the floor rate, and the worst case for one pattern in one
+// container per window is the cap plus the floor share of everything above it.
 //
 // Decision order per event:
 //   1. Mute file (FILE WINS): if the pattern is listed and active in the

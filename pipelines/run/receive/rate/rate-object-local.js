@@ -30,9 +30,14 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 // TenXLookup.get when the table is not registered, regardless of runtime
 // if-guards. The 4-class cartesian is the structurally honest answer.
 //
-// HEADLINE GUARANTEE (the cap variants): no single log pattern can exceed
-// its resolved cap bytes per container per `rateReceiverResetIntervalMs`
-// window. Cap resolution priority:
+// WHAT THE CAP DOES (the cap variants): once a log pattern has spent its
+// resolved cap bytes in a container within the `rateReceiverResetIntervalMs`
+// window, the regulator engages for that pattern. The cap is NOT a hard
+// bound: step 5 below runs after step 3, so above the cap a flood still
+// passes at the floor rate (ERROR and CRITICAL half, WARN three tenths,
+// everything else a tenth), and the worst case for one pattern in one
+// container per window is the cap plus the floor share of everything above
+// it. Cap resolution priority:
 //   1. `rateReceiverCapLookupFile` (cap-file variants only)
 //   2. `rateReceiverAbsoluteCap` env var (this variant)
 //   3. No cap: the over-cap branch is skipped, event retained, no counter
