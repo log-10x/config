@@ -31,8 +31,10 @@ includePaths: []
 # 'jarFiles' specifies .jar files to dynamically load for use by compile, input and output API extensions.
 jarFiles: []
 
-# 'metricEndpoint' specifies the Prometheus endpoint to report usage/health metrics (enterprise version only).
-# metricEndpoint: https://prometheus.log10x.com/api/v1/write
+# 'metricEndpoint' specifies a Prometheus remote-write endpoint for pipeline usage and health metrics.
+# Unset by default. The endpoint is a self-hosted or vendor Prometheus-compatible store, never a 10x
+# service, and is where the MCP reads engine state back from to tune policy such as regulator rates.
+# metricEndpoint: https://prometheus.example.com/api/v1/write
 
 # specifies a list of launch arguments that are disallowed from either command line or user config files.
 disabledArgs: []
