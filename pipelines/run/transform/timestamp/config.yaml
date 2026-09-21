@@ -95,6 +95,7 @@ timestamp:
   - "yyyy-MM-dd'T'HH:mm:ss,SSS"                # Common in Java logging with ISO 8601 date-time, comma-separated milliseconds.
   - "MM/dd/yyyy HH:mm:ss"                      # Used in Windows event logs, .NET applications, and U.S.-based systems.
   - "EEE MMM dd HH:mm:ss yyyy"                 # Human-readable format used in various logs, including some web servers and application logs.
+  - "EEE MMM dd HH:mm:ss zzz yyyy"             # java.util.Date.toString() and the Unix date command, e.g. "Thu Jan 15 10:00:01 UTC 2026". Common in Java application logs and shell-script output.
   - "yyyy-MM-dd'T'HH:mm:ss"                    # Simplified ISO 8601 format, used in many modern applications and frameworks.
   - "HH:mm:ss"                                 # Time-only format, used when the date is implied or provided separately, common in embedded systems and some programming languages.
   - "yyyyMMdd HH:mm:ss"                        # Compact format used in some legacy systems and batch processing logs.
