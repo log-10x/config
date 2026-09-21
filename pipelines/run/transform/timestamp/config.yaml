@@ -88,6 +88,8 @@ timestamp:
   - "yyyy-MM-dd HH:mm:ss"                      # Widely used in Java applications, databases (e.g., MySQL, PostgreSQL), and application servers (e.g., Tomcat, JBoss).
   - "yyyy-MM-dd'T'HH:mm:ss.SSSZ"               # Common in web services, APIs, Java (with DateTimeFormatter.ISO_OFFSET_DATE_TIME), Python (with datetime.isoformat()), and systems requiring precise timestamps with timezone information.
   - "MMM dd HH:mm:ss"                          # Frequently seen in syslog, Unix-based systems, network devices (e.g., Cisco routers), and web servers (e.g., Apache, Nginx).
+  - "MMM  d HH:mm:ss"                          # Classic syslog (RFC 3164) on days 1-9: the day is space-padded, e.g. "Jan  3 17:38:36".
+  - "MMM d HH:mm:ss"                           # Same date without the padding (strftime %b %-d), e.g. "Nov 9 12:01:01" in Thunderbird-style system logs.
   - "dd/MMM/yyyy:HH:mm:ss Z"                   # Standard syslog format, used in firewalls (e.g., Cisco ASA, Palo Alto), network monitoring tools, and Unix-based systems.
   - "yyyy-MM-dd HH:mm:ss,SSS"                  # Common in Java logging frameworks like Log4j and Logback.
   - "yyyy-MM-dd'T'HH:mm:ss,SSS"                # Common in Java logging with ISO 8601 date-time, comma-separated milliseconds.
