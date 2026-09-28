@@ -45,7 +45,16 @@ output:
   #   receiverOptimize=true   → encoded=encode()                                                     (compact every event)
   #   outputOffload truthy    → fullText("routeState")                                               (FULL text + marker; for S3 offload, never compacted)
   #   outputSoftDrop truthy   → encoded=isRoute("compact") ? encode("routeState") : fullText("routeState")  (compact the compact-marked slice; every other action stays fullText so the forwarder routes it by routeState)
-  #   neither                 → fullText                                                             (receive / hard-drop)
+  #   neither                 → fullText("tenx_passthrough")                                         (receive / hard-drop)
+#
+# Receive mode calls the fullText(...) FUNCTION, not the bare `fullText` field.
+# The field splices the decoded body back between the JSON quotes unescaped
+# and joins grouped lines with ",", so any record whose message holds a `"`
+# stopped parsing and reached the forwarder as {"fullText": "<record as text>"}
+# (measured with Fluent Bit 5.1.2 + edge 1.1.81: 1,030 of 1,453 records). The
+# function re-escapes and joins on "\n". It takes at least one extra-field
+# name, and a name no event carries adds nothing: `tenx_passthrough` is never
+# stamped, so records keep exactly the keys they arrived with.
   # The `symbolMessageHashField` variant (when set) passes the hash field name
   # into encode()/fullText() so a stable pattern-hash ships alongside the output.
   #
@@ -67,7 +76,7 @@ output:
                   + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "encode(\"routeState\")")
                   + " : "
                   + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")"))
-              : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText")))
+              : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText(\"tenx_passthrough\")")))
 
   # outputWriteTemplates = true whenever events are encoded (compact-all or soft-drop)
   writeTemplates: $=yield TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")
