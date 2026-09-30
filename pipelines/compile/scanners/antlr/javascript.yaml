@@ -54,6 +54,13 @@ antlr:
       context: var_assign
       recursive: true
       capture: literalsOnly
+
+    # a throw anywhere in a function marks the scope ('throw' is a log method)
+    - name: throwStatement
+      lang: javascript
+      context: method_invoke
+      recursive: true
+      capture: literalsOnly
   
     - name: classDeclaration
       lang: javascript

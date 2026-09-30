@@ -91,6 +91,13 @@ log:
     - critical
     - Panic
 
+    # Throw keywords: a scope that throws is a logging scope. JS, C# and C++
+    # 'throw', Go 'panic'. This list matches bare calls only; a package call
+    # such as fmt.Errorf(...) matches through 'streams' below. errors.New is
+    # left out: 'New' would match every pkg.New(...).
+    - throw
+    - panic
+
   # 'methodRegex' specifies an optional regex that will be applied
   #  to a scanned source code method/function name. If matched, the method
   #  will be considered to be a 'logging method' (see above).
@@ -112,3 +119,5 @@ log:
     - err
     - out
     - Console
+    # Go 'fmt.Errorf' (a qualified call matches only through this list)
+    - Errorf
