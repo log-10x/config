@@ -16,8 +16,10 @@ symbol:
   #  per symbol token sequence. As a series of tokens within 
   #  a target TenXTemplate (e.g., 'ERROR', 'could not connect to "{}') may appear 
   #  in multiple source/binary files within the pipeline's loaded library.
-  #  The sorting algorithm configured below is used to select the 'maxSymbolOrigins' 
-  #  topmost entries to list.
+  #  There is no sort: the first 'maxOrigins' units holding the sequence are
+  #  read in library order, which is library files by file name, and within
+  #  a file the units in the order the linker wrote them (by unit name).
+  #  The same libraries therefore give the same origins on every node.
   maxOrigins: 64
   
   # 'sequenceReserved' defines a list of terms to ignore when searching
