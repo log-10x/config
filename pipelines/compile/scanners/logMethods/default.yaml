@@ -91,14 +91,15 @@ log:
     - critical
     - Panic
 
-    # Throw keywords and error constructors. A scope that throws is a
-    # logging scope: its literals are exception text. The ANTLR scanner
-    # promotes a scope holding a node whose text is listed here, so these
-    # cover JS, C# and C++ 'throw' and Go 'panic' / 'fmt.Errorf'.
-    # 'New' (errors.New) is not listed: too generic.
+    # Throw keywords. A scope that throws is a logging scope: its literals
+    # are exception text. The ANTLR scanner promotes a scope holding a
+    # call whose name is listed here: JS, C# and C++ 'throw', Go 'panic'.
+    # This list matches bare calls only; a package call such as
+    # fmt.Errorf(...) matches through 'streams' below.
+    # 'New' (errors.New) is not listed: it would promote every scope that
+    # returns any pkg.New(...).
     - throw
     - panic
-    - Errorf
 
   # 'methodRegex' specifies an optional regex that will be applied
   #  to a scanned source code method/function name. If matched, the method
@@ -121,3 +122,6 @@ log:
     - err
     - out
     - Console
+    # Go 'fmt.Errorf': a qualified call (pkg.Name) promotes only through this
+    # list. 't.Errorf' in tests adds nothing: link drops *_test.go files.
+    - Errorf
