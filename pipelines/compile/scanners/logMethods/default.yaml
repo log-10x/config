@@ -91,6 +91,15 @@ log:
     - critical
     - Panic
 
+    # Throw keywords and error constructors. A scope that throws is a
+    # logging scope: its literals are exception text. The ANTLR scanner
+    # promotes a scope holding a node whose text is listed here, so these
+    # cover JS, C# and C++ 'throw' and Go 'panic' / 'fmt.Errorf'.
+    # 'New' (errors.New) is not listed: too generic.
+    - throw
+    - panic
+    - Errorf
+
   # 'methodRegex' specifies an optional regex that will be applied
   #  to a scanned source code method/function name. If matched, the method
   #  will be considered to be a 'logging method' (see above).
