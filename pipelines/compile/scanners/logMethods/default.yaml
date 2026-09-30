@@ -91,13 +91,10 @@ log:
     - critical
     - Panic
 
-    # Throw keywords. A scope that throws is a logging scope: its literals
-    # are exception text. The ANTLR scanner promotes a scope holding a
-    # call whose name is listed here: JS, C# and C++ 'throw', Go 'panic'.
-    # This list matches bare calls only; a package call such as
-    # fmt.Errorf(...) matches through 'streams' below.
-    # 'New' (errors.New) is not listed: it would promote every scope that
-    # returns any pkg.New(...).
+    # Throw keywords: a scope that throws is a logging scope. JS, C# and C++
+    # 'throw', Go 'panic'. This list matches bare calls only; a package call
+    # such as fmt.Errorf(...) matches through 'streams' below. errors.New is
+    # left out: 'New' would match every pkg.New(...).
     - throw
     - panic
 
@@ -122,6 +119,5 @@ log:
     - err
     - out
     - Console
-    # Go 'fmt.Errorf': a qualified call (pkg.Name) promotes only through this
-    # list. 't.Errorf' in tests adds nothing: link drops *_test.go files.
+    # Go 'fmt.Errorf' (a qualified call matches only through this list)
     - Errorf

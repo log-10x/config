@@ -55,9 +55,7 @@ antlr:
       recursive: true
       capture: literalsOnly
 
-    # A throw anywhere in a function (not only as a direct body statement)
-    # marks the scope: the 'throw' token is listed as a log method, and
-    # this selector is what lets a nested throw reach it.
+    # a throw anywhere in a function marks the scope ('throw' is a log method)
     - name: throwStatement
       lang: javascript
       context: method_invoke
