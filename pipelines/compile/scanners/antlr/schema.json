@@ -7,6 +7,11 @@
     "antlrParseUnitTimeout" : {
       "type" : [ "string", "null" ],
       "markdownDescription" : "Source file parse timeout\n\nDefines the timeout interval for parsing and scanning a source/binary input file before aborting. default value: 60sec"
+    },
+    "antlrParseUnitTokenBudget" : {
+      "type" : [ "number", "string", "null" ],
+      "markdownDescription" : "Source file parse token read budget\n\nCaps the number of token stream reads a single source file parse may make before it is stopped. The symbols found up to the stop are kept and the unit is marked with an error. The count depends on the file and the grammar only, so the same file stops at the same point on any machine, unlike 'antlrParseUnitTimeout'. 0 disables the cap. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
+      "default" : 0
     }
   },
   "additionalProperties" : false
