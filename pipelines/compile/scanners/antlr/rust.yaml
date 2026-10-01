@@ -21,7 +21,7 @@ antlr:
   fileExt:
     - .rs
 
-  # Names each impl block's scope by its type (see RustDecoratedParser)
+  # Names each impl block's scope by its type
   parserClass: com.log10x.antlr.parsers.RustDecoratedParser
 
   lexerClass: com.log10x.antlr.generated.rust.RustLexer
@@ -45,7 +45,7 @@ antlr:
   lineFilters:
     - ^\s*(//.*|/\*.*\*/)$
 
-  # The 'rule' list defines the nodes within a rust AST tree that are captured
+  # The 'rule' list defines the nodes within a Rust AST tree that are captured
   # and added to the output symbol unit.
   # To learn more see: https://doc.log10x.com/compile/scanner/antlr/rules/
   rule:
@@ -148,7 +148,7 @@ antlr:
       recursive: true
       capture: literalsOnly
 
-    # A block's tail expression is its value, const like a returned one
+    # A block's tail expression is its return value
     - name: statements
       lang: rust
       context: var_assign
@@ -187,9 +187,7 @@ antlr:
       recursive: true
       capture: literalsOnly
 
-    # Logging in Rust is macros (info!, println!, panic!, ...): the macro name
-    # is the call name the log methods list matches. target: "jobs" names
-    # the logger, not the message
+    # A macro's name is matched against the log methods list; target: names the logger and is skipped
     - name: macroInvocation
       lang: rust
       context: method_invoke

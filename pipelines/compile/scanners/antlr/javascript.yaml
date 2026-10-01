@@ -95,8 +95,7 @@ antlr:
       capture: allSymbols
   
     # A function expression or arrow function is its own method scope, named
-    # by the variable it initializes (const handler = ...), 'anonymous' when
-    # passed as an argument
+    # by the variable it initializes, 'anonymous' as a call argument
     - name: anonymousFunctionDecl
       lang: javascript
       context: method_decl

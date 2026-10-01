@@ -98,11 +98,8 @@ log:
     - throw
     - panic
 
-    # Rust macros: println!/eprintln! write to the console, panic! (above)
-    # and the anyhow!/bail!/unreachable! family raise. format! is left out:
-    # it is a plain string builder. todo! and tracing's event! are left out:
-    # this list is shared by every language and matches identifiers in a
-    # call, so 'event' and 'todo' would mark ordinary code as logging.
+    # Rust macros (panic! above). Left out: format!, which builds a string, and
+    # todo! and event!, which would match ordinary identifiers in every language.
     - println
     - eprintln
     - anyhow
