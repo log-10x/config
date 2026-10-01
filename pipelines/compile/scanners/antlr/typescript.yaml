@@ -162,7 +162,7 @@ antlr:
       context: var_assign
       recursive: true
       capture: literalsOnly
-      subRule: propertyName
+      subRule: classElementName
 
     - name: assignmentExpression
       lang: typescript
