@@ -36,6 +36,6 @@ s3Pull:
   # 'recursive' specifies whether 'prefixes' include objects under nested '/' segments.
     recursive: true
 
-# 's3Command' sets the AWS CLI program the pull runs: 'aws' on the path by default.
-# The CLI's credential chain applies: environment, profile, instance or task role.
-s3Command: $=TenXEnv.get("TENX_S3_COMMAND", "aws")
+  # 'command' sets the AWS CLI program the pull runs: 'aws' on the path by default.
+  #  The CLI's credential chain applies: environment, profile, instance or task role.
+    command: $=TenXEnv.get("TENX_S3_COMMAND", "aws")
