@@ -29,7 +29,7 @@
               "string",
               "null"
             ],
-            "markdownDescription" : "S3-compatible endpoint\n\nEndpoint URL passed to the AWS CLI as --endpoint-url, for S3-compatible stores (e.g., http://minio.internal:9000)"
+            "markdownDescription" : "S3-compatible endpoint\n\nEndpoint URL passed to the AWS CLI as `--endpoint-url`, for S3-compatible stores (e.g., http://minio.internal:9000)"
           },
           "keys" : {
             "type" : [
@@ -37,7 +37,7 @@
               "string",
               "null"
             ],
-            "markdownDescription" : "Object keys to pull\n\nExact keys of objects to pull. A key may carry a pin: `releases/app.jar#versionId=<id>` pulls that object version, `releases/app.jar@sha256:<64 hex>` fails the pull when the content differs.",
+            "markdownDescription" : "Object keys to pull\n\nExact keys of objects to pull. A key may carry a pin: ``` yaml s3PullKeys:   - releases/app.jar#versionId=3HL4kqtJlcpXroDTDmJ+rmSpXd3dIbrHY   # that object version   - units/spring-boot.10x.tar@sha256:4d4c1211c730c265d849f27b501fd969f790ce1ab0330865ab91f92d81eb62a0  # fails when the content differs ```  An unpinned key resolves its current version when the pull runs.",
             "items" : {
               "type" : "string"
             }
@@ -59,7 +59,7 @@
               "string",
               "null"
             ],
-            "markdownDescription" : "Pull objects under nested prefixes\n\nSpecifies whether [s3PullPrefixes](https://doc.log10x.com/compile/pull/s3/#s3pullprefixes) include objects under nested '/' segments. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
+            "markdownDescription" : "Pull objects under nested prefixes\n\nSpecifies whether [s3PullPrefixes](https://doc.log10x.com/compile/pull/s3/#s3pullprefixes) include objects under nested `/` segments. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
             "default" : false
           },
           "command" : {
@@ -67,7 +67,7 @@
               "string",
               "null"
             ],
-            "markdownDescription" : "Path to the AWS CLI\n\nThe [AWS CLI](https://docs.aws.amazon.com/cli/) program this entry's pull runs for listing and downloading objects: a program name on the path or a full path, with optional leading arguments (e.g., `aws --profile build`). The CLI's credential chain applies: environment, profile, instance or task role. (Default: aws)",
+            "markdownDescription" : "Path to the AWS CLI\n\nThe [AWS CLI](https://docs.aws.amazon.com/cli/) program this entry's pull runs for listing and downloading objects: a program name on the path or a full path, with optional leading arguments (e.g., `aws --profile build`).  The CLI's credential chain applies: environment, profile, instance or task role.  ``` yaml s3PullCommand: $=TenXEnv.get(\"TENX_S3_COMMAND\", \"aws\") ``` (Default: aws)",
             "default" : "aws"
           }
         },
