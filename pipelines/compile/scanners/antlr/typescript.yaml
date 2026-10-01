@@ -50,7 +50,7 @@ antlr:
   lineFilters:
     - ^\s*(//.*|/\*.*\*/)$
 
-  # The 'rule' list defines the nodes within a ts AST tree that are captured
+  # The 'rule' list defines the nodes within a TypeScript AST tree that are captured
   # and added to the output symbol unit.
   # To learn more see: https://doc.log10x.com/compile/scanner/antlr/rules/
   rule:
@@ -102,8 +102,7 @@ antlr:
       capture: allSymbols
 
     # An arrow function is its own method scope, named by the variable or
-    # property it initializes (const handler = ..., run = async () => ...),
-    # 'anonymous' when passed as an argument
+    # property it initializes, 'anonymous' as a call argument
     - name: arrowFunctionDeclaration
       lang: typescript
       context: method_decl
@@ -137,7 +136,7 @@ antlr:
       recursive: true
       capture: literalsOnly
 
-    # a throw anywhere in a function marks the scope ('throw' is a log method)
+    # A throw anywhere in a function marks the scope ('throw' is a log method)
     - name: throwStatement
       lang: typescript
       context: method_invoke
