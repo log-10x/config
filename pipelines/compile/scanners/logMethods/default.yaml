@@ -98,6 +98,18 @@ log:
     - throw
     - panic
 
+    # Rust macros: println!/eprintln! write to the console, panic! (above)
+    # and the anyhow!/bail!/unreachable!/todo! family raise, event! is
+    # tracing's generic event. format! is left out: it is a plain string
+    # builder.
+    - println
+    - eprintln
+    - anyhow
+    - bail
+    - unreachable
+    - todo
+    - event
+
   # 'methodRegex' specifies an optional regex that will be applied
   #  to a scanned source code method/function name. If matched, the method
   #  will be considered to be a 'logging method' (see above).
