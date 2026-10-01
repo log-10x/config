@@ -12,16 +12,16 @@ tenx: compile
 
 s3Pull:
 
-  # 'bucket' names the bucket to pull from.
+  # 'bucket' specifies the bucket to pull from.
   - bucket: "" # (REQUIRED)
 
-  # 'region' sets the bucket's region. If omitted, the AWS CLI's default region applies.
+  # 'region' specifies the bucket's region. If omitted, the AWS CLI's default region applies.
     region: null
 
-  # 'endpointUrl' points the AWS CLI at an S3-compatible store (e.g., http://minio.internal:9000).
+  # 'endpointUrl' specifies an S3-compatible endpoint for the AWS CLI (e.g., http://minio.internal:9000).
     endpointUrl: null
 
-  # 'keys' lists objects to pull by exact key. A key may carry a pin:
+  # 'keys' specifies objects to pull by exact key. A key may carry a pin:
   #   releases/app.jar#versionId=<id>    pulls that object version
   #   releases/app.jar@sha256:<64 hex>   fails the pull when the content differs
     keys: [
@@ -29,13 +29,13 @@ s3Pull:
       # units/spring-boot.10x.tar
     ]
 
-  # 'prefixes' lists key prefixes to pull every object under (e.g., builds/2026-10/).
+  # 'prefixes' specifies key prefixes to pull every object under (e.g., builds/2026-10/).
     prefixes: [
     ]
 
   # 'recursive' specifies whether 'prefixes' include objects under nested '/' segments.
     recursive: true
 
-  # 'command' sets the AWS CLI program the pull runs: 'aws' on the path by default.
+  # 'command' specifies the AWS CLI program the pull runs: 'aws' on the path by default.
   #  The CLI's credential chain applies: environment, profile, instance or task role.
     command: $=TenXEnv.get("TENX_S3_COMMAND", "aws")
