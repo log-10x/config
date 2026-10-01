@@ -94,11 +94,29 @@ antlr:
       recursive: false
       capture: allSymbols
   
-    - name: anoymousFunctionDecl
+    # A function expression or arrow function is its own method scope, named
+    # by the variable it initializes (const handler = ...), 'anonymous' when
+    # passed as an argument
+    - name: anonymousFunctionDecl
       lang: javascript
       context: method_decl
       recursive: false
       capture: allSymbols
+      anonymous: true
+
+    - name: arrowFunction
+      lang: javascript
+      context: method_decl
+      recursive: false
+      capture: allSymbols
+      anonymous: true
+
+    # An expression body is the arrow function's return value
+    - name: arrowFunctionBody
+      lang: javascript
+      context: var_assign
+      recursive: true
+      capture: literalsOnly
   
     - name: argumentsExpression
       lang: javascript
@@ -111,6 +129,7 @@ antlr:
       context: var_assign
       recursive: true
       capture: literalsOnly
+      subRule: assignable
 
     - name: assignmentExpression
       lang: javascript
