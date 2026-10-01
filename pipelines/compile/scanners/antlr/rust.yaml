@@ -148,6 +148,21 @@ antlr:
       recursive: true
       capture: literalsOnly
 
+    # A block's tail expression is its value, const like a returned one
+    - name: statements
+      lang: rust
+      context: var_assign
+      recursive: true
+      capture: literalsOnly
+
+    # Attribute arguments: #[error("connection to {0} failed")] is the
+    # Display text of an error that gets logged, and 'error' is a log method
+    - name: attr
+      lang: rust
+      context: method_invoke
+      recursive: true
+      capture: literalsOnly
+
     - name: expressionStatement
       lang: rust
       context: method_invoke
@@ -173,15 +188,18 @@ antlr:
       capture: literalsOnly
 
     # Logging in Rust is macros (info!, println!, panic!, ...): the macro name
-    # is the call name the log methods list matches
+    # is the call name the log methods list matches. target: "jobs" names
+    # the logger, not the message
     - name: macroInvocation
       lang: rust
       context: method_invoke
       recursive: true
       capture: literalsOnly
+      skipNamedArgs: ^target$
 
     - name: macroInvocationSemi
       lang: rust
       context: method_invoke
       recursive: true
       capture: literalsOnly
+      skipNamedArgs: ^target$
