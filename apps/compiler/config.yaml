@@ -51,6 +51,7 @@ include:
   - compile/pull/docker       # https://doc.log10x.com/compile/pull/docker
   - compile/pull/helm         # https://doc.log10x.com/compile/pull/helm
   # - compile/pull/artifactory  # https://doc.log10x.com/compile/pull/artifactory
+  # - compile/pull/s3           # https://doc.log10x.com/compile/pull/s3
 
   # ---------------------------- Link Output ----------------------------------
 
