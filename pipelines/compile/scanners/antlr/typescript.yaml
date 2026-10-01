@@ -101,6 +101,23 @@ antlr:
       recursive: false
       capture: allSymbols
 
+    # An arrow function is its own method scope, named by the variable or
+    # property it initializes (const handler = ..., run = async () => ...),
+    # 'anonymous' when passed as an argument
+    - name: arrowFunctionDeclaration
+      lang: typescript
+      context: method_decl
+      recursive: false
+      capture: allSymbols
+      anonymous: true
+
+    # An expression body is the arrow function's return value
+    - name: arrowFunctionBody
+      lang: typescript
+      context: var_assign
+      recursive: true
+      capture: literalsOnly
+
     # Parameter names and types are not symbols
     - name: callSignature
       lang: typescript
@@ -138,12 +155,14 @@ antlr:
       context: var_assign
       recursive: true
       capture: literalsOnly
+      subRule: identifierOrKeyWord
 
     - name: propertyDeclarationExpression
       lang: typescript
       context: var_assign
       recursive: true
       capture: literalsOnly
+      subRule: propertyName
 
     - name: assignmentExpression
       lang: typescript
