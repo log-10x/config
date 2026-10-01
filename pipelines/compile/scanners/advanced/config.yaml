@@ -37,6 +37,7 @@ fileExtStringFormats:
   - .go:%
   - .rs:{
   - .ts:${
+  - .tsx:${
   - .pl:$
   - .sh:$
   - .r:%
