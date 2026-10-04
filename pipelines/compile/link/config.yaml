@@ -84,3 +84,15 @@ symbol:
     # - const  # string constant assigned into a variable or method arg (e.g. 'greeting = "hello world"')
     # - text    # string value, usually read from a config file (e.g. JSON/XML/YAML field name)
     # - package # source code package/namespace/module name (e.g. 'com.acme.core')
+
+  # 'wordTypes' controls the types of symbols whose words the library index knows at
+  #  runtime. A known word is template text; any other word is a variable. Constants
+  #  and config text are values a program logs, so their words stay out.
+  #  Unset, every type's words are known.
+  wordTypes:
+    - class
+    - enum
+    - log
+    - exec
+    - method
+    - package
