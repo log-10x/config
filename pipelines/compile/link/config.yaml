@@ -70,7 +70,11 @@ symbol:
     - testdata       # Go test data folder
     - fixtures       # test fixtures folder
     - mocks          # mock implementations folder
-    - "[/\\\\]vendor[/\\\\][a-z]+\\.[a-z]"   # Go vendored deps (vendor/domain.tld pattern)
+    - "[/\\\\]tests?[/\\\\]"         # test/ or tests/ anywhere in the path
+    - "[/\\\\]vendor[/\\\\]"         # vendored deps anywhere (Go, PHP, Ruby, C)
+    - "[/\\\\]deps[/\\\\]"           # bundled C deps (e.g. lib/monkey/deps/mbedtls)
+    - "[/\\\\]third_party[/\\\\]"    # bundled third-party code
+    - "[/\\\\]node_modules[/\\\\]"   # npm dependencies
 
   # 'types' controls the types of symbols written into 'outputSymbolLibraryFile'
   #  for reflective use at runtime.
