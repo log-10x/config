@@ -42,6 +42,17 @@
             "exec"
           ]
         },
+        "wordTypes" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Token types whose words the symbol library index knows at run time\n\nFilters the words a symbol library index holds by the [context](https://doc.log10x.com/run/transform/symbol/#contexts) of the entries they come from. A word the index knows is template text at run time; any other word is a variable. Constants and config text are values a program logs, so leaving them out keeps their values out of templates and pattern names. Unset, the words of every type are known. For possible values, see: [contexts](https://doc.log10x.com/run/transform/symbol/#contexts).",
+          "items" : {
+            "type" : "string"
+          }
+        },
         "fileNameFilters" : {
           "type" : [
             "array",
