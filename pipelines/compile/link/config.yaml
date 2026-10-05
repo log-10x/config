@@ -122,3 +122,4 @@ symbol:
     - log
     - method
     - package
+    - exec
