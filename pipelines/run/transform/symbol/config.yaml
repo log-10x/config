@@ -196,6 +196,9 @@ symbol:
 
     # 'enclosures' lists open and close character pairs: text inside them
     #  before the message is envelope (e.g., 'main' in '[main] Starting worker').
+    #  An open with no close after it in the same field encloses nothing, such
+    #  as the '[' of a color code ('\033[0;33mWARN') or one that closes on a
+    #  later line of a multi-line event.
     enclosures: ['[]', '()']
 
     # 'assigners' lists the characters that bind a key to its value when the
