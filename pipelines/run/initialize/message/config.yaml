@@ -47,7 +47,8 @@ symbol:
 # The check fires only for templates that don't already pass the (groupSize > 1) || groupHead arms;
 # i.e., for single-event templates with no head signal. A non-negator line in that case (e.g., bare
 # "Hello World", "Heartbeat received from node-7") gets a pattern from its library words; a negator-matching
-# orphan (e.g., a lone "\tat com.foo.Bar(...)") skips origin selection and is named by its template.
+# orphan (e.g., a lone "\tat com.foo.Bar(...)") skips origin selection and is named by a hash of its shape,
+# template_<hash>.
 message:
   negators:
     - " "                 # any indented line (stack frames, indented app detail, multi-line JSON, banners)
