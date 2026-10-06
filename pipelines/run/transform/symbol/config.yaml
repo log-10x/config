@@ -73,13 +73,8 @@ symbol:
     - FATAL
     - PANIC
     # severity levels, lowercase (engine matching is case-sensitive).
-    # Note. The token "error" is intentionally NOT reserved here.
-    # Verification against 3254 demo events (2026-05-20) found 1280
-    # signal hits where the "error" key carries the actual message
-    # body the pattern groups; reserving it would collapse distinct
-    # error patterns into one.
-    # Note. The token "emergency" is also intentionally NOT reserved
-    #, sample showed only prose hits, no envelope use observed.
+    #  'error' and 'emergency' are not reserved: an 'error' key often
+    #  carries the message itself, and 'emergency' appears as prose.
     - "trace"
     - "debug"
     - "info"
@@ -101,8 +96,7 @@ symbol:
     - "timestamp"
     - "ts"
     # 'msg' and 'message' are message keys (see 'preamble.messageKeys')
-    # OpenTelemetry / collector envelope (these tokens leak from the
-    # otelcol's Go-package logging into pattern names)
+    # OpenTelemetry / collector envelope
     - "otel"
     - "otelcol"
     - "opentelemetry"
@@ -116,9 +110,7 @@ symbol:
     - "exporters"
     - "pipeline"
     - "pipelines"
-    # structured / envelope keys (singular + plural, engine matcher
-    # is exact, no stem; both forms appear in real otel logs).
-    # Note: "trace" is already reserved above under lowercase severity.
+    # structured / envelope keys, singular and plural (matching is exact)
     - "service"
     - "services"
     - "instance"
@@ -141,9 +133,7 @@ symbol:
     - "context"
     - "contexts"
     - "baggage"
-    # K8s audit / Kubernetes API envelope (verified zero signal in
-    # the 2026-05-20 sample, every occurrence was a JSON metadata
-    # key or audit field)
+    # Kubernetes API / audit envelope
     - "metadata"
     - "namespace"
     - "verb"
@@ -154,8 +144,7 @@ symbol:
     - "encoding"
     - "headers"
     - "duration"
-    # HTTP / request envelope (verified safe, appear only as
-    # klog field markers or JSON keys, not as message content)
+    # HTTP / request envelope
     - "path"
     - "status"
     # generic identity keys (very common envelope tokens in JSON logs)
@@ -164,7 +153,7 @@ symbol:
     - "kind"
     - "version"
     - "type"
-    # source-location envelope (Go / Java / Python loggers leak these)
+    # source-location envelope (Go / Java / Python loggers print these)
     - "caller"
     - "func"
     - "function"
@@ -176,15 +165,9 @@ symbol:
     - "method"
     - "stack"
     - "stacktrace"
-    # process / runtime context.
-    # Note. The token "host" is intentionally NOT reserved, 1018 of
-    # 1024 occurrences in the verification corpus were the content
-    # phrase "no such host" inside DNS-failure messages; reserving
-    # it would collapse every "no such host" pattern into one.
-    # Note. The token "app" is intentionally NOT reserved, 42 of 44
-    # occurrences were the Flask logger-name discriminator in
-    # "INFO in app:" lines; reserving it would collapse Python-app
-    # logger structure.
+    # process / runtime context. 'host' and 'app' are not reserved:
+    #  'host' is message text in 'no such host', and 'app' is the Flask
+    #  logger name that tells one application's statements from another's.
     - "pid"
     - "tid"
     - "process"
