@@ -35,7 +35,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Pairs of open and close characters whose text before the message is envelope\n\nDefines the enclosures of a line's preamble, each an open and a close character. A word inside one of them before the message (e.g., 'main' in '[main] Starting worker') is envelope and stays out of the TenXTemplate's message name. The message starts at the first word that no part of the preamble describes: not [reserved](https://doc.log10x.com/run/transform/symbol/#symbolsequencereserved), not a [message key](https://doc.log10x.com/run/transform/symbol/#symbolpreamblemessagekeys), not enclosed and not a reserved key or its value. (Default: [\"[]\",\"()\"])",
+              "markdownDescription" : "Pairs of open and close characters whose text before the message is envelope\n\nDefines the enclosures of a line's preamble, each an open and a close character. A word inside one of them before the message (e.g., 'main' in '[main] Starting worker') is envelope and stays out of the TenXTemplate's message name. An open with no close after it in the same field encloses nothing, such as the '[' of a color code ('\\033[0;33mWARN') or one that closes on a later line of a multi-line event. The message starts at the first word that no part of the preamble describes: not [reserved](https://doc.log10x.com/run/transform/symbol/#symbolsequencereserved), not a [message key](https://doc.log10x.com/run/transform/symbol/#symbolpreamblemessagekeys), not enclosed and not a reserved key or its value. (Default: [\"[]\",\"()\"])",
               "items" : {
                 "type" : "string"
               },
