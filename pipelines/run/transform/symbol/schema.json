@@ -25,6 +25,95 @@
             "false"
           ]
         },
+        "preamble" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enclosures" : {
+              "type" : [
+                "array",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Pairs of open and close characters whose text before the message is envelope\n\nDefines the enclosures of a line's preamble, each an open and a close character. A word inside one of them before the message (e.g., 'main' in '[main] Starting worker') is envelope and stays out of the TenXTemplate's message name. The message starts at the first word that no part of the preamble describes: not [reserved](https://doc.log10x.com/run/transform/symbol/#symbolsequencereserved), not a [message key](https://doc.log10x.com/run/transform/symbol/#symbolpreamblemessagekeys), not enclosed and not a reserved key or its value. (Default: [\"[]\",\"()\"])",
+              "items" : {
+                "type" : "string"
+              },
+              "default" : [
+                "[]",
+                "()"
+              ]
+            },
+            "assigners" : {
+              "type" : [
+                "array",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Characters that bind a key to its value when the key or the value is quoted\n\nDefines the characters that bind a key to its value, one character each, when the key or the value is quoted (e.g., '\"level\":\"info\"', \"body: 'Charge request received.'\"). A [reserved](https://doc.log10x.com/run/transform/symbol/#symbolsequencereserved) key and its value are envelope; the message starts inside a [message key](https://doc.log10x.com/run/transform/symbol/#symbolpreamblemessagekeys)'s value. Unquoted, a colon binds nothing, so 'Error: 13 INTERNAL' and 'INFO:root:Starting' keep their words. (Default: [\"=\",\":\"])",
+              "items" : {
+                "type" : "string"
+              },
+              "default" : [
+                "=",
+                ":"
+              ]
+            },
+            "bareAssigners" : {
+              "type" : [
+                "array",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Characters that also bind an unquoted key to an unquoted value\n\nDefines the assigners that bind a key without quotes, one character each, as logfmt writes them (e.g., 'level=info', 'logger=cleanup'). An assigner listed here binds in record form too. (Default: [\"=\"])",
+              "items" : {
+                "type" : "string"
+              },
+              "default" : [
+                "="
+              ]
+            },
+            "joiners" : {
+              "type" : [
+                "array",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Separators that chain words into one name, read to find a group's lead\n\nDefines the separators that chain two or more words, written without whitespace, into one name (e.g., 'org.apache.kafka.log.LocalLog', 'cart.cartstore.ValkeyCartStore'), typically a logger, class or file name. They decide only which member of a multi-line event names it: a member whose every word is such a name or other envelope does not lead the group (see [symbolGroupLead](https://doc.log10x.com/run/transform/symbol/#symbolgrouplead)). In a message name a joined name stays, as a logger or class name is often the only text that tells two statements apart. (Default: [\".\",\"::\"])",
+              "items" : {
+                "type" : "string"
+              },
+              "default" : [
+                ".",
+                "::"
+              ]
+            },
+            "messageKeys" : {
+              "type" : [
+                "array",
+                "string",
+                "null"
+              ],
+              "markdownDescription" : "Keys whose bound value holds the message\n\nDefines the keys whose value holds the message. The message starts at the value's first word the preamble does not describe (e.g., 'starting' in 'msg=starting', 'Subchannel' in '\"msg\":\"[core][Channel #1] Subchannel created\"', 'Charge' in \"body: 'Charge request received.'\"). In a record that opens with '{', reading starts at the first message key with a value. A message key without a value is envelope, as a reserved word is. (Default: [\"msg\",\"message\",\"body\"])",
+              "items" : {
+                "type" : "string"
+              },
+              "default" : [
+                "msg",
+                "message",
+                "body"
+              ]
+            }
+          }
+        },
+        "groupLead" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "Member of a multi-line group whose text names the group\n\nSelects the member of a multi-line event group whose text names it. 'firstWithMessage' names a group from its first member whose input field is not all envelope, a name of words chained by a [joiner](https://doc.log10x.com/run/transform/symbol/#symbolpreamblejoiners) counting as envelope here, so a head such as the .NET console logger's 'info: cart.cartstore.ValkeyCartStore[0]' before the record holding the message leaves the name, origin and skeleton to that record. A head that holds a message (e.g., a stack trace's exception line) names the group. 'head' always names a group from its head. (Default: firstWithMessage)",
+          "default" : "firstWithMessage"
+        },
         "maxOrigins" : {
           "type" : [
             "number",
