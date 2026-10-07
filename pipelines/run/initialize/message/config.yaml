@@ -23,8 +23,8 @@ symbol:
   contexts: log,exec
 
   # 'messageField' specifies the field name to assign the message pattern to target TenXObjects: the symbol
-  #  tokens of the origin ranked highest by coverage, meaning the count of distinct library-known tokens it
-  #  explains. Span length is the last tiebreak. The origin file name itself goes to 'originField'.
+  #  tokens of the origin ranked highest on the five-key comparator, message-text width first. Span length
+  #  is the last tiebreak. The origin file name itself goes to 'originField'.
   messageField: message_pattern
 
   # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key.
@@ -46,8 +46,9 @@ symbol:
 # indented detail, banners) so the message-template skips its own message-pattern compute for them.
 # The check fires only for templates that don't already pass the (groupSize > 1) || groupHead arms;
 # i.e., for single-event templates with no head signal. A non-negator line in that case (e.g., bare
-# "Hello World", "Heartbeat received from node-7") still gets a pattern; a negator-matching orphan
-# (e.g., a lone "\tat com.foo.Bar(...)") does not.
+# "Hello World", "Heartbeat received from node-7") gets a pattern from its library words; a negator-matching
+# orphan (e.g., a lone "\tat com.foo.Bar(...)") skips origin selection and is named by a hash of its shape,
+# template_<hash>.
 message:
   negators:
     - " "                 # any indented line (stack frames, indented app detail, multi-line JSON, banners)
