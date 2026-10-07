@@ -20,8 +20,8 @@ include: run/modules/receive/rate
 
 rateReceiver:
 
-  # 'fieldNames' identifies the log PATTERN (the numerator bucket). Usually the
-  #  symbolMessage field from message enrichment. The container is configured
+  # 'fieldNames' identifies the log PATTERN (the numerator bucket): the field the
+  #  message initializer writes, named by symbolMessageField (message_pattern). The container is configured
   #  separately via 'containerField' below -- it is the denominator and is keyed
   #  on its own, so a pattern's share is measured per container.
   fieldNames:

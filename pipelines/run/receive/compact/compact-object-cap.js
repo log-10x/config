@@ -5,9 +5,9 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString, Ten
 // Per-pattern compaction predicate.
 //
 // Reads a cap-file keyed by `fieldSetKey` (joined from
-// `compactReceiverFieldNames`, default `symbolMessage`). Listed patterns get
-// the entry's `true|false` decision; unlisted patterns fall back to
-// `compactReceiverDefault`.
+// `compactReceiverFieldNames`, the pattern field `symbolMessageField` names).
+// Listed patterns get the entry's `true|false` decision; unlisted patterns
+// fall back to `compactReceiverDefault`.
 //
 // CSV format: pattern_hash,<true|false>[:<untilEpochSec>[:<reason>]]
 //   e.g.  payment_retry_timeout,true:1745856000:OPS-5123
@@ -27,16 +27,16 @@ export class CompactInput extends TenXInput {
             TenXConsole.log("🗜️ Loading compact cap file: " + TenXEnv.get("compactReceiverLookupFile"));
         }
 
-        var lastModified = TenXLookup.load(TenXEnv.get("compactReceiverLookupFile"), true);
-        var retain = TenXEnv.get("compactReceiverLookupRetain", 300000);
+        var compactLastModified = TenXLookup.load(TenXEnv.get("compactReceiverLookupFile"), true);
+        var compactRetain = TenXEnv.get("compactReceiverLookupRetain", 300000);
 
-        if (TenXDate.now() - lastModified > retain) {
+        if (TenXDate.now() - compactLastModified > compactRetain) {
             if (!TenXEnv.get("quiet")) {
                 TenXConsole.log("⚠️ compact receiver cap file is stale, lastModified: {}, retainInterval: {}",
-                    lastModified, retain);
+                    compactLastModified, compactRetain);
             }
             TenXLog.info("compact receiver cap file is stale, lastModified: {}, retainInterval: {}",
-                lastModified, retain);
+                compactLastModified, compactRetain);
         }
     }
 }
@@ -59,7 +59,7 @@ export class CompactObject extends TenXObject {
         var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
         var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
 
-        // Key on the pattern identity (default: symbolMessage), matching the
+        // Key on the pattern identity (the symbolMessageField field), matching the
         // rate receiver's rateReceiverFieldNames key so MCP-authored entries
         // address the same pattern_hash the Reporter attributes cost to.
         var fieldSetKey = this.joinFields("_", TenXEnv.get("compactReceiverFieldNames"));
