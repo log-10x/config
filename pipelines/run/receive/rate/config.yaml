@@ -21,7 +21,7 @@ include: run/modules/receive/rate
 rateReceiver:
 
   # 'fieldNames' identifies the log PATTERN (the numerator bucket). Usually the
-  #  symbolMessage field from message enrichment. The container is configured
+  #  message_pattern field from message enrichment (named by symbolMessageField). The container is configured
   #  separately via 'containerField' below -- it is the denominator and is keyed
   #  on its own, so a pattern's share is measured per container.
   fieldNames:
@@ -134,9 +134,9 @@ rateReceiver:
   #   container,cap
   #   <container>,<bytes>[:<untilEpochSec>][:<reason>]
   #
-  # Intended to be managed via GitOps + the log10x_configure_regulator MCP tool,
-  # which derives per-container caps from a monthly dollar budget and opens a PR
-  # against this file.
+  # Intended to be managed via GitOps + the configure_engine MCP tool, which
+  # derives per-container caps from a target percent or a monthly dollar budget
+  # and opens a PR against this file.
   capLookup:
 
     # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
