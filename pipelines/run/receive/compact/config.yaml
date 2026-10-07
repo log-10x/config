@@ -19,11 +19,12 @@ include: run/modules/receive/compact
 compactReceiver:
 
   # 'fieldNames' defines the TenXObject fields joined with underscores to form
-  # each event's lookup key. Defaults to [symbolMessage], matching the rate
-  # receiver's rateReceiverFieldNames so MCP-authored entries address the same
-  # pattern_hash the Reporter attributes cost to.
+  # each event's lookup key: the pattern field the message initializer writes
+  # (symbolMessageField, message_pattern in the shipped configuration), as the
+  # rate receiver's fieldNames, so MCP-authored entries address the same
+  # pattern the Reporter attributes cost to.
   fieldNames:
-    - symbolMessage
+    - $=yield TenXEnv.get("symbolMessageField")
 
   # 'default' is the fallback when no cap-file entry matches the event's
   # pattern. `false` (default) preserves fullText; `true` compacts via

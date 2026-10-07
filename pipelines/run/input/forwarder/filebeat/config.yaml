@@ -28,7 +28,7 @@ filebeat:
     # 'fields' specifies TenXObject field names to emit alongside the main
     #  event. When set, enrichment fields are included in the sidecar output
     #  for forwarder post-processing.
-    #  Example: fields: [level, group, symbolMessage]
+    #  Example: fields: [level, group, message_pattern]
     fields: []
 
     # 'encodeType' controls the output format when fields is set.
