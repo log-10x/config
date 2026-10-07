@@ -34,12 +34,9 @@
             "type" : "string"
           },
           "default" : [
-            "package",
             "class",
             "enum",
-            "log",
-            "text",
-            "exec"
+            "log"
           ]
         },
         "wordTypes" : {

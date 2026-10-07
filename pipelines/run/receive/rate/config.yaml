@@ -135,8 +135,8 @@ rateReceiver:
   #   <container>,<bytes>[:<untilEpochSec>][:<reason>]
   #
   # Intended to be managed via GitOps + the log10x_configure_engine MCP tool,
-  # which derives per-container caps from a monthly dollar budget and opens a PR
-  # against this file.
+  # which derives per-container caps from a target percent or a monthly dollar
+  # budget and opens a PR against this file.
   capLookup:
 
     # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
