@@ -59,7 +59,7 @@
             "null"
           ],
           "markdownDescription" : "Timeout interval for scanning a source code /binary input file\n\nSets the timeout interval when scanning a source code /binary input file before dropping it. Set to null to ignore. (Default: 30s)",
-          "default" : "20s"
+          "default" : "30s"
         },
         "operationTimeout" : {
           "type" : [
@@ -123,7 +123,7 @@
         "null"
       ],
       "markdownDescription" : "Maximum number of input files to scan per sub-process.\n\nSets the maximum number of source/binary input files to scan by a single 'compile' sub-process. Set to 0 to unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 200)",
-      "default" : 40
+      "default" : 200
     },
     "tokenDelims" : {
       "type" : [
