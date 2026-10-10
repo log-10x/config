@@ -12,21 +12,17 @@ tenx: run
 
 symbol:
 
-  # 'maxOrigins' controls the number of source/binary origins to list 
-  #  per symbol token sequence. As a series of tokens within 
-  #  a target TenXTemplate (e.g., 'ERROR', 'could not connect to "{}') may appear 
-  #  in multiple source/binary files within the pipeline's loaded library.
-  #  The first 'maxOrigins' units holding the sequence are read in library
-  #  order: library files by file name, and within a file the units by name,
-  #  so the same libraries give the same origins on every node.
+  # 'maxOrigins' is the most places in code to compare for one phrase. A phrase
+  #  such as 'could not connect to' can appear in many files. The first ones in
+  #  library order, by file name and then by unit name, are compared, so the same
+  #  library picks the same origin on every node.
   maxOrigins: 64
   
-  # 'sequenceReserved' defines a list of terms to ignore when searching
-  #  for the symbol tokens that constitute an TenXTemplate's 'message' portion.
-  #  For example, for an event whose text contains: 'connect success = true',
-  #  the value 'true' will not be considered a part of the event's message,
-  #  as the 'true' value is mostly likely the result of a variable boolean state.
-  #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbolSequence
+  # 'sequenceReserved' lists words that do not count as evidence of where a line
+  #  comes from. A match made only of these words cannot pick a source. Before the
+  #  message they are skipped, and a key from this list is skipped with its value
+  #  ('level=info'). Words of the statement itself stay in the name as written.
+  #  To learn more see https://doc.log10x.com/run/transform/symbol/#symbolsequencereserved
   sequenceReserved:
     # literals
     - "null"
@@ -183,94 +179,58 @@ symbol:
     # tokenizer artifacts
     - "t"
 
-  # 'preamble' describes the envelope a line carries before its message: the
-  #  words that stay out of a TenXTemplate's message name. The line is read
-  #  left to right, and the message starts at the first word that is not in
-  #  'sequenceReserved', not a message key, not inside an enclosure and not a
-  #  reserved key or its value; from there every word goes into the name as
-  #  written. A word these lists do not describe is message text, a logger or
-  #  class name included. 'joiners' only decides which record of a multi-line
-  #  event names it (see 'groupLead').
-  #  For more information, see: https://doc.log10x.com/run/transform/symbol/
+  # 'preamble' describes the text a line carries before its message, such as a
+  #  thread name in brackets or 'level=info'. That text stays out of the name.
+  #  To learn more see https://doc.log10x.com/run/transform/symbol/#symbolpreambleenclosures
   preamble:
 
-    # 'enclosures' lists open and close character pairs: text inside them
-    #  before the message is envelope (e.g., 'main' in '[main] Starting worker').
-    #  An open with no close after it in the same field encloses nothing, such
-    #  as the '[' of a color code ('\033[0;33mWARN') or one that closes on a
-    #  later line of a multi-line event.
+    # 'enclosures' lists bracket pairs. Text inside them before the message stays
+    #  out of the name ('main' in '[main] Starting worker'). An open bracket with
+    #  no close in the same field is ignored.
     enclosures: ['[]', '()']
 
-    # 'assigners' lists the characters that bind a key to its value when the
-    #  key or the value is quoted ('"level":"info"', "body: 'Charge request
-    #  received.'"). A reserved key and its value are envelope; a message key's
-    #  value is where the message starts (see 'messageKeys'). Unquoted, a colon
-    #  binds nothing: 'Error: 13 INTERNAL' and 'INFO:root:Starting' keep their words.
+    # 'assigners' lists characters that join a key to its value when the key or
+    #  the value is quoted ('"level":"info"'). Without quotes, ':' joins nothing,
+    #  so 'Error: 13 INTERNAL' and 'INFO:root:Starting' keep their words.
     assigners: ['=', ':']
 
-    # 'bareAssigners' lists the assigners that also bind an unquoted key to an
-    #  unquoted value, as logfmt writes them ('level=info', 'logger=cleanup').
+    # 'bareAssigners' lists characters that also join a key to its value without
+    #  quotes, as logfmt writes them ('level=info').
     bareAssigners: ['=']
 
-    # 'joiners' lists the separators that chain two or more words, written
-    #  without whitespace, into one name ('org.apache.kafka.log.LocalLog',
-    #  'cart.cartstore.ValkeyCartStore'). They decide only which member of a
-    #  multi-line event leads it (see 'groupLead'). In a message name a joined
-    #  name stays: a logger or class name is often the only text that tells
-    #  two statements apart.
+    # 'joiners' lists separators that chain words into one name without spaces
+    #  ('org.apache.kafka.log.LocalLog'). Such a name stays in an event's name. A
+    #  line of a multi-line event that holds only such names does not name it.
     joiners: ['.', '::']
 
-    # 'messageKeys' lists the keys whose value holds the message. The message
-    #  starts at the value's first word that is not reserved, not enclosed and
-    #  not a reserved key or its value:
-    #  'starting' in 'msg=starting', 'Subchannel' in
-    #  '"msg":"[core][Channel #1] Subchannel created"', 'Charge' in
-    #  "body: 'Charge request received.'". In a record that opens with '{',
-    #  reading starts at the first message key with a value. A message key
-    #  without a value is envelope, as a reserved word is.
+    # 'messageKeys' lists keys whose value holds the message. The name starts at
+    #  the value's first word outside brackets ('starting' in 'msg=starting').
     messageKeys: [msg, message, body]
 
-  # 'groupLead' selects the member of a multi-line event group that names it.
-  #  'firstWithMessage' names a group from its first member that is not all
-  #  envelope, a joined name ('joiners') counting as envelope here, so a head
-  #  such as the .NET console logger's 'info: cart.cartstore.ValkeyCartStore[0]'
-  #  before the record that holds the message leaves the name, origin and
-  #  skeleton to that record.
-  #  A head that holds a message, such as a stack trace's, names the group.
-  #  'head' always names a group from its head.
+  # 'groupLead' picks the line of a multi-line event that names it.
+  #  'firstWithMessage' uses the first line that holds message text, so the .NET
+  #  logger's 'info: cart.cartstore.ValkeyCartStore[0]' line leaves the name to
+  #  the line after it. 'head' always uses the first line.
   groupLead: firstWithMessage
 
   # ----------------------------- Debug Options -------------------------------
   
   debug:
- 
-    # 'symbol' debugging allows for verbose printing of the selection process
-    #  for symbol tokens from the pipeline's 10x symbol files used to produce the
-    #  results of 10x reflection functions.
-    #  For more information, see: https://doc.log10x.com/api/js/#TenXObject+symbol
-    
 
-   # 'loggerName' controls the name of the log4j logger used by origins and symbols below
+    # 'debug' logs how the origin of a line is picked.
+    #  To learn more see https://doc.log10x.com/run/transform/symbol/#symboldebugorigins
+
+    # 'loggerName' is the log4j logger the debug output goes to.
     loggerName: "symbolDebugger"
 
-    # 'origins' outputs information about the origin selection process for an TenXTemplate symbol.
-    #  For example, setting 'units' to 'foo.js' will output information about if/how it 
-    #  was selected as the origin of TenXTemplate symbols.
-    #  In other words, if a symbol (e.g., 'MyClass') has 'foo.java' as the source file
-    #  from which it originated, adding 'foo.js' to 'units' will emit information
-    #  about the selection process.
-    #  Specifying '*' will emit information for all source /binary files that have
-    #  been selected as the origin of any TenXTemplate objects within the pipeline.
+    # 'origins' lists source files in the symbol library, such as 'foo.java', for
+    #  which to log how they take part in picking an origin. '*' logs all files.
     origins: [
     #  '*'
     ]
 
-    # 'symbols' logs the origin selection process for symbol tokens within an TenXTemplate.
-    #  For example, set 'symbols' to 'Could not connect to' to log how the 10x JavaScript 'symbolSequence' 
-    #  determines the origin source code/binary file within the pipeline's symbol library. 
-
-    #  Specifying '*' will emit information for all source code /binary files that have
-    #  been selected as the origin of any TenXTemplate objects within the pipeline.
+    # 'symbols' lists words of a line, such as 'Could not connect to', for which
+    #  to log how their origin is picked. '*' logs all of them.
     symbols: [
     #  '*'
     ]

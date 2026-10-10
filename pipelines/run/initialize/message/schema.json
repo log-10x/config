@@ -16,7 +16,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Types of symbols to search\n\nSpecifies a comma delimited list of [symbol contexts](https://doc.log10x.com/run/transform/symbol/#contexts) values. This is argument is passed as the `symbolContexts` argument value for the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function.  The listed contexts are evaluated in a single pass, so list order acts as a filter rather than a precedence chain. (Default: log,exec)",
+          "markdownDescription" : "Kinds of symbols that can name an event\n\nA comma-separated list of the [symbol contexts](https://doc.log10x.com/run/transform/symbol/#contexts) that can name an event. The default `log,exec` matches text passed to a logging call in source code and text read from a program file, such as the output of `strings`. Order in the list does not matter. (Default: log,exec)",
           "default" : "log,exec"
         },
         "maxLen" : {
@@ -25,7 +25,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Max number of output chars\n\nSpecifies the max number of chars of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield). Set 0 to unlimited. (Accepts number or string with $= prefix for runtime evaluation) (Default: 120)",
+          "markdownDescription" : "Longest name, in characters\n\nThe longest name to write, in characters. Set `0` for no limit. (Accepts number or string with $= prefix for runtime evaluation) (Default: 120)",
           "default" : 120
         },
         "message" : {
@@ -37,7 +37,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Field name to assign with symbol sequence value\n\nSpecifies the name of the field to assign the return value of [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function when invoking it with the a symbolContext argument value of [symbolContexts](https://doc.log10x.com/run/initialize/message/#symbolcontexts).  For an example, see [symbolInputField](https://doc.log10x.com/run/initialize/message/#symbolinputfield). (Default: symbolMessage)",
+              "markdownDescription" : "Field that holds the name\n\nThe field that holds each event's name. The shipped configuration sets `message_pattern`.  The name comes from the [symbolSequence](https://doc.log10x.com/api/js/#TenXObject+symbolSequence) function. (Default: symbolMessage)",
               "default" : "symbolMessage"
             },
             "hashField" : {
@@ -45,7 +45,7 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Field name to assign with the hash of the symbol sequence value\n\nSpecifies the name of the field to assign a stable, URL-safe hash of the [symbolMessageField](https://doc.log10x.com/run/initialize/message/#symbolmessagefield) value, computed via [TenXString.hash](https://doc.log10x.com/api/js/#TenXString.hash).  The value is an 11-character base64url identifier (xxHash64 of the UTF-8 bytes, big-endian, no padding). It is one-way and reproduces byte-for-byte outside the engine, so it is safe to use directly as a deduplication key, metric dimension, analyzer query term, or forwarder filter key.  **Unset by default.** The enrichment field itself is always present on the TenXObject under the internal name `tenx_hash`, so metrics dimensions, the aggregation key and the MCP artifacts carry the pattern hash whether or not this option is set. What the option controls is the *wire* name, and with it whether the hash reaches a coupled log forwarder: on the [forwarder receive path](https://doc.log10x.com/run/input/forwarder/) the record goes back to the forwarder byte-for-byte as it arrived unless this option names a field, and then that field is spliced onto the returned record.  Set it to `tenx_hash` to get the historical name, or to any other name to both rename the enrichment field and ship it, for example `symbolMessageHashField my_custom_hash`."
+              "markdownDescription" : "Field that holds a hash of the name\n\nThe field that holds an 11-character hash of the name. Unset by default.  The hash is [TenXString.hash](https://doc.log10x.com/api/js/#TenXString.hash) of the name: xxHash64 of its UTF-8 bytes, big-endian, in base64url without padding. Any tool can compute the same value, so it works as a join key, a metric tag or a forwarder filter.  Metrics and aggregation carry the hash whether or not this option is set. Events sent back to a [log forwarder](https://doc.log10x.com/run/input/forwarder/) return as they arrived; set this option to add the hash to them, for example `symbolMessageHashField tenx_hash`."
             }
           }
         },
@@ -54,7 +54,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Field name to assign with symbol message origin file\n\nSpecifies the name of the field to assign the return value of [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: )",
+          "markdownDescription" : "Field that holds the statement's source location\n\nThe field that holds where the statement is in code, such as `recommendation_server.py:ListRecommendations`. Unset by default.  The value comes from the [symbolOrigin](https://doc.log10x.com/api/js/#TenXObject+symbolOrigin) function. (Default: )",
           "default" : ""
         },
         "skeletonField" : {
@@ -62,7 +62,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Field name for the pattern rendering hint (the message shape with one marker per identity token)\n\nWhen set, each template also carries a `skeleton`: the message region of the log line with `~` standing in for every token that went into the message pattern and `$` for every variable. A consumer holding the pattern and the skeleton reconstructs the original line for display — punctuation, spacing and dropped stopwords included — so a readable pattern needs no access to the logs themselves. Unset (the default) computes and emits nothing."
+          "markdownDescription" : "Field that holds the message layout\n\nThe field that holds the message with `~` in place of each word of the name and `$` in place of each value. Unset by default.  A viewer holding the name and this field can print the line as it was written, punctuation and spacing included, without access to the logs."
         }
       }
     },
@@ -72,7 +72,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "List of strings that, when matched at the start of a log line's text, mark it as low-value continuation/boilerplate that does NOT receive its own message pattern.\n\nA list of strings that, when matched at the start of a log line's text, mark it as a known continuation pattern (e.g., stack trace frame, indented detail, banner) that should not receive its own message pattern.  Negators have two consumers. The message template's gate evaluates them when the event is neither part of a multi-event group (groupSize > 1) nor a group head: in that case, an event still receives a pattern unless it matches a negator. This is the \"Hello World vs orphan stack frame\" discriminator. The group template's head detection also consults them as a veto BETWEEN the timestamp and severity checks: a negator-prefixed line cannot be promoted to group head by severity inference alone (a token like `info` inside an object dump), so continuation fragments weld into their parent instead of minting orphan heads. Both consumers are inert until this list is configured — there is no default.  - ` ` - any indented line (universal continuation signal). - `\t` - any tab-prefixed line (Java/Go stack frames etc.). - `Caused by: ` - Java chained exception (column 0). - `Suppressed: ` - Java suppressed exception (column 0). - `--- End of ` - .NET inner exception marker. - `created by ` - Go goroutine creator. - `#0 `..`#5 ` - PHP stack frames (depth 0-5).",
+      "markdownDescription" : "Line starts that mark a continuation line\n\nLine starts that mark a line as a continuation of the event above it, such as a stack frame. Empty by default. The shipped configuration lists:  - a space, a tab or a literal `\\t`: any indented line; - `Caused by: ` and `Suppressed: `: Java chained exceptions; - `--- End of `: the .NET inner exception marker; - `created by `: the Go goroutine creator; - `#0 ` to `#5 `: PHP stack frames.  A continuation line that arrives as its own event is named by its shape, `template_` plus a hash, and not from the symbol library. The [group](https://doc.log10x.com/run/initialize/group/) module keeps such a line with the event above it, even when it holds a level word such as `info`.",
       "items" : {
         "type" : "string"
       }
