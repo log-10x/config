@@ -16,39 +16,30 @@ include: run/modules/initialize/message
 
 symbol:
 
-  # 'types' specifies the types of symbols that participate in the origin search. The listed
-  #  contexts are evaluated in a single pass, so list order acts as a filter rather than a precedence chain.
-  #  Supported values (case insensitive), PACKAGE, CLASS, METHOD, LOG, ENUM, CONST, TEXT, EXEC, ANY
+  # 'contexts' lists the kinds of symbols that can name an event: 'log' is text
+  #  passed to a logging call in source code, 'exec' is text read from a program
+  #  file. Values, in any case: package, class, method, log, enum, const, text,
+  #  exec, any. Order does not matter.
   #  To learn more see https://doc.log10x.com/run/transform/symbol/#contexts
   contexts: log,exec
 
-  # 'messageField' specifies the field name to assign the message pattern to target TenXObjects: the symbol
-  #  tokens of the origin ranked highest on the five-key comparator, message-text width first. Span length
-  #  is the last tiebreak. The origin file name itself goes to 'originField'.
+  # 'messageField' is the field that holds each event's name.
   messageField: message_pattern
 
-  # 'messageHashField' specifies the field name to assign a stable, URL-safe pattern hash (xxHash64 of the messageField value, base64url, 11 chars). Safe as a SIEM query term or forwarder filter key.
-  #
-  #  Left unset on purpose. The hash enrichment is always computed and carried on the TenXObject under
-  #  its internal name 'tenx_hash', so metric dimensions, the aggregation key and the MCP artifacts are
-  #  unaffected. Setting this key is what names the field on the wire, and on the forwarder receive path
-  #  that is also what puts it on the record returned to the forwarder; leave it unset and the forwarder
-  #  gets its record back byte-for-byte. Uncomment and name a field to opt in:
+  # 'messageHashField' is the field that holds an 11-character hash of the name.
+  #  Metrics and aggregation carry the hash either way. Name a field here to also
+  #  add the hash to events sent back to a log forwarder:
   #
   # messageHashField: tenx_hash
 
-  # 'maxLen' specifies the max char len of the output messageField
+  # 'maxLen' is the longest name to write, in characters. 0 means no limit.
   maxLen: 120
 
 # ============================== Message Options ==============================
 
-# 'negators' specifies patterns that mark a log line as boilerplate/continuation (stack trace frames,
-# indented detail, banners) so the message-template skips its own message-pattern compute for them.
-# The check fires only for templates that don't already pass the (groupSize > 1) || groupHead arms;
-# i.e., for single-event templates with no head signal. A non-negator line in that case (e.g., bare
-# "Hello World", "Heartbeat received from node-7") gets a pattern from its library words; a negator-matching
-# orphan (e.g., a lone "\tat com.foo.Bar(...)") skips origin selection and is named by a hash of its shape,
-# template_<hash>.
+# 'negators' lists line starts that mark a line as a continuation of the event
+# above it, such as a stack frame. A continuation line that arrives as its own
+# event is named by its shape, template_<hash>, and not from the symbol library.
 message:
   negators:
     - " "                 # any indented line (stack frames, indented app detail, multi-line JSON, banners)
