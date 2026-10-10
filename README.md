@@ -73,9 +73,8 @@ Application configs are entry points that include pipeline modules. Edit these t
 
 | Application | Config Path | Documentation |
 |-------------|-------------|---------------|
-| **Edge Receiver** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
-| **Edge Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
-| **Cloud Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
+| **Receiver** | `apps/receiver/config.yaml` | [Overview](https://doc.log10x.com/apps/receiver/) \| [Run](https://doc.log10x.com/apps/receiver/run/) |
+| **Reporter** | `apps/reporter/config.yaml` | [Overview](https://doc.log10x.com/apps/reporter/) \| [Run](https://doc.log10x.com/apps/reporter/run/) |
 | **Retriever** | `apps/retriever/*/config.yaml` | [Overview](https://doc.log10x.com/apps/retriever/) \| [Run](https://doc.log10x.com/apps/retriever/run/) |
 | **Compiler** | `apps/compiler/config.yaml` | [Overview](https://doc.log10x.com/compile/) \| [Run](https://doc.log10x.com/compile/test/) |
 | **Dev** | `apps/dev/config.yaml` | [Overview](https://doc.log10x.com/apps/dev/) \| [Run](https://doc.log10x.com/apps/dev/run/) |
