@@ -44,3 +44,7 @@ log10xMetrics:
     # 'filter' sets a JavaScript expression that TenXSummaries must evaluate as truthy to write to the output.
     #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: isSummary
+
+    # 'topSeries' keeps the output to the tag sets with the most bytes, ranked on
+    #  summaryBytes as the series accumulate. 0 (the default) publishes every tag set.
+    # topSeries: 0

@@ -62,6 +62,10 @@ cloudwatch:
     #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: isSummary
 
+    # 'topSeries' keeps the output to the tag sets with the most bytes, ranked on
+    #  summaryBytes as the series accumulate. 0 (the default) publishes every tag set.
+    # topSeries: 0
+
     # 'step' sets the interval to send metrics to CloudWatch (e.g., '1m').
     #  To learn more see https://micrometer.io/docs/concepts#rate-aggregation
     step: 5s
