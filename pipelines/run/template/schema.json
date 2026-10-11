@@ -28,7 +28,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Maximum total byte size of in-memory cached templates\n\nControls the maximum total byte size of templates held in the in-memory cache. When the cache exceeds this limit, least recently used templates are pruned to a temporary file on disk. Pruned templates are automatically reloaded from disk when accessed again.  Set to 0 to disable pruning and keep all templates in memory. (Accepts number or string with $= prefix for runtime evaluation) (Default: 20971520)",
+          "markdownDescription" : "Maximum total byte size of in-memory cached templates\n\nControls the maximum total byte size of templates held in the in-memory cache. When the cache exceeds this limit, least recently used templates are pruned to a temporary file on disk. Pruned templates are automatically reloaded from disk when accessed again.  Set to 0 to disable pruning and keep all templates in memory. The shipped configuration file sets it to 10MB. (Accepts number or string with $= prefix for runtime evaluation) (Default: 20971520)",
           "default" : 20971520
         }
       }
