@@ -79,6 +79,15 @@
             "markdownDescription" : "Maximum number of unique metric combinations allowed\n\nSets the maximum number of unique metric combinations (cardinality) allowed for this output. When exceeded, metrics will be dropped to prevent excessive cardinality. (Accepts number or string with $= prefix for runtime evaluation) (Default: 500)",
             "default" : 500
           },
+          "topSeries" : {
+            "type" : [
+              "number",
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Number of tag sets with the most bytes to publish\n\nKeeps the output to the tag sets with the most bytes, ranked on the summaryBytes counter as the series accumulate. A set outside the top keeps accumulating and is published once it enters it. 0 publishes every set.",
+            "default" : 200
+          },
           "descriptions" : {
             "type" : [
               "boolean",

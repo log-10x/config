@@ -69,6 +69,15 @@
               "null"
             ],
             "markdownDescription" : "A JavaScript expression an TenXSummary must evaluate as 'truthy' against to be written to this output\n\nSpecifies a JavaScript expression that an TenXSummary must evaluate as truthy to write its instance/template field values to the target counter.   For example, to only emit TenXSummaries produced by the 'myMetric' aggregator, specify:       ``` yaml  log10xMetrics:    filter: this.inputName == \"myMetric\" ```     To learn more see [inputName](https://doc.log10x.com/api/js/#TenXBaseObject+inputName)."
+          },
+          "topSeries" : {
+            "type" : [
+              "number",
+              "string",
+              "null"
+            ],
+            "markdownDescription" : "Number of tag sets with the most bytes to publish\n\nKeeps the output to the tag sets with the most bytes, ranked on the summaryBytes counter as the series accumulate. An admitted tag set publishes from every aggregator; one outside the top keeps accumulating and is published once it has cost more than the smallest one inside. 0 publishes every tag set.",
+            "default" : 0
           }
         }
       }

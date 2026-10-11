@@ -59,6 +59,10 @@ prometheusRW:
     #  To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: isSummary
 
+    # 'topSeries' keeps the output to the tag sets with the most bytes, ranked on
+    #  summaryBytes as the series accumulate. 0 (the default) publishes every tag set.
+    # topSeries: 0
+
     # ---------------------------- Publish Options ----------------------------
 
     # 'step' sets the interval to send metrics to Prometheus RW (e.g. '1m').
