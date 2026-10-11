@@ -56,9 +56,24 @@ datadog:
       - summaryTotals
 
     # 'tagFields' sets the TenXSummary fields used as the counter tag dimension values.
-    #  Defaults to https://doc.log10x.com/run/initialize/#enrichmentFields
+    #  Datadog counts one custom metric per distinct tag set, so this list carries the
+    #  pattern and where it ran, and nothing that names one node or one process. The
+    #  same set on every node, so the count does not grow with the fleet.
     tagFields:
-      - $=yield TenXEnv.get("enrichmentFields")
+      - message_pattern
+      - tenx_hash
+      - tenx_user_service
+      - severity_level
+      - 'routeState=isSummary?l1e_routeState:routeState'
+      - k8s_container
+      - k8s_namespace
+
+    # 'topSeries' keeps the output to the tag sets with the most bytes, ranked on the
+    #  summaryBytes counter as the series accumulate. A set outside the top keeps
+    #  accumulating and is published once it enters it. 0 publishes every set. With
+    #  two aggregators and two counters, 200 sets are 800 custom metrics, inside a
+    #  Pro plan's allotment from ten hosts up.
+    topSeries: 200
 
     # 'tagFieldNames' allows setting custom names to aggregated fields for metrics reporting.
     #  Defaults to https://doc.log10x.com/run/initialize/#metricFieldNames
