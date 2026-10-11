@@ -64,7 +64,7 @@ datadog:
       - tenx_hash
       - tenx_user_service
       - severity_level
-      - 'routeState=isSummary?l1e_routeState:routeState'
+      - routeState=l1e_routeState
       - k8s_container
       - k8s_namespace
 
