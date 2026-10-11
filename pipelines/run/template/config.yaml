@@ -18,6 +18,7 @@ template:
 
   # 'cacheSize' controls the maximum total byte size of templates held
   #  in the in-memory cache vs. on disk. Set to 0 to disable pruning.
+  #  The option's default is 20 MiB; this file sets 10MB.
   cacheSize: $=parseBytes("10MB")
 
 # =============================== Variable ===================================

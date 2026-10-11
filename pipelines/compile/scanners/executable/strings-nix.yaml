@@ -29,7 +29,7 @@ exec:
     # try for known extensions before invoking a 'selectorProcess'
     extensions:   
       - .so
-      - .dynlib   
+      - .dylib   
       
     # 'selector' processes provide a method for determining whether a file is an executable binary.
     #  If a selector process is not provided the file's ELF/PE/OSX binary header is tested. 
