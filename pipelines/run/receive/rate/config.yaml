@@ -189,11 +189,12 @@ rateReceiver:
 
   # Optional declarative per-SERVICE action file, keyed by the value of
   # 'containerField' (the k8s container name = the service). Each entry assigns
-  # the disposition of that service's regulator-identified excess: 'drop'
+  # the disposition of that service's regulator-identified excess: 'pass'
   # (default), 'offload' (to customer S3), 'tier_down' (SIEM cheap tier),
-  # 'compact' (lossless encode), 'sample', or 'pass'. The byte cap above still
+  # 'compact' (lossless encode), 'sample', or 'drop'. The byte cap above still
   # decides where the excess starts; the action only decides what happens to it.
-  # Unlisted services default to 'drop' (the original regulator behavior).
+  # A capped service with no row passes, and a cap file with no actions file
+  # loads an empty table: a cap alone never loses a line.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,action
