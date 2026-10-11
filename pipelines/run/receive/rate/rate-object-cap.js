@@ -44,14 +44,12 @@ export class rateReceiverCapInput extends TenXInput {
                 lastModified, capRetain);
         }
 
-        // Register the per-service action table (sibling actions.csv) so the
-        // cap-variant objects can route(action) for the over-budget slice
-        // instead of a hardcoded drop. Shared by both cap variants, like the
-        // cap table above. Guarded: when no action file is configured every
-        // service's action defaults to "drop" (today's behavior), and the
-        // empty-path load is skipped so the regulator never fails to start.
+        // The per-service action table (sibling actions.csv) decides what the
+        // over-budget slice of each capped service does. A cap file may ship
+        // alone, so a missing actions file loads as an empty table and every
+        // capped service passes until a row names it.
         if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
-            TenXLookup.load(TenXEnv.get("rateReceiverActionLookupFile"), true);
+            TenXLookup.loadIfExists(TenXEnv.get("rateReceiverActionLookupFile"), true);
         }
     }
 }
@@ -129,12 +127,12 @@ export class rateReceiverCapObject extends TenXObject {
         if (TenXMath.random() < floor) return true;
 
         // Over-budget: the per-service action lookup (keyed by the same
-        // container as the cap) decides the disposition of the excess. Default
-        // "drop" preserves the original regulator behavior exactly. The
-        // forwarder recipe + the output encodeField honor offload/tier_down/
-        // compact/sample; the byte cap above stays the safety backstop.
+        // container as the cap) decides the disposition of the excess. A
+        // capped service with no action row passes: the cap alone never
+        // loses a line. The forwarder recipe + the output encodeField honor
+        // offload/tier_down/compact/sample/drop.
         // Entry shape (mirrors the cap entry): <action>[:<untilEpochSec>[:<reason>]].
-        var action = "drop";
+        var action = "pass";
         if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
             var actionEntry = TenXLookup.get("rateReceiverActionLookupFile", container);
             if (actionEntry) {

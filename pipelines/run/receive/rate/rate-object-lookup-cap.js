@@ -118,12 +118,12 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (TenXMath.random() < floor) return true;
 
         // Over-budget: the per-service action lookup (keyed by the same
-        // container as the cap) decides the disposition of the excess. Default
-        // "drop" preserves the original regulator behavior exactly. The
-        // forwarder recipe + the output encodeField honor offload/tier_down/
-        // compact/sample; the byte cap above stays the safety backstop.
+        // container as the cap) decides the disposition of the excess. A
+        // capped service with no action row passes: the cap alone never
+        // loses a line. The forwarder recipe + the output encodeField honor
+        // offload/tier_down/compact/sample/drop.
         // Entry shape (mirrors the cap entry): <action>[:<untilEpochSec>[:<reason>]].
-        var action = "drop";
+        var action = "pass";
         if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
             var actionEntry = TenXLookup.get("rateReceiverActionLookupFile", container);
             if (actionEntry) {
