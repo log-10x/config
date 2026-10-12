@@ -16,7 +16,7 @@ include:
 # The Receiver app picks the encoding mode based on user flags:
 #   default                      → emit events verbatim (`fullText`)
 #   receiverOptimize=true        → compact-all (lossless compaction of every event)
-#   compactReceiverLookupFile=…  → compact-lookup (per-container decision)
+#   compactReceiverLookupFile=…  → compact-lookup (per-pattern decision: listed patterns follow their row, the rest compactReceiverDefault)
 #
 # `symbolMessageHashField` (optional, unset by default) adds a stable
 # pattern-hash field alongside the encoded/fullText output: when set, encode()
@@ -42,6 +42,7 @@ output:
   # where action is the per-service disposition: drop/offload/tier_down/compact/
   # sample/pass; this picks the output FORMAT, while `outputSoftDrop` also flips
   # the stream filter):
+  #   compactReceiverLookupFile set → encoded=shouldEncode() ? encode() : fullText                  (compact the patterns the cap file selects)
   #   receiverOptimize=true   → encoded=encode()                                                     (compact every event)
   #   outputOffload truthy    → fullText("routeState")                                               (FULL text + marker; for S3 offload, never compacted)
   #   outputSoftDrop truthy   → encoded=isRoute("compact") ? encode("routeState") : fullText("routeState")  (compact the compact-marked slice; every other action stays fullText so the forwarder routes it by routeState)
@@ -67,7 +68,12 @@ output:
   # string-equality against the action name, NOT boolean truthiness. hard-drop
   # omits dropped events entirely, so it emits no marker (nothing to route).
   encodeField: |-
-    $=yield TenXEnv.get("receiverOptimize")
+    $=yield TenXEnv.get("compactReceiverLookupFile")
+      ? ("encoded=shouldEncode() ? "
+          + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")
+          + " : "
+          + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
+      : TenXEnv.get("receiverOptimize")
       ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
       : (TenXEnv.get("outputOffload")
           ? (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")")
@@ -79,7 +85,7 @@ output:
               : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText(\"tenx_passthrough\")")))
 
   # outputWriteTemplates = true whenever events are encoded (compact-all or soft-drop)
-  writeTemplates: $=yield TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")
+  writeTemplates: $=yield TenXEnv.get("compactReceiverLookupFile") || TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")
 
   # outputDropFilter decides whether a (possibly regulator-marked) object is written.
   # Resolved ONCE here so the soft/hard logic lives next to encodeField instead of
