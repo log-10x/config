@@ -42,10 +42,14 @@ output:
   # where action is the per-service disposition: drop/offload/tier_down/compact/
   # sample/pass; this picks the output FORMAT, while `outputSoftDrop` also flips
   # the stream filter):
-  #   compactReceiverLookupFile set → encoded=shouldEncode() ? encode() : fullText                  (compact the patterns the cap file selects)
-  #   receiverOptimize=true   → encoded=encode()                                                     (compact every event)
   #   outputOffload truthy    → fullText("routeState")                                               (FULL text + marker; for S3 offload, never compacted)
-  #   outputSoftDrop truthy   → encoded=isRoute("compact") ? encode("routeState") : fullText("routeState")  (compact the compact-marked slice; every other action stays fullText so the forwarder routes it by routeState)
+  #   outputSoftDrop truthy   → encoded=(isRoute("compact") || <decide>) ? encode("routeState") : fullText("routeState")  (the compact-marked slice and the patterns <decide> selects; every other action stays fullText so the forwarder routes it by routeState)
+  #   receiverOptimize=true   → encoded=encode()                                                     (compact every event of the source)
+  #   compactReceiverLookupFile set → encoded=shouldEncode() ? encode() : fullText                  (the cap file's per-pattern decision; unlisted patterns follow compactReceiverDefault, which follows receiverOptimize when not set)
+  #   <decide> is shouldEncode() with a cap file, else true under receiverOptimize, else false:
+  #   the source switch compacts every pattern, and the cap file, when set, is the
+  #   per-pattern exception list over it (shouldEncode() reads the row; an unlisted
+  #   pattern compacts under receiverOptimize and follows compactReceiverDefault otherwise).
   #   neither                 → fullText("tenx_passthrough")                                         (receive / hard-drop)
 #
 # Receive mode calls the fullText(...) FUNCTION, not the bare `fullText` field.
@@ -68,21 +72,17 @@ output:
   # string-equality against the action name, NOT boolean truthiness. hard-drop
   # omits dropped events entirely, so it emits no marker (nothing to route).
   encodeField: |-
-    $=yield TenXEnv.get("compactReceiverLookupFile")
-      ? ("encoded=shouldEncode() ? "
-          + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()")
-          + " : "
-          + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText"))
-      : TenXEnv.get("receiverOptimize")
-      ? ("encoded=" + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "encode()"))
-      : (TenXEnv.get("outputOffload")
-          ? (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")")
-          : (TenXEnv.get("outputSoftDrop")
-              ? ("encoded=isRoute(\"compact\") ? "
-                  + (TenXEnv.get("symbolMessageHashField") ? ("encode(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "encode(\"routeState\")")
-                  + " : "
-                  + (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\",\"routeState\")") : "fullText(\"routeState\")"))
-              : (TenXEnv.get("symbolMessageHashField") ? ("fullText(\"" + TenXEnv.get("symbolMessageHashField") + "\")") : "fullText(\"tenx_passthrough\")")))
+    $=yield (function () {
+      var hash = TenXEnv.get("symbolMessageHashField");
+      var enc = function (route) { return hash ? ("encode(\"" + hash + "\"" + (route ? ",\"routeState\"" : "") + ")") : (route ? "encode(\"routeState\")" : "encode()"); };
+      var full = function (route) { return hash ? ("fullText(\"" + hash + "\"" + (route ? ",\"routeState\"" : "") + ")") : (route ? "fullText(\"routeState\")" : "fullText"); };
+      var decide = TenXEnv.get("compactReceiverLookupFile") ? "shouldEncode()" : (TenXEnv.get("receiverOptimize") ? "true" : "false");
+      if (TenXEnv.get("outputOffload")) return full(true);
+      if (TenXEnv.get("outputSoftDrop")) return "encoded=(isRoute(\"compact\") || " + decide + ") ? " + enc(true) + " : " + full(true);
+      if (decide === "true") return "encoded=" + enc(false);
+      if (decide === "false") return hash ? full(false) : "fullText(\"tenx_passthrough\")";
+      return "encoded=" + decide + " ? " + enc(false) + " : " + full(false);
+    })()
 
   # outputWriteTemplates = true whenever events are encoded (compact-all or soft-drop)
   writeTemplates: $=yield TenXEnv.get("compactReceiverLookupFile") || TenXEnv.get("receiverOptimize") || TenXEnv.get("outputSoftDrop")

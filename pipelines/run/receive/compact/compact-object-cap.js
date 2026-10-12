@@ -7,7 +7,7 @@ import { TenXObject, TenXEnv, TenXLookup, TenXConsole, TenXDate, TenXString, Ten
 // Reads a cap-file keyed by `fieldSetKey` (joined from
 // `compactReceiverFieldNames`, the pattern field `symbolMessageField` names).
 // Listed patterns get the entry's `true|false` decision; unlisted patterns
-// fall back to `compactReceiverDefault`.
+// fall back to `compactReceiverDefault`, or compact under `receiverOptimize`.
 //
 // CSV format: pattern_hash,<true|false>[:<untilEpochSec>[:<reason>]]
 //   e.g.  payment_retry_timeout,true:1745856000:OPS-5123
@@ -56,8 +56,11 @@ export class CompactObject extends TenXObject {
 
         if ((!this.isObject) || (this.isRoute("drop"))) return false;
 
+        // Under the source switch (receiverOptimize) an unlisted pattern compacts:
+        // the cap file is then the list of patterns kept as full text.
+        var optimizeRaw = TenXEnv.get("receiverOptimize", false);
         var defaultEncodeRaw = TenXEnv.get("compactReceiverDefault", false);
-        var defaultEncode = (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
+        var defaultEncode = (optimizeRaw == true) || (optimizeRaw == "true") || (defaultEncodeRaw == true) || (defaultEncodeRaw == "true");
 
         // Key on the pattern identity (the symbolMessageField field), matching the
         // rate receiver's rateReceiverFieldNames key so MCP-authored entries
