@@ -1,0 +1,22 @@
+name: Forwarder output expression
+
+on:
+  pull_request:
+    paths:
+      - 'pipelines/run/input/forwarder/config.yaml'
+      - 'tests/forwarder-encode-field.test.mjs'
+      - '.github/workflows/forwarder-config.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  encode-field:
+    name: encodeField cases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test tests/

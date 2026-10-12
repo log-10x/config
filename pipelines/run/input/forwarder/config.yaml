@@ -75,12 +75,12 @@ output:
     $=yield (function () {
       var hash = TenXEnv.get("symbolMessageHashField");
       var enc = function (route) { return hash ? ("encode(\"" + hash + "\"" + (route ? ",\"routeState\"" : "") + ")") : (route ? "encode(\"routeState\")" : "encode()"); };
-      var full = function (route) { return hash ? ("fullText(\"" + hash + "\"" + (route ? ",\"routeState\"" : "") + ")") : (route ? "fullText(\"routeState\")" : "fullText"); };
+      var full = function (route) { return hash ? ("fullText(\"" + hash + "\"" + (route ? ",\"routeState\"" : "") + ")") : (route ? "fullText(\"routeState\")" : "fullText(\"tenx_passthrough\")"); };
       var decide = TenXEnv.get("compactReceiverLookupFile") ? "shouldEncode()" : (TenXEnv.get("receiverOptimize") ? "true" : "false");
       if (TenXEnv.get("outputOffload")) return full(true);
       if (TenXEnv.get("outputSoftDrop")) return "encoded=(isRoute(\"compact\") || " + decide + ") ? " + enc(true) + " : " + full(true);
       if (decide === "true") return "encoded=" + enc(false);
-      if (decide === "false") return hash ? full(false) : "fullText(\"tenx_passthrough\")";
+      if (decide === "false") return full(false);
       return "encoded=" + decide + " ? " + enc(false) + " : " + full(false);
     })()
 
