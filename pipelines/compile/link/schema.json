@@ -29,7 +29,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Token types read from input source/binary files written to output\n\nFilter symbol values to write to [outputSymbolLibraryFile](https://doc.log10x.com/compile/link/#outputsymbollibraryfile) based on their [context](https://doc.log10x.com/run/transform/symbol/#contexts). This option reduces the size of the output symbol library file by omitting symbol types not required at run time.  For possible values, see: [contexts](https://doc.log10x.com/run/transform/symbol/#contexts). (Default: [\"class\",\"enum\",\"log\"])",
+          "markdownDescription" : "Token types read from input source/binary files written to output\n\nFilter symbol values to write to [outputSymbolLibraryFile](https://doc.log10x.com/compile/link/#outputsymbollibraryfile) based on their [context](https://doc.log10x.com/run/transform/symbol/#contexts). This option reduces the size of the output symbol library file by omitting symbol types not required at run time.  For possible values, see: [contexts](https://doc.log10x.com/run/transform/symbol/#contexts). The default leaves out `exec`, so a library compiled with it holds no strings from binaries; the default library that ships with the engine includes them. Add `exec` to keep them. (Default: [\"class\",\"enum\",\"log\"])",
           "items" : {
             "type" : "string"
           },

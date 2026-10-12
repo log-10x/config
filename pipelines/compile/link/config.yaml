@@ -101,7 +101,9 @@ symbol:
 
   # 'types' controls the types of symbols written into 'outputSymbolLibraryFile'
   #  for reflective use at runtime.
-  #  Narrowing the this list reduces the size of the output 10x symbols file. Possible values:
+  #  Narrowing the this list reduces the size of the output 10x symbols file. 'exec' is left
+  #  out, so a library compiled with this file holds no strings from binaries; the default
+  #  library that ships with the engine includes them. Possible values:
   types:
     - class   # source code class/interface name (e.g. 'AcmeLogic')
     - enum    # source code enum/literal name (e.g. 'severity: {error,warn,debug}')
