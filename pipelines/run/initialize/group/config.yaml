@@ -22,6 +22,7 @@ group:
   # Unmatched lines default to false, indicating they are group children (continuation-by-default).
   indicators:
     - '{'                 # Indicates a pretty-printed JSON/object log body (e.g., payment '{ resource: {...} }'); the opening brace heads the multi-line object so it groups as one event. Matches the log body only, grouping reads inputField, not the wrapped envelope.
+    - "\x1b[2m"           # Indicates a line that opens in ANSI dim, the way Rust tracing prints the timestamp of a coloured line (e.g., "<ESC>[2m2026-10-14T13:54:02.350758Z<ESC>[0m <ESC>[32m INFO<ESC>[0m ..."). The escape code is glued to the year, so the timestamp is not recognised and the line needs this indicator to head its own event.
     - '192.'              # Indicates a private IP address, common in web server logs (e.g., "192.168.1.1 - - [...]")
     - '10.'               # Indicates a private IP range, often in Kubernetes or internal network logs (e.g., "10.244.0.125 - - [...]")
     - '172.'              # Indicates a private IP range, typical in enterprise network logs (e.g., "172.16.0.1 - - [...]")
