@@ -63,6 +63,14 @@ rateReceiver:
   #  fraction of a chatty container, not an outlier.
   minSharePercent: 0.05
 
+  # 'defaultAction' is the action the over-cap excess of a container with no
+  #  row in 'actionLookupFile' takes: 'pass', 'offload', 'tier_down', 'compact',
+  #  'sample' or 'drop'. 'pass' leaves the excess in place, so only listed
+  #  containers act on theirs; an explicit row still wins. A value outside the
+  #  six logs a warning at load and 'pass' applies. Read by the regulators that
+  #  consult 'actionLookupFile'.
+  defaultAction: pass
+
   # 'severityFloors' is the minimum retention per severity level, applied as an
   #  absolute floor that BEATS the share cap: even a pattern over its cap keeps at
   #  least this fraction of each level. That floor share of the excess is what makes
@@ -193,8 +201,8 @@ rateReceiver:
   # (default), 'offload' (to customer S3), 'tier_down' (SIEM cheap tier),
   # 'compact' (lossless encode), 'sample', or 'drop'. The byte cap above still
   # decides where the excess starts; the action only decides what happens to it.
-  # A capped service with no row passes, and a cap file with no actions file
-  # loads an empty table: a cap alone never loses a line.
+  # A capped service with no row takes 'defaultAction' above ('pass' unless
+  # set), and a cap file with no actions file loads an empty table.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,action

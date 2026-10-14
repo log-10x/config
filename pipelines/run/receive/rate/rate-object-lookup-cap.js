@@ -43,7 +43,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
-        var floor = floorRaw ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
         // ---- 1. mute file (FILE WINS) ----
         var hasActiveMute = false;
@@ -119,11 +119,12 @@ export class rateReceiverLookupCapObject extends TenXObject {
 
         // Over-budget: the per-service action lookup (keyed by the same
         // container as the cap) decides the disposition of the excess. A
-        // capped service with no action row passes: the cap alone never
-        // loses a line. The forwarder recipe + the output encodeField honor
+        // capped service with no action row takes rateReceiverDefaultAction,
+        // pass unless set. The forwarder recipe + the output encodeField honor
         // offload/tier_down/compact/sample/drop.
         // Entry shape (mirrors the cap entry): <action>[:<untilEpochSec>[:<reason>]].
-        var action = "pass";
+        var action = TenXEnv.get("rateReceiverDefaultAction", "pass");
+        if (action != "offload" && action != "tier_down" && action != "compact" && action != "sample" && action != "drop") action = "pass";
         if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
             var actionEntry = TenXLookup.get("rateReceiverActionLookupFile", container);
             if (actionEntry) {
