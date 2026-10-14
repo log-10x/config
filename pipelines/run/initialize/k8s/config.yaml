@@ -32,3 +32,14 @@ k8s:
   # attribution case without the deploy-churn cost. To opt in to per-pod resolution, set this
   # to a concrete field name (e.g. 'k8s_pod'); the 'tenx_user_process' alias activates with it.
   podNameField: ""
+
+  # 'teamLabel' names a pod label whose value is the team that owns the container, for
+  # example 'team' or 'app.kubernetes.io/part-of'. Its value goes into 'teamField' and joins
+  # the metric labels. It adds series only where one container name runs in several teams'
+  # pods. Empty reads no label.
+  teamLabel: ""
+
+  # 'teamField' specifies the name of the field in which to assign the team label's value.
+  # An event whose pod carries no such label gets no field, and its Datadog series carry
+  # the tag with an empty value.
+  teamField: tenx_team

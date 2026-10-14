@@ -114,7 +114,7 @@ export class rateReceiverLookupObject extends TenXObject {
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
-        var floor = floorRaw ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
 
         // ---- 1. mute file (FILE WINS) ----
         var hasActiveMute = false;
