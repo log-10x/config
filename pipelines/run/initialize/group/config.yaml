@@ -91,4 +91,15 @@ group:
     - 'KafkaServer:'      # Indicates a Kafka server log (e.g., "KafkaServer: Starting Kafka server")
     - 'Redis:'            # Indicates a Redis server log (e.g., "Redis: Server initialized")
 
-  
+  # 'childLabels' lists labels that mark a line as a child of the event above it, even when the line
+  # has its own timestamp. A line's label is the word before its first colon and two spaces, at the
+  # start of the line or after a space, a colon or a closing bracket. PostgreSQL writes its log prefix
+  # and a label on each line of one error (e.g., "2026-10-15 09:12:01.311 UTC [4711] DETAIL:  Key (id)=(42)
+  # already exists."), so these lines join the ERROR line above them as one event.
+  childLabels:
+    - 'DETAIL'            # PostgreSQL detail of the error or message above (e.g., "... [4711] DETAIL:  Key (id)=(42) already exists.")
+    - 'HINT'              # PostgreSQL hint for the error above (e.g., "... [4711] HINT:  No function matches the given name and argument types.")
+    - 'CONTEXT'           # PostgreSQL call context of the error above (e.g., "... [4711] CONTEXT:  PL/pgSQL function add_order() line 3 at RAISE")
+    - 'STATEMENT'         # PostgreSQL statement that raised the error above (e.g., "... [4711] STATEMENT:  INSERT INTO orders (id) VALUES (42);")
+    - 'QUERY'             # PostgreSQL internal query of the error above (e.g., "... [4711] QUERY:  SELECT 1/0")
+    - 'LOCATION'          # PostgreSQL source location of the error above, with log_error_verbosity verbose (e.g., "... [4711] LOCATION:  _bt_check_unique, nbtinsert.c:666")
