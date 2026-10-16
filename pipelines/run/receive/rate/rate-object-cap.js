@@ -128,10 +128,12 @@ export class rateReceiverCapObject extends TenXObject {
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
         if (firstSeen == 0) {
-            TenXCounter.getAndSet("rg_seen_" + container, now);
-            return true;
+            // getAndSet is atomic: one event gets 0 back, a racing one gets the stored time.
+            firstSeen = TenXCounter.getAndSet("rg_seen_" + container, now);
+            if (firstSeen == 0) firstSeen = now;
         }
-        if ((now - firstSeen) < TenXEnv.get("rateReceiverWarmupMs", 300000)) return true;
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
+        if (warmupMs > 0 && (now - firstSeen) < warmupMs) return true;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
         if ((patternBytes + bytes) <= absoluteCap) return true;
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
