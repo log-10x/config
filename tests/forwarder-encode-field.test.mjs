@@ -1,7 +1,8 @@
 // The forwarder output expression, evaluated for every switch combination.
-// `encodeField` in pipelines/run/input/forwarder/config.yaml is a JavaScript
-// snippet the engine evaluates once at launch with TenXEnv; this test runs
-// the same snippet with a stub TenXEnv and checks the string it yields.
+// `encodeField` in pipelines/run/input/forwarder/config.yaml is one expression
+// the engine compiles as Java at launch, so it may use only ternaries, string
+// concatenation and calls. This test runs the same expression with a stub
+// TenXEnv and checks the string it yields.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,6 +16,10 @@ assert.ok(block, 'encodeField block found');
 const script = block[1].split('\n').map((l) => l.slice(4)).join('\n').trim();
 assert.ok(script.startsWith('$=yield '), 'the block is a $=yield expression');
 const expr = script.slice('$=yield '.length);
+
+test('the expression has no statement syntax the engine cannot compile', () => {
+  assert.doesNotMatch(expr, /\bfunction\b|\bvar\b|\blet\b|\bconst\b|=>|===|!==|[;{}]/);
+});
 
 function evaluate(env) {
   const TenXEnv = { get: (k, d) => (k in env ? env[k] : d) };
