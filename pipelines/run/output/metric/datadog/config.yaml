@@ -19,11 +19,12 @@ datadog:
   
     # --------------------------- Connection Options --------------------------
 
-    # 'apiKey' and 'applicationKey' set the Datadog API and app keys (required).
+    # 'apiKey' sets the Datadog API key (required). 'applicationKey' is optional: the
+    #  output publishes without it, and with 'count' series it lets the output set units.
     #  To learn more see: https://docs.datadoghq.com/account_management/api-app-keys/
   - apiKey: $=TenXEnv.get("DD_API_KEY")         # (EnvVar REQUIRED)
 
-    applicationKey: $=TenXEnv.get("DD_APP_KEY") # (EnvVar REQUIRED)
+    applicationKey: $=TenXEnv.get("DD_APP_KEY") # (EnvVar optional)
 
     # 'uri' sets the Datadog site address to which to connect.
     #  'DD_SITE' is the bare site domain (e.g. 'us5.datadoghq.com', 'datadoghq.eu'),
@@ -33,11 +34,22 @@ datadog:
 
     # ---------------------------- Publish Options ----------------------------
 
+    # 'metricType' sets how counters reach Datadog. 'distribution' posts distribution
+    #  points, which Datadog merges across every node sending the same tag set, so the
+    #  fleet total is exact with no host tag. 'count' posts count series, which Datadog
+    #  keeps one per second per tag set, so nodes sharing a tag set overwrite each other.
+    #  To learn more see: https://docs.datadoghq.com/metrics/distributions/
+    metricType: distribution
+
+    # 'metricPrefix' is prepended to each distribution's name:
+    #  log10x.emitted_events_summaryBytes, log10x.all_events_summaryVolume, and so on.
+    metricPrefix: log10x.
+
     # 'descriptions' sets whether to send meter descriptions to Datadog
     #  Turn this off to minimize the amount of data sent on each write
     descriptions: false
 
-    # 'step' sets the interval to send metrics to CloudWatch (e.g., '1m').
+    # 'step' sets the interval to send metrics to Datadog (e.g., '1m').
     #  To learn more see: https://micrometer.io/docs/concepts#rate-aggregation
     step: 5s
 
@@ -56,11 +68,12 @@ datadog:
       - summaryTotals
 
     # 'tagFields' sets the TenXSummary fields used as the counter tag dimension values.
-    #  Datadog counts one custom metric per distinct tag set, so this list carries the
-    #  pattern, where it ran and the team that owns it (when the k8s team label is set),
-    #  and nothing that names one node or one process. The same set on every node, so the
-    #  count does not grow with the fleet. A listed field that no summary carries is sent
-    #  as a tag with an empty value, so the team field is listed only when the label is set.
+    #  Datadog bills each distinct tag set, so this list carries the pattern, where it
+    #  ran and the team that owns it (when the k8s team label is set), and nothing that
+    #  names one node or one process. Every node sends the same sets and Datadog merges
+    #  their distribution points, so the count does not grow with the fleet. A listed
+    #  field that no summary carries is sent as a tag with an empty value, so the team
+    #  field is listed only when the label is set.
     tagFields:
       - message_pattern
       - tenx_hash
@@ -74,9 +87,15 @@ datadog:
     # 'topSeries' keeps the output to the tag sets with the most bytes, ranked on the
     #  summaryBytes counter as the series accumulate. A set outside the top keeps
     #  accumulating and is published once it enters it. 0 publishes every set. With
-    #  two aggregators and two counters, 200 sets are 800 custom metrics, inside a
-    #  Pro plan's allotment from ten hosts up.
+    #  two aggregators and two counters, 200 sets are 800 distributions, billed as
+    #  4,000 custom metrics on any fleet size, inside a Pro plan's allotment from 40
+    #  hosts up.
     topSeries: 200
+
+    # 'maxCardinality' caps the counters the output keeps; above it, counters idle for a
+    #  few seconds are dropped, with the counts of the step in progress. 200 tag sets
+    #  with two aggregators and two counters are 800 counters, so the cap sits above it.
+    maxCardinality: 2000
 
     # 'tagFieldNames' allows setting custom names to aggregated fields for metrics reporting.
     #  Defaults to https://doc.log10x.com/run/initialize/#metricFieldNames

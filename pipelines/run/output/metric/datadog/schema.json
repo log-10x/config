@@ -88,6 +88,17 @@
             "markdownDescription" : "Number of tag sets with the most bytes to publish\n\nKeeps the output to the tag sets with the most bytes, ranked on the summaryBytes counter as the series accumulate. A set outside the top keeps accumulating and is published once it enters it. 0 publishes every set.",
             "default" : 200
           },
+          "metricType" : {
+            "type" : [ "string", "null" ],
+            "enum" : [ "distribution", "count", null ],
+            "markdownDescription" : "How counters are published to Datadog, as distribution points or count series\n\n`distribution` posts each step's value as a distribution point; Datadog merges the points from every node that sends the same tag set, so the total is exact on any number of nodes with no host tag. `count` posts count series, which Datadog keeps one per second per tag set, so nodes sharing a tag set overwrite each other. (Default: distribution)",
+            "default" : "distribution"
+          },
+          "metricPrefix" : {
+            "type" : [ "string", "null" ],
+            "markdownDescription" : "Prefix prepended to each distribution's metric name\n\nFor example `log10x.emitted_events_summaryBytes`. Datadog does not accept a name already used by another metric type, so the prefix keeps the distributions apart from count series posted under the bare names. (Default: log10x.)",
+            "default" : "log10x."
+          },
           "descriptions" : {
             "type" : [
               "boolean",
