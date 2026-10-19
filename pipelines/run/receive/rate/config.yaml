@@ -2,11 +2,11 @@
 
 # 🔟❎ 'run' rate regulator configuration
 
-# The rate regulator prevents any single log pattern from dominating a container's
-# volume. For each event it computes the pattern's share of its container's recent
-# bytes and trims the pattern back once it crosses a fixed cap. Severity floors keep
-# errors/warnings flowing; an optional mute file overrides the regulator for
-# explicitly declared patterns.
+# The rate regulator holds each log pattern in a container to a cap per window, and
+# each container to an optional total per window, counted in bytes or in events.
+# Lines over a cap or a total take the container's action; error-class levels keep
+# a fixed count of lines per pattern per window. An optional mute file overrides the
+# regulator for explicitly declared patterns.
 # To learn more see https://doc.log10x.com/run/receive/rate/
 
 # Set the 10x pipeline to 'run'
@@ -38,62 +38,71 @@ rateReceiver:
   #  window is ~4.25 minutes.
   resetIntervalMs: $=parseDuration("4m")
 
-  # 'absoluteCap' is the fleet-wide trigger: the byte budget for a single pattern
-  #  per container within the current window, past which the regulator engages.
-  #
-  #  The cap is NOT a hard bound. The severity floor check below runs after the cap
-  #  check, so above the cap a flood still passes at the floor rate (ERROR and
-  #  CRITICAL half, WARN three tenths, everything else a tenth). The worst case for
-  #  one pattern in one container per window is the cap plus the floor share of
-  #  everything above it.
+  # 'unit' is what the caps, the totals and the share guard count: 'bytes' (each
+  #  line counts its UTF-8 size) or 'events' (each line counts 1). Write the cap
+  #  and total files in the same unit. Any other value stops the launch.
+  unit: bytes
+
+  # 'absoluteCap' is the fleet-wide cap: the budget, in 'unit', for a single
+  #  pattern per container within the current window. Past it, lines take the
+  #  container's action, except the 'baselineCount' sample and, for the levels
+  #  in 'keepCounts', that many lines per pattern per window.
   #
   #  Default 0 = disabled. Three customer configurations are first-class:
-  #    - Per-container only: leave 'absoluteCap' unset, set 'capLookupFile' below.
+  #    - Per-container only: leave 'absoluteCap' unset, set 'capLookup.file' below.
   #      Listed containers get the file's cap; unlisted containers are
   #      unregulated by the absolute cap. Most selective.
   #    - Fleet-wide only: set 'absoluteCap' to a positive integer (e.g., 10485760
   #      for 10 MB). Applies to every container the regulator sees.
-  #    - Both: per-container entries in 'capLookupFile' override the fleet-wide
+  #    - Both: per-container entries in 'capLookup.file' override the fleet-wide
   #      cap; unlisted containers fall back to the fleet-wide cap (safety floor).
   # absoluteCap: 10485760   # 10 MB
 
-  # 'minSharePercent' is the sanity guard against false positives on legitimately
-  #  high-volume containers. If a pattern is over `absoluteCap` BUT below this
-  #  share of its container's volume, it is left alone -- the pattern is a small
-  #  fraction of a chatty container, not an outlier.
-  minSharePercent: 0.05
+  # 'minSharePercent' is an optional guard for legitimately high-volume
+  #  containers. If a pattern is over its cap BUT below this share of its
+  #  container's volume, it is left alone. 0 turns the guard off, so a cap holds
+  #  every pattern it is set for.
+  minSharePercent: 0
 
-  # 'defaultAction' is the action the over-cap excess of a container with no
-  #  row in 'actionLookupFile' takes: 'pass', 'offload', 'tier_down', 'compact',
-  #  'sample' or 'drop'. 'pass' leaves the excess in place, so only listed
-  #  containers act on theirs; an explicit row still wins. A value outside the
-  #  six logs a warning at load and 'pass' applies. Read by the regulators that
+  # 'defaultAction' is the action the held lines of a container with neither its
+  #  own row nor a '*' row in 'actionLookupFile' take: 'pass', 'offload',
+  #  'tier_down', 'compact', 'sample' or 'drop'. 'pass' leaves them in place, so
+  #  only the containers the file covers act on theirs. A value outside the six
+  #  logs a warning at load and 'pass' applies. Read by the regulators that
   #  consult 'actionLookupFile'.
   defaultAction: pass
 
-  # 'severityFloors' is the minimum retention per severity level, applied as an
-  #  absolute floor that BEATS the share cap: even a pattern over its cap keeps at
-  #  least this fraction of each level. That floor share of the excess is what makes
-  #  the cap a trigger rather than a bound. Floor-map keys must match the level
-  #  vocabulary emitted by the level enrichment.
+  # 'keepCounts' is the number of lines per pattern per window that pass for a
+  #  level once the pattern is over its cap or its container is over its total,
+  #  also under a mute file entry. A listed level skips its 'severityFloors' draw.
+  #  Keys must match the level vocabulary emitted by the level enrichment. Keep at
+  #  least one entry: like 'severityFloors', an empty list stops the launch.
+  keepCounts:
+    - ERROR=50
+    - CRITICAL=50    # the level enrichment maps fatal/critical -> CRITICAL
+    - FATAL=50       # kept for forwarders whose level vocabulary emits FATAL
+
+  # 'severityFloors' is the fraction of each level kept at random once a pattern is
+  #  over its cap, for levels not in 'keepCounts'. 0 keeps none, so the cap holds.
+  #  Floor-map keys must match the level vocabulary emitted by the level enrichment.
   severityFloors:
-    - TRACE=0.1
-    - DEBUG=0.1
-    - INFO=0.1
-    - WARN=0.3
-    - ERROR=0.5
-    - CRITICAL=0.5   # the level enrichment maps fatal/critical -> CRITICAL
-    - FATAL=0.5      # kept for forwarders whose level vocabulary emits FATAL
+    - TRACE=0
+    - DEBUG=0
+    - INFO=0
+    - WARN=0
+    - ERROR=0        # 'keepCounts' governs ERROR, CRITICAL and FATAL
+    - CRITICAL=0
+    - FATAL=0
 
   # 'minRetentionThreshold' is the floor used for any level not present in
   #  'severityFloors'.
-  minRetentionThreshold: 0.1
+  minRetentionThreshold: 0
 
-  # 'warmupMs' is the per-instance grace period before the regulator starts capping a
-  #  newly-seen container, giving the per-pattern sample counts time to fill. Scope is
-  #  per regulator instance, so a regulator restart restarts the window. See
+  # 'warmupMs' is an optional per-instance grace period before the regulator starts
+  #  capping a newly-seen container. Scope is per regulator instance, so a regulator
+  #  restart restarts the window. 0 caps a container from its first line. See
   #  https://doc.log10x.com/run/receive/rate/#warmup for the operator guide.
-  warmupMs: $=parseDuration("5m")
+  warmupMs: 0
 
   # 'baselineCount' is the number of events of each pattern kept per window
   #  regardless of share, so even a heavily-capped pattern leaves a forensic sample.
@@ -134,13 +143,16 @@ rateReceiver:
 
   # Optional declarative per-container cap file keyed by the value of
   # 'containerField' (the k8s container name by default). Each entry assigns a
-  # byte cap to a specific container; the file wins per-event over 'absoluteCap'
-  # above. Listed containers get the file's cap; unlisted containers fall back
-  # to 'absoluteCap' (or to no cap, when 'absoluteCap' is unset/0).
+  # cap, in 'unit', to a specific container; the file wins per-event over
+  # 'absoluteCap' above. A row keyed '*' applies to every container without a
+  # row of its own. Unlisted containers with no '*' row fall back to
+  # 'absoluteCap' (or to no cap, when 'absoluteCap' is unset/0). A row of 0
+  # exempts its container.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,cap
-  #   <container>,<bytes>[:<untilEpochSec>][:<reason>]
+  #   <container>,<cap>[:<untilEpochSec>][:<reason>]
+  #   *,<cap>[:<untilEpochSec>][:<reason>]
   #
   # Intended to be managed via GitOps + the log10x_configure_engine MCP tool,
   # which derives per-container caps from a target percent or a monthly dollar
@@ -197,25 +209,49 @@ rateReceiver:
 
   # Optional declarative per-SERVICE action file, keyed by the value of
   # 'containerField' (the k8s container name = the service). Each entry assigns
-  # the disposition of that service's regulator-identified excess: 'pass'
-  # (default), 'offload' (to customer S3), 'tier_down' (SIEM cheap tier),
-  # 'compact' (lossless encode), 'sample', or 'drop'. The byte cap above still
-  # decides where the excess starts; the action only decides what happens to it.
-  # A capped service with no row takes 'defaultAction' above ('pass' unless
-  # set), and a cap file with no actions file loads an empty table.
+  # the disposition of that service's held lines: 'pass' (default), 'offload'
+  # (to customer S3), 'tier_down' (SIEM cheap tier), 'compact' (lossless
+  # encode), 'sample', or 'drop'. The cap and the total decide which lines are
+  # held; the action only decides what happens to them. A row keyed '*' applies
+  # to every service without a row of its own; a service with neither takes
+  # 'defaultAction' above ('pass' unless set), and a cap file with no actions
+  # file loads an empty table.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,action
   #   <container>,<action>[:<untilEpochSec>][:<reason>]
+  #   *,<action>[:<untilEpochSec>][:<reason>]
   #
   # Managed via GitOps + the log10x_configure_engine MCP tool, which derives the
   # per-service action from the per-pattern action plan and opens a PR against
   # this file (a sibling of the cap file in the same ConfigMap).
   # 'actionLookupFile' is the per-service action file path. Declared as a FLAT
-  #  key (like 'fieldNames' / 'minSharePercent') so it maps to the
-  #  rateReceiverActionLookupFile option -- a new nested sub-group (e.g.
-  #  actionLookup.file) is NOT recognized by the config-to-option mapper, even
-  #  though capLookup.file is (capLookup is special-cased). Always set (default
-  #  below, sibling to the cap file) so the cap-variant regulator can read it.
+  #  key (like 'fieldNames' / 'minSharePercent'): the schema generator nests a
+  #  group only when two or more options share its prefix, and this option is
+  #  the only one under 'actionLookup'. Always set (default below, sibling to the
+  #  cap file) so the cap-variant regulator can read it.
   #  ACTION_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
   actionLookupFile: $=TenXEnv.get("ACTION_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")
+
+  # ---------------------------- Total File Options ---------------------------
+
+  # Optional declarative per-SERVICE total file, keyed by the value of
+  # 'containerField'. Each entry bounds what the service passes per window on
+  # this node, in 'unit'. Once the service has seen more than its total in a
+  # window, every pattern's cap scales by total / service volume, so its largest
+  # patterns are held first; once the lines it passed reach the total, every
+  # further line takes the service's action. The 'baselineCount' sample and the
+  # 'keepCounts' lines still pass and count toward the total, so an error storm
+  # can exceed it by that much. Read by the cap-file regulators, for containers
+  # with a cap. A row keyed '*' applies to every service without a row of its
+  # own; a row of 0 exempts its service. A missing file loads as an empty table.
+  #
+  # File format (CSV; header row + one comma-separated entry per row):
+  #   container,total
+  #   <container>,<total>[:<untilEpochSec>][:<reason>]
+  #   *,<total>[:<untilEpochSec>][:<reason>]
+  #
+  # 'totalLookupFile' is the per-service total file path, a FLAT key like
+  #  'actionLookupFile', defaulting to the sibling of the cap file.
+  #  TOTAL_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
+  totalLookupFile: $=TenXEnv.get("TOTAL_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/totals.csv")

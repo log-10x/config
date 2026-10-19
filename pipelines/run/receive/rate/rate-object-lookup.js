@@ -20,25 +20,25 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 //      groupFilters 4-way ternary.
 //
 // WHAT THE CAP DOES (cap variants): once a log pattern has spent its resolved
-// cap bytes in a container within the `rateReceiverResetIntervalMs` window,
-// the regulator engages for that pattern, UNLESS a mute file entry overrides
-// for that pattern (file wins). The cap is NOT a hard bound: the severity
-// floor (step 7 below) runs after the cap (step 5), so above the cap a flood
-// still passes at the floor rate, and the worst case for one pattern in one
-// container per window is the cap plus the floor share of everything above it.
+// cap in a container within the `rateReceiverResetIntervalMs` window, counted
+// in `rateReceiverUnit`, its further lines are held, UNLESS a mute file entry
+// overrides for that pattern (file wins).
 //
 // Decision order per event:
 //   1. Mute file (FILE WINS): if the pattern is listed and active in the
-//      file, the file's `<sampleRate>` decides -- max(sampleRate, severity
-//      floor) so a 0.0 mute never silences ERROR/CRITICAL. Expired/malformed
-//      entries fall through to the regulator.
+//      file, levels in `rateReceiverKeepCounts` pass their first K lines per
+//      pattern per window, so a 0.0 mute never silences ERROR/CRITICAL; the
+//      file's `<sampleRate>` decides the rest, as max(sampleRate, severity
+//      floor). Expired/malformed entries fall through to the regulator.
 //   2. Cap resolution (env-var only here): if no cap, retain and skip the
 //      regulator path entirely (no counters touched).
-//   3. Warmup: brand-new container left unregulated for the grace period.
+//   3. Warmup: container left unregulated for the grace period (default 0, off).
 //   4. Baseline: first N events of each (pattern, container) per window kept.
-//   5. Absolute cap (primary): kept if patternBytes (after this event) <= cap.
-//   6. Share guard (sanity): kept if pattern is < minSharePercent of container.
-//   7. Severity floor: kept with probability = severity floor; otherwise drop.
+//   5. Absolute cap: kept if the pattern's units (after this event) <= cap.
+//   6. Share guard: kept if pattern is < minSharePercent of container (default 0, off).
+//   7. Levels in `rateReceiverKeepCounts`: the first K held lines per pattern
+//      per window kept; other levels kept with probability = severity floor
+//      (0 as shipped); otherwise drop.
 
 export class rateReceiverLookupInput extends TenXInput {
 
@@ -66,10 +66,16 @@ export class rateReceiverLookupInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
 
         if (!(warmupMs >= 0)) {
             throw new Error("the 'rateReceiverWarmupMs' argument must be >= 0, received: " + warmupMs);
+        }
+
+        var unit = TenXEnv.get("rateReceiverUnit", "bytes");
+
+        if (unit != "bytes" && unit != "events") {
+            throw new Error("the 'rateReceiverUnit' argument must be 'bytes' or 'events', received: " + unit);
         }
 
         var maxShare = TenXEnv.get("rateReceiverMaxSharePerFieldSet", 0.2);
@@ -111,10 +117,20 @@ export class rateReceiverLookupObject extends TenXObject {
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
         if (!fieldSetKey) return true;
 
+        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
+        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
+        if (!container) container = "__node__";
+
+        var key = fieldSetKey + "@" + container;
+        var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
+
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
-        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0);
+        var keepMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverKeepCounts"));
+        var keepRaw = TenXMap.get(keepMap, level, "");
+        var keepCount = TenXString.length(keepRaw) > 0 ? TenXMath.parseDouble(keepRaw) : -1;
 
         // ---- 1. mute file (FILE WINS) ----
         var hasActiveMute = false;
@@ -133,26 +149,23 @@ export class rateReceiverLookupObject extends TenXObject {
                 }
             }
         }
-        if (hasActiveMute) {
-            if (TenXMath.random() > muteThreshold) this.route("drop");
-            return true; // mute decision is terminal (marked if over threshold)
-        }
+        // Under a mute, the levels with a keep count pass their first K lines
+        // per pattern per window; the mute's sample rate decides the rest.
+        var muteKept = -1;
+        if (hasActiveMute && keepCount >= 0) muteKept = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (hasActiveMute && muteKept >= 0 && muteKept < keepCount) return true;
+        if (hasActiveMute && TenXMath.random() > muteThreshold) this.route("drop");
+        if (hasActiveMute) return true; // mute decision is terminal (marked if over threshold)
 
         // ---- regulator path (env-var cap only; no cap file in this variant) ----
-
-        // Inline the env lookup; a local var passed to this.get() is treated as an event field.
-        var container = this.get(TenXEnv.get("rateReceiverContainerField"));
-        if (!container) container = "__node__";
 
         var absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         if (absoluteCap == 0) return true;
 
-        var key = fieldSetKey + "@" + container;
-        var bytes = this.utf8Size();
+        var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
 
-        var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
-        var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
-        var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
+        var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
+        var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
         var now = TenXDate.now();
@@ -162,14 +175,19 @@ export class rateReceiverLookupObject extends TenXObject {
             firstSeen = TenXCounter.getAndSet("rg_seen_" + container, now);
             if (firstSeen == 0) firstSeen = now;
         }
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
         if (warmupMs > 0 && (now - firstSeen) < warmupMs) return true;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
-        if ((patternBytes + bytes) <= absoluteCap) return true;
-        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
-        var share = (patternBytes + bytes) / (containerBytes + bytes);
+        if ((patternUnits + units) <= absoluteCap) return true;
+        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
+        var share = (patternUnits + units) / (containerUnits + units);
         if (share < minSharePercent) return true;
-        if (TenXMath.random() < floor) return true;
+        if (keepCount < 0 && TenXMath.random() < floor) return true;
+
+        // Error-class levels with a keep count: the first K held lines of a pattern pass each window.
+        var keptBefore = -1;
+        if (keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (keptBefore >= 0 && keptBefore < keepCount) return true;
 
         this.route("drop");
         return true;

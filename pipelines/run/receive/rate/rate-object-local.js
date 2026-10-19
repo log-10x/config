@@ -30,28 +30,32 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXConso
 // TenXLookup.get when the table is not registered, regardless of runtime
 // if-guards. The 4-class cartesian is the structurally honest answer.
 //
-// WHAT THE CAP DOES (the cap variants): once a log pattern has spent its
-// resolved cap bytes in a container within the `rateReceiverResetIntervalMs`
-// window, the regulator engages for that pattern. The cap is NOT a hard
-// bound: step 5 below runs after step 3, so above the cap a flood still
-// passes at the floor rate (ERROR and CRITICAL half, WARN three tenths,
-// everything else a tenth), and the worst case for one pattern in one
-// container per window is the cap plus the floor share of everything above
-// it. Cap resolution priority:
-//   1. `rateReceiverCapLookupFile` (cap-file variants only)
+// WHAT THE CAP DOES: once a log pattern has spent its resolved cap in a
+// container within the `rateReceiverResetIntervalMs` window, counted in
+// `rateReceiverUnit` (bytes or events), its further lines are held. Cap
+// resolution priority:
+//   1. `rateReceiverCapLookupFile` (cap-file variants only): the container's
+//      row, then the `*` row
 //   2. `rateReceiverAbsoluteCap` env var (this variant)
 //   3. No cap: the over-cap branch is skipped, event retained, no counter
 //      state accumulated. Protection is strictly opt-in.
+// The cap-file variants also read a per-service total
+// (`rateReceiverTotalLookupFile`) and route held lines by the action file.
 //
 // Decision order per event (only runs when a cap IS resolved):
 //   1. Warmup: container left unregulated for `warmupMs` after this regulator
-//      instance first sees its events (per-instance, not per container birth --
-//      a regulator restart restarts the window). Default 5 min.
+//      instance first sees its events (per-instance). Default 0, off.
 //   2. Baseline: first `baselineCount` events of each pattern kept per
 //      window for forensic visibility.
-//   3. ABSOLUTE CAP (primary trigger): under cap -> keep.
-//   4. SHARE GUARD: pattern is small share of a chatty container -> keep.
-//   5. Severity floor wins over cap: keep with probability = floor.
+//   3. Cap: under the cap (scaled down by the total in the cap-file variants)
+//      -> keep.
+//   4. Share guard: pattern below `minSharePercent` of its container -> keep.
+//      Default 0, off.
+//   5. Levels in `rateReceiverKeepCounts`: the first K held lines of a pattern
+//      per window -> keep. Other levels: keep with probability = floor
+//      (`rateReceiverSeverityFloors`, 0 as shipped).
+//   6. Otherwise the line is held: marked drop here, the container's action in
+//      the cap-file variants.
 //
 // ENGINE NOTES:
 //   - Counter keyspace is bounded by AtomicCounterRegistry (~262K LRU);
@@ -87,10 +91,16 @@ export class rateReceiverInput extends TenXInput {
             throw new Error("the 'rateReceiverResetIntervalMs' argument must be at least 60000 (1 minute), received: " + resetIntervalMs);
         }
 
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
 
         if (!(warmupMs >= 0)) {
             throw new Error("the 'rateReceiverWarmupMs' argument must be >= 0, received: " + warmupMs);
+        }
+
+        var unit = TenXEnv.get("rateReceiverUnit", "bytes");
+
+        if (unit != "bytes" && unit != "events") {
+            throw new Error("the 'rateReceiverUnit' argument must be 'bytes' or 'events', received: " + unit);
         }
 
         var maxShare = TenXEnv.get("rateReceiverMaxSharePerFieldSet", 0.2);
@@ -132,16 +142,19 @@ export class rateReceiverObject extends TenXObject {
         if (absoluteCap == 0) return true;
 
         var key = fieldSetKey + "@" + container;
-        var bytes = this.utf8Size();
+        var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
 
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
-        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0);
+        var keepMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverKeepCounts"));
+        var keepRaw = TenXMap.get(keepMap, level, "");
+        var keepCount = TenXString.length(keepRaw) > 0 ? TenXMath.parseDouble(keepRaw) : -1;
 
         var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
-        var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
-        var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
+        var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
+        var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
         var now = TenXDate.now();
@@ -151,14 +164,19 @@ export class rateReceiverObject extends TenXObject {
             firstSeen = TenXCounter.getAndSet("rg_seen_" + container, now);
             if (firstSeen == 0) firstSeen = now;
         }
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
         if (warmupMs > 0 && (now - firstSeen) < warmupMs) return true;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
-        if ((patternBytes + bytes) <= absoluteCap) return true;
-        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
-        var share = (patternBytes + bytes) / (containerBytes + bytes);
+        if ((patternUnits + units) <= absoluteCap) return true;
+        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
+        var share = (patternUnits + units) / (containerUnits + units);
         if (share < minSharePercent) return true;
-        if (TenXMath.random() < floor) return true;
+        if (keepCount < 0 && TenXMath.random() < floor) return true;
+
+        // Error-class levels with a keep count: the first K held lines of a pattern pass each window.
+        var keptBefore = -1;
+        if (keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (keptBefore >= 0 && keptBefore < keepCount) return true;
 
         this.route("drop");
         return true;

@@ -6,17 +6,22 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 //
 // One of FOUR regulator-decision classes split across the (mute, cap)
 // cartesian. See rate-object-local.js's header for the full overview.
-// This file is the NO-MUTE WITH-CAP-FILE variant: per-event cap is
-// resolved from `rateReceiverCapLookupFile` first, then the
-// `rateReceiverAbsoluteCap` env var as fallback.
+// This file is the NO-MUTE WITH-CAP-FILE variant. Per container, three files
+// are read, each keyed by the container with a `*` row for every container
+// without a row of its own (the container's own row wins, then `*`):
+//   - caps.csv    (`rateReceiverCapLookupFile`): the per-pattern cap, falling
+//                 back to `rateReceiverAbsoluteCap`;
+//   - totals.csv  (`rateReceiverTotalLookupFile`): the service's total per
+//                 window, none when absent;
+//   - actions.csv (`rateReceiverActionLookupFile`): what the held lines do,
+//                 falling back to `rateReceiverDefaultAction`.
 //
 // Two classes:
 //   1. `rateReceiverCapInput` (shouldLoad: capFile is set): registers the
-//      cap lookup table via TenXLookup.load. Independent of mute state,
-//      so the with-mute-and-cap variant in rate-object-lookup-cap.js can
-//      also use the table without duplicating the load.
+//      cap, action and total tables. Independent of mute state, so the
+//      with-mute-and-cap variant in rate-object-lookup-cap.js also reads them.
 //   2. `rateReceiverCapObject` (shouldLoad: !muteFile && capFile):
-//      regulator algorithm + inline cap-lookup. Dispatched via
+//      regulator algorithm + inline lookups. Dispatched via
 //      `shouldRetainEventWithCap()` from settings.yaml's groupFilters
 //      4-way ternary.
 
@@ -52,6 +57,13 @@ export class rateReceiverCapInput extends TenXInput {
             TenXLookup.loadIfExists(TenXEnv.get("rateReceiverActionLookupFile"), true);
         }
 
+        // The per-service total table (sibling totals.csv) bounds what each
+        // capped service passes per window. A missing totals file loads as an
+        // empty table: no service has a total until a row names it.
+        if (TenXString.length(TenXEnv.get("rateReceiverTotalLookupFile")) > 0) {
+            TenXLookup.loadIfExists(TenXEnv.get("rateReceiverTotalLookupFile"), true);
+        }
+
         // A container with no actions row takes rateReceiverDefaultAction. route()
         // rejects an unknown name on every event, so the regulator uses pass for one.
         var defaultAction = TenXEnv.get("rateReceiverDefaultAction", "pass");
@@ -69,16 +81,15 @@ export class rateReceiverCapInput extends TenXInput {
 
 export class rateReceiverCapObject extends TenXObject {
 
-    // No mute file, WITH cap file: regulator + per-container cap-lookup.
+    // No mute file, WITH cap file: regulator + per-container lookups.
     static shouldLoad(config) {
         return !TenXEnv.get("rateReceiverLookupFile") && TenXEnv.get("rateReceiverCapLookupFile");
     }
 
     // The regulator algorithm runs in the groupFilter getter (post-grouping,
-    // on the whole event). `this.route("drop")` MARKS the event routeState="drop"; the marked
-    // event keeps flowing (getter returns true). The encoder no longer filters
-    // marked events out of output, so each output stream's filter decides:
-    // isObject = emit (soft-drop), isObject && !this.isRoute("drop") = suppress.
+    // on the whole event). `this.route(action)` MARKS the event's routeState; the
+    // marked event keeps flowing (getter returns true), and each output stream's
+    // filter decides what a mark means.
     get shouldRetainEventWithCap() {
 
         if ((!this.isObject) || (this.isRoute("drop"))) return true;
@@ -90,39 +101,94 @@ export class rateReceiverCapObject extends TenXObject {
         var container = this.get(TenXEnv.get("rateReceiverContainerField"));
         if (!container) container = "__node__";
 
+        var nowSec = TenXDate.now() / 1000;
+
+        // Cap: the container's active row, else the `*` row, else rateReceiverAbsoluteCap.
+        // Entry shape: <units>[:<untilEpochSec>[:<reason>]]. A row of 0 exempts the container.
         var absoluteCap = 0;
+        var capFound = false;
         var capEntry = TenXLookup.get("rateReceiverCapLookupFile", container);
         if (capEntry) {
             var capC1 = TenXString.indexOf(capEntry, ":", 0);
-            var capBytesEnd = (capC1 < 0) ? TenXString.length(capEntry) : capC1;
-            var capCandidate = TenXMath.parseDouble(TenXString.substring(capEntry, 0, capBytesEnd));
+            var capEnd = (capC1 < 0) ? TenXString.length(capEntry) : capC1;
             var capActive = true;
             if (capC1 >= 0) {
                 var capC2 = TenXString.indexOf(capEntry, ":", capC1 + 1);
                 var capUntilEnd = (capC2 < 0) ? TenXString.length(capEntry) : capC2;
-                var capUntilEpochSec = TenXMath.parseDouble(TenXString.substring(capEntry, capC1 + 1, capUntilEnd));
-                if (capUntilEpochSec > 0 && (TenXDate.now() / 1000) > capUntilEpochSec) {
-                    capActive = false;
-                }
+                var capUntil = TenXMath.parseDouble(TenXString.substring(capEntry, capC1 + 1, capUntilEnd));
+                if (capUntil > 0 && nowSec > capUntil) capActive = false;
             }
-            if (capActive) absoluteCap = capCandidate;
+            if (capActive) absoluteCap = TenXMath.parseDouble(TenXString.substring(capEntry, 0, capEnd));
+            if (capActive) capFound = true;
         }
-        if (absoluteCap == 0) {
-            absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
+        if (!capFound) {
+            var starCapEntry = TenXLookup.get("rateReceiverCapLookupFile", "*");
+            if (starCapEntry) {
+                var starCapC1 = TenXString.indexOf(starCapEntry, ":", 0);
+                var starCapEnd = (starCapC1 < 0) ? TenXString.length(starCapEntry) : starCapC1;
+                var starCapActive = true;
+                if (starCapC1 >= 0) {
+                    var starCapC2 = TenXString.indexOf(starCapEntry, ":", starCapC1 + 1);
+                    var starCapUntilEnd = (starCapC2 < 0) ? TenXString.length(starCapEntry) : starCapC2;
+                    var starCapUntil = TenXMath.parseDouble(TenXString.substring(starCapEntry, starCapC1 + 1, starCapUntilEnd));
+                    if (starCapUntil > 0 && nowSec > starCapUntil) starCapActive = false;
+                }
+                if (starCapActive) absoluteCap = TenXMath.parseDouble(TenXString.substring(starCapEntry, 0, starCapEnd));
+                if (starCapActive) capFound = true;
+            }
         }
+        if (!capFound) absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
         if (absoluteCap == 0) return true; // no cap configured -> opt-out
 
+        // Total per window: the container's active row, else the `*` row, else none.
+        var serviceTotal = 0;
+        if (TenXString.length(TenXEnv.get("rateReceiverTotalLookupFile")) > 0) {
+            var totalFound = false;
+            var totalEntry = TenXLookup.get("rateReceiverTotalLookupFile", container);
+            if (totalEntry) {
+                var tC1 = TenXString.indexOf(totalEntry, ":", 0);
+                var tEnd = (tC1 < 0) ? TenXString.length(totalEntry) : tC1;
+                var tActive = true;
+                if (tC1 >= 0) {
+                    var tC2 = TenXString.indexOf(totalEntry, ":", tC1 + 1);
+                    var tUntilEnd = (tC2 < 0) ? TenXString.length(totalEntry) : tC2;
+                    var tUntil = TenXMath.parseDouble(TenXString.substring(totalEntry, tC1 + 1, tUntilEnd));
+                    if (tUntil > 0 && nowSec > tUntil) tActive = false;
+                }
+                if (tActive) serviceTotal = TenXMath.parseDouble(TenXString.substring(totalEntry, 0, tEnd));
+                if (tActive) totalFound = true;
+            }
+            if (!totalFound) {
+                var starTotalEntry = TenXLookup.get("rateReceiverTotalLookupFile", "*");
+                if (starTotalEntry) {
+                    var stC1 = TenXString.indexOf(starTotalEntry, ":", 0);
+                    var stEnd = (stC1 < 0) ? TenXString.length(starTotalEntry) : stC1;
+                    var stActive = true;
+                    if (stC1 >= 0) {
+                        var stC2 = TenXString.indexOf(starTotalEntry, ":", stC1 + 1);
+                        var stUntilEnd = (stC2 < 0) ? TenXString.length(starTotalEntry) : stC2;
+                        var stUntil = TenXMath.parseDouble(TenXString.substring(starTotalEntry, stC1 + 1, stUntilEnd));
+                        if (stUntil > 0 && nowSec > stUntil) stActive = false;
+                    }
+                    if (stActive) serviceTotal = TenXMath.parseDouble(TenXString.substring(starTotalEntry, 0, stEnd));
+                }
+            }
+        }
+
         var key = fieldSetKey + "@" + container;
-        var bytes = this.utf8Size();
+        var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
 
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
         var floorRaw = TenXMap.get(floorMap, level, "");
-        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0.1);
+        var floor = TenXString.length(floorRaw) > 0 ? TenXMath.parseDouble(floorRaw) : TenXEnv.get("rateReceiverMinRetentionThreshold", 0);
+        var keepMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverKeepCounts"));
+        var keepRaw = TenXMap.get(keepMap, level, "");
+        var keepCount = TenXString.length(keepRaw) > 0 ? TenXMath.parseDouble(keepRaw) : -1;
 
         var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
-        var patternBytes = TenXCounter.getAndInc("rg_num_" + key, bytes, windowMs);
-        var containerBytes = TenXCounter.getAndInc("rg_den_" + container, bytes, windowMs);
+        var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
+        var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
 
         var now = TenXDate.now();
@@ -132,24 +198,49 @@ export class rateReceiverCapObject extends TenXObject {
             firstSeen = TenXCounter.getAndSet("rg_seen_" + container, now);
             if (firstSeen == 0) firstSeen = now;
         }
-        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 300000);
-        if (warmupMs > 0 && (now - firstSeen) < warmupMs) return true;
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) return true;
-        if ((patternBytes + bytes) <= absoluteCap) return true;
-        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0.05);
-        var share = (patternBytes + bytes) / (containerBytes + bytes);
-        if (share < minSharePercent) return true;
-        if (TenXMath.random() < floor) return true;
+        var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
 
-        // Over-budget: the per-service action lookup (keyed by the same
-        // container as the cap) decides the disposition of the excess. A
-        // capped service with no action row takes rateReceiverDefaultAction,
-        // pass unless set. The forwarder recipe + the output encodeField honor
-        // offload/tier_down/compact/sample/drop.
+        // Always kept: the warm-up and the per-pattern baseline sample.
+        var keep = false;
+        if (warmupMs > 0 && (now - firstSeen) < warmupMs) keep = true;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) keep = true;
+
+        // Noisiest first: once the service has seen more than its total this
+        // window, every pattern's cap scales by total / service units.
+        var effectiveCap = absoluteCap;
+        if (serviceTotal > 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
+
+        var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
+        var share = (patternUnits + units) / (containerUnits + units);
+        var regular = false;
+        if (!keep && (patternUnits + units) <= effectiveCap) regular = true;
+        if (!keep && share < minSharePercent) regular = true;
+        if (!keep && keepCount < 0 && TenXMath.random() < floor) regular = true;
+
+        // Hard bound: the units the service passed this window, reserved before the pass.
+        var reserved = false;
+        var passedBefore = 0;
+        if (regular && serviceTotal > 0) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (regular && serviceTotal > 0) reserved = true;
+        if (regular && serviceTotal > 0 && (passedBefore + units) > serviceTotal) regular = false;
+        if (regular) keep = true;
+
+        // Error-class levels with a keep count: the first K lines of a pattern
+        // held by its cap or by the service total pass each window.
+        var keptBefore = -1;
+        if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (keptBefore >= 0 && keptBefore < keepCount) keep = true;
+
+        if (keep && serviceTotal > 0 && !reserved) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (keep) return true;
+
+        // Held: the action is the container's active row, else the `*` row,
+        // else rateReceiverDefaultAction (pass unless set).
         // Entry shape (mirrors the cap entry): <action>[:<untilEpochSec>[:<reason>]].
         var action = TenXEnv.get("rateReceiverDefaultAction", "pass");
         if (action != "offload" && action != "tier_down" && action != "compact" && action != "sample" && action != "drop") action = "pass";
         if (TenXString.length(TenXEnv.get("rateReceiverActionLookupFile")) > 0) {
+            var actionFound = false;
             var actionEntry = TenXLookup.get("rateReceiverActionLookupFile", container);
             if (actionEntry) {
                 var aC1 = TenXString.indexOf(actionEntry, ":", 0);
@@ -159,9 +250,25 @@ export class rateReceiverCapObject extends TenXObject {
                     var aC2 = TenXString.indexOf(actionEntry, ":", aC1 + 1);
                     var aUntilEnd = (aC2 < 0) ? TenXString.length(actionEntry) : aC2;
                     var aUntil = TenXMath.parseDouble(TenXString.substring(actionEntry, aC1 + 1, aUntilEnd));
-                    if (aUntil > 0 && (TenXDate.now() / 1000) > aUntil) actionActive = false;
+                    if (aUntil > 0 && nowSec > aUntil) actionActive = false;
                 }
                 if (actionActive) action = TenXString.substring(actionEntry, 0, actionEnd);
+                if (actionActive) actionFound = true;
+            }
+            if (!actionFound) {
+                var starActionEntry = TenXLookup.get("rateReceiverActionLookupFile", "*");
+                if (starActionEntry) {
+                    var saC1 = TenXString.indexOf(starActionEntry, ":", 0);
+                    var saEnd = (saC1 < 0) ? TenXString.length(starActionEntry) : saC1;
+                    var saActive = true;
+                    if (saC1 >= 0) {
+                        var saC2 = TenXString.indexOf(starActionEntry, ":", saC1 + 1);
+                        var saUntilEnd = (saC2 < 0) ? TenXString.length(starActionEntry) : saC2;
+                        var saUntil = TenXMath.parseDouble(TenXString.substring(starActionEntry, saC1 + 1, saUntilEnd));
+                        if (saUntil > 0 && nowSec > saUntil) saActive = false;
+                    }
+                    if (saActive) action = TenXString.substring(starActionEntry, 0, saEnd);
+                }
             }
         }
 
