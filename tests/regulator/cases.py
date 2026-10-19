@@ -7,8 +7,8 @@ files, then check what the engine routed.
   python3 cases.py send <dir> <port>      sends a paced case's batches over the Forward protocol
 
 A paced case (expect "pace") runs on paced.yaml: run.sh starts the engine with the Forward
-input and `send` sends each batch, a gap of seconds apart, so the batches land in
-consecutive regulator windows.
+input and `send` sends each batch, a gap of seconds apart (or at the offsets in "at"), so
+the batches land in consecutive regulator windows, which start at the first line.
 
 Every line of a pattern has the same byte length, so caps and totals in bytes are
 exact line counts. Floors are 0 on the shipped configuration, so the expected
@@ -87,8 +87,11 @@ def send(out, port):
     pace = json.load(open(os.path.join(out, "pace")))
     lines = open(os.path.join(out, "events.log")).read().splitlines()
     start = 0
+    t0 = time.time()
     for i, n in enumerate(pace["batches"]):
-        if i:
+        if "at" in pace:
+            time.sleep(max(0, t0 + pace["at"][i] - time.time()))
+        elif i:
             time.sleep(pace["gap"])
         with socket.create_connection(("127.0.0.1", int(port)), timeout=10) as s:
             for l in lines[start:start + n]:
@@ -356,6 +359,26 @@ def case_w3_windows_scaled():
     return scaled_windows(counts, 30, 301)
 
 
+def case_w4_windows_late():
+    """Ruling 21, a window whose first line comes late: batches at +0, +110, +125 and +185 s,
+    one per 60-second window. Window 1 is the three 7-line patterns alone; windows 2 to 4 are
+    the w3 lines. Window 3 starts 15 s after window 2's first line and must still take window
+    2's count, so windows 3 and 4 pass their total to within one line. Window 2 follows a
+    quiet window and fills its total in arrival order."""
+    counts = [60] * 20 + [7] * 3
+    first = shuffled([pair_line(p, 1000 + i) for p in range(20, 23) for i in range(7)], 7)
+    rest = [shuffled([pair_line(p, b * 10000 + i) for p, n in enumerate(counts) for i in range(n)], 31 + b)
+            for b in range(1, 4)]
+    lines, files, args, env, expect = scaled_windows(counts, 30, 301)
+    batches = [first] + rest
+    small = [pair_name(p) for p in range(20, 23)]
+    large = [pair_name(p) for p in range(20)]
+    expect = {"pace": {"batches": [len(x) for x in batches], "at": [0, 110, 125, 185], "total": 301},
+              "window_pass": {0: (21, 21), 1: (300, 301 + 5 * 23), 2: (300, 301), 3: (300, 301)},
+              "window_all_pass": {0: small, 2: small, 3: small}, "window_moved": {2: large, 3: large}}
+    return [l for b in batches for l in b], files, args, env, expect
+
+
 CASES = {
     "k1-errors": case_k1_errors,
     "k2-mute": case_k2_mute,
@@ -374,6 +397,7 @@ CASES = {
     "w1-windows": case_w1_windows,
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
+    "w4-windows-late": case_w4_windows_late,
 }
 
 ENV = {"CAP": ("CAP_LOOKUP_FILE", "caps.csv"), "ACTION": ("ACTION_LOOKUP_FILE", "actions.csv"),
