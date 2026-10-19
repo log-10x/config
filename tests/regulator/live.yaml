@@ -1,0 +1,45 @@
+# The live GitHub lane case (gitops-live.sh): the replay pipeline with the Forward
+# protocol input instead of the file input, plus the gitops include the receiver app
+# loads (apps/receiver/config.yaml), so the github lanes are parsed and pulled.
+tenx: run
+runtimeName: live
+include:
+  - gitops
+  - apps/shared
+  - run/initialize/inputField
+  - run/initialize/level
+  - run/initialize/group
+  - run/initialize/message
+  - run/initialize/httpCode
+  - run/initialize/lookup
+  - run/initialize/custom
+  - run/initialize/k8s
+  - run/receive/rate
+  - run/aggregate/receive
+  - run/input/forward
+  - run/modules/output/event/file
+outputFile:
+  - path: $=TenXEnv.get("OUTPUT_DIR") + "/routed.jsonl"
+    encodeType: json
+    fields:
+      - routeState
+      - k8s_container
+      - severity_level
+      - message_pattern
+      - tenx_hash
+      - groupSize
+      - utf8Size()
+  - path: $=TenXEnv.get("OUTPUT_DIR") + "/summaries.jsonl"
+    encodeType: json
+    filter: isSummary
+    fields:
+      - inputName
+      - k8s_container
+      - severity_level
+      # A summary's own routeState is always pass; the bucket's value is encoded on it
+      # under the l1e_ prefix, which is what the metric outputs read.
+      - routeState=l1e_routeState
+      - message_pattern
+      - tenx_hash
+      - summaryVolume
+      - summaryBytes
