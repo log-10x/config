@@ -154,9 +154,11 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (serviceTotal > 0 && absoluteCap != 0) {
             if (TenXCounter.getAndInc("rg_win_" + container, 1, windowMs) == 0) {
                 var lastStart = TenXCounter.getAndSet("rg_ws_" + container, nowSec);
-                var lastUnits = TenXCounter.getAndSet("rg_run_" + container, 0);
-                var lastWindow = (lastStart > 0 && (nowSec - lastStart) * 1000 < 2 * windowMs) ? lastUnits : 0;
-                TenXCounter.getAndSet("rg_prev_" + container, lastWindow);
+                if ((nowSec - lastStart) * 1000 >= windowMs / 2) {
+                    var lastUnits = TenXCounter.getAndSet("rg_run_" + container, 0);
+                    var lastWindow = (lastStart > 0 && (nowSec - lastStart) * 1000 < 2 * windowMs) ? lastUnits : 0;
+                    TenXCounter.getAndSet("rg_prev_" + container, lastWindow);
+                }
             }
             prevUnits = TenXCounter.getAndInc("rg_prev_" + container, 0);
         }
@@ -184,7 +186,9 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
         var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
-        if (serviceTotal > 0 && (patternUnits + units) <= absoluteCap) TenXCounter.getAndInc("rg_run_" + container, units);
+        var underCap = (serviceTotal > 0 && (patternUnits + units) <= absoluteCap) ? units : 0;
+        var runUnits = 0;
+        if (serviceTotal > 0) runUnits = TenXCounter.getAndInc("rg_run_" + container, underCap) + underCap;
 
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
@@ -202,10 +206,12 @@ export class rateReceiverLookupCapObject extends TenXObject {
 
         // Noisiest first: when the service's caps alone let more than its total
         // through in the previous window, every pattern's cap scales by total /
-        // that amount for the whole window. With no previous window, the scale
-        // is total / the service's units so far this window.
+        // that amount, or by what they let through so far this window once that
+        // is larger. With no previous window, the scale is total / the
+        // service's units so far this window.
         var effectiveCap = absoluteCap;
-        if (serviceTotal > 0 && prevUnits > serviceTotal) effectiveCap = absoluteCap * serviceTotal / prevUnits;
+        var scaleUnits = TenXMath.max(prevUnits, runUnits);
+        if (serviceTotal > 0 && prevUnits > 0 && scaleUnits > serviceTotal) effectiveCap = absoluteCap * serviceTotal / scaleUnits;
         if (serviceTotal > 0 && prevUnits == 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
 
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);

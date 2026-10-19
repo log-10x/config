@@ -276,8 +276,9 @@ def case_d1_defaults():
 
 def case_w1_windows():
     """Ruling 21: the budget run's shape (a cap at the level L and a total of sum(min(rate, L)))
-    over two windows. In the second window the cap scale comes from the first window, so the
-    service passes its total to within one line."""
+    over two windows. Window 1 has no previous window and takes the in-window scale, under the
+    total. In window 2 the caps alone let the total through, so nothing scales and the service
+    passes its total to within one line."""
     counts = [200, 120, 80, 40, 30, 20, 15, 10, 8, 6, 5, 4]
     width = max(len(w) for w in WORDS) + 6
     line = lambda w, i: record("svc", "2026-10-18T10:00:00.000Z INFO %s request served id=%0*d" % (w, width - len(w), i))
@@ -293,14 +294,66 @@ def case_w1_windows():
     args = ["rateReceiverWarmupMs", "0", "rateReceiverResetIntervalMs", "60000"]
     return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
         "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total},
-        "window_pass": {1: (total - 1, total)}}
+        "window_pass": {0: (total - 30, total), 1: (total - 1, total)}}
+
+
+PAIR_WIDTH = 2 * max(len(w) for w in WORDS) + 6
+
+
+def pair_words(p):
+    """Two different words per pattern: (w, the next word) for p < 20, (w, the one after) above."""
+    return WORDS[p % 20], WORDS[(p % 20 + 1 + p // 20) % 20]
+
+
+def pair_name(p):
+    return "%s_%s_request_served_id" % pair_words(p)
+
+
+def pair_line(p, i):
+    w = "%s %s" % pair_words(p)
+    return record("svc", "2026-10-18T10:00:00.000Z INFO %s request served id=%0*d" % (w, PAIR_WIDTH - len(w) + 1, i))
+
+
+def scaled_windows(counts, cap, total, muted=None):
+    """Two windows of the same lines. Every pattern of 60 lines is over its cap, so window 1's
+    lines under their caps come to more than the total, and window 2's caps scale by
+    total / that amount: the 60-line patterns are held at the scaled cap, the 7-line ones pass
+    every line, and the total fills to within one line."""
+    batches = [shuffled([pair_line(p, b * 1000 + i) for p, n in enumerate(counts) for i in range(n)], 31 + b)
+               for b in range(2)]
+    b = forward_size(batches[0][0])
+    assert len({forward_size(l) for l in batches[0] + batches[1]}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", cap * b)]),
+             "totals.csv": csv("container,total", [("svc", total * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverResetIntervalMs", "60000"]
+    if muted is not None:
+        files["mutes.csv"] = csv("fieldSet,value", [(pair_name(muted), "1.0:%d:test" % FUTURE)])
+        args += ["rateReceiverLookupFile", "/policy/mutes.csv"]
+    small = [pair_name(p) for p, n in enumerate(counts) if n == 7]
+    large = [pair_name(p) for p, n in enumerate(counts) if n == 60 and p != muted]
+    allowance = 5 * len(counts) + (counts[muted] if muted is not None else 0)
+    return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
+        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total},
+        "window_pass": {0: (total - 1, total + allowance), 1: (total - 1, total)},
+        "window_all_pass": {1: small}, "window_moved": {1: large}}
 
 
 def case_w2_windows_mute():
-    """Ruling 21 with a mute file (the mute and cap file variant): the same two windows."""
-    lines, files, args, env, expect = case_w1_windows()
-    files["mutes.csv"] = csv("fieldSet,value", [("payment_failed_order_upstream_timeout", "0:%d:test" % FUTURE)])
-    return lines, files, args + ["rateReceiverLookupFile", "/policy/mutes.csv"], env, expect
+    """Ruling 21 in the mute and cap file variant: 24 patterns of 60 lines, one more muted at
+    1.0 (it passes all 40 lines, and they count among what passed under the caps), three of
+    7 lines; cap 27 lines, total 517. Window 1's count is 24 x 27 + 40 + 21 = 709, so window
+    2's caps scale to 27 x 517 / 709 = 19.7 lines: 24 x 19 + 40 + 21 = 517."""
+    counts = [40] + [60] * 24 + [7] * 3
+    return scaled_windows(counts, 27, 517, muted=0)
+
+
+def case_w3_windows_scaled():
+    """Ruling 21, the scaling itself: 20 patterns of 60 lines and three of 7, cap 30 lines,
+    total 301. Window 1's count is 20 x 30 + 21 = 621, so window 2's caps scale to
+    30 x 301 / 621 = 14.5 lines: 20 x 14 + 21 = 301."""
+    counts = [60] * 20 + [7] * 3
+    return scaled_windows(counts, 30, 301)
 
 
 CASES = {
@@ -320,6 +373,7 @@ CASES = {
     "d1-defaults": case_d1_defaults,
     "w1-windows": case_w1_windows,
     "w2-windows-mute": case_w2_windows_mute,
+    "w3-windows-scaled": case_w3_windows_scaled,
 }
 
 ENV = {"CAP": ("CAP_LOOKUP_FILE", "caps.csv"), "ACTION": ("ACTION_LOOKUP_FILE", "actions.csv"),
@@ -456,6 +510,22 @@ def check(name, out):
                 lo, hi = expect["window_pass"][i]
                 if not lo <= len(win_pass) <= hi:
                     problems.append("window %d passed %d lines, want %d to %d" % (i + 1, len(win_pass), lo, hi))
+            seen = Counter(r["message_pattern"] for r in win)
+            got = Counter(r["message_pattern"] for r in win_pass)
+            for p in expect.get("window_all_pass", {}).get(i, []):
+                if seen[p] == 0 or got[p] != seen[p]:
+                    problems.append("window %d: %s passed %d of %d" % (i + 1, p, got[p], seen[p]))
+            if expect.get("window_all_pass", {}).get(i):
+                ps = expect["window_all_pass"][i]
+                facts.append("window %d small patterns passing every line: %d of %d" % (
+                    i + 1, sum(1 for p in ps if seen[p] and got[p] == seen[p]), len(ps)))
+            moved = expect.get("window_moved", {}).get(i, [])
+            for p in moved:
+                if seen[p] == 0 or got[p] == seen[p]:
+                    problems.append("window %d: %s moved nothing (%d of %d passed)" % (i + 1, p, got[p], seen[p]))
+            if moved:
+                facts.append("window %d large patterns passed %d to %d lines each" % (
+                    i + 1, min(got[p] for p in moved), max(got[p] for p in moved)))
             start += n
     for c, want in expect.get("pass_by_container", {}).items():
         got = sum(1 for r in passed if r["k8s_container"] == c)

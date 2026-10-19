@@ -156,9 +156,10 @@ rateReceiver:
   #   *,<cap>[:<untilEpochSec>][:<reason>]
   #
   # Written by the Log10x MCP: its budget run (log10x_setup_recurring) writes the
-  # file to the policy ConfigMap or commits it to the policy branch, and a
+  # file to the policy ConfigMap or commits it to the policy branch. A
   # log10x_configure_engine call derives caps from a target percent or a monthly
-  # dollar budget and opens a PR against it.
+  # dollar budget and delivers them as its 'delivery' says: a PR against the
+  # gitops repo, a write to the policy ConfigMap, or no write (stdout_only).
   capLookup:
 
     # 'file' specifies the per-container cap file path. Hot-reloaded on in-place
@@ -236,10 +237,11 @@ rateReceiver:
   # 'containerField'. Each entry bounds what the service passes per window on
   # this node, in 'unit'. When the service's caps alone let more than its total
   # through in the previous window, every pattern's cap scales by total / that
-  # amount for the whole window, so its largest patterns are held first (with no
-  # previous window, by total / the service's units so far this window); once the
-  # lines it passed reach the total, every further line takes the service's
-  # action. The 'baselineCount' sample, the 'keepCounts' lines and the lines a
+  # amount (or by what they let through so far this window, once larger), so its
+  # largest patterns are held first. A service whose first lines of this window
+  # and of the last window it sent in are two window lengths or more apart
+  # scales by total / its units so far this window instead. Once the lines it
+  # passed reach the total, every further line takes the service's action. The 'baselineCount' sample, the 'keepCounts' lines and the lines a
   # mute entry passes still pass and count toward the total, so an error storm or
   # a muted pattern can exceed it by that much. Read by the cap-file regulators,
   # for containers with a cap. A row keyed '*' applies to every service without

@@ -2,8 +2,10 @@
 #
 # Runs the rate regulator cases (cases.py) through the released engine image, twice:
 #
-#   main  the image as published: its own config and modules
-#   fix   the same image with this config checkout and a modules checkout mounted
+#   main    the image as published: its own config and modules
+#   fix     the same image with this config checkout and a modules checkout mounted
+#   before  the same image with an earlier commit of this config (BEFORE_REF) and the
+#           modules checkout mounted, to compare a change against the code it replaces
 #
 # A case is a gate when it fails on main and passes on the fix. Nothing here runs in CI.
 #
@@ -15,7 +17,8 @@
 #   CONFIG_DIR   config checkout to mount for the fix arm (default: this one)
 #   IMAGE        engine image (default: edge-10x 1.1.145, by digest)
 #   OUT          output folder (default: a new temporary folder)
-#   ARMS         arms to run (default: "main fix")
+#   ARMS         arms to run (default: "main fix"; add "before" with BEFORE_REF)
+#   BEFORE_REF   config commit for the before arm, extracted with git archive
 #   PORT         host port for the paced cases' Forward input (default: 24298)
 
 set -euo pipefail
@@ -31,6 +34,14 @@ CASES=("$@")
 [ ${#CASES[@]} -gt 0 ] || mapfile -t CASES < <(python3 -I "$HERE/cases.py" list)
 
 docker image inspect "$IMAGE" >/dev/null 2>&1 || docker pull "$IMAGE" >/dev/null
+BEFORE_DIR=""
+if [[ " $ARMS " == *" before "* ]]; then
+  : "${BEFORE_REF:?set BEFORE_REF for the before arm}"
+  BEFORE_DIR="$OUT/before-config"
+  rm -rf "$BEFORE_DIR"; mkdir -p "$BEFORE_DIR"
+  git -C "$CONFIG_DIR" archive "$BEFORE_REF" | tar -x -C "$BEFORE_DIR"
+  echo "before $BEFORE_REF"
+fi
 echo "image $IMAGE"
 echo "config $CONFIG_DIR ($(git -C "$CONFIG_DIR" rev-parse --short HEAD))"
 echo "modules $MODULES_DIR ($(git -C "$MODULES_DIR" rev-parse --short HEAD))"
@@ -41,12 +52,15 @@ run_arm() {
   rm -rf "$dir"; mkdir -p "$dir"
   python3 -I "$HERE/cases.py" prepare "$name" "$dir"
   local variant; variant="$(cat "$dir/config")"
-  if [ "$arm" = main ] && [ -n "$variant" ]; then echo "n/a" > "$dir/exit"; return; fi
+  if [ "$arm" != fix ] && [ -n "$variant" ]; then echo "n/a" > "$dir/exit"; return; fi
   touch "$dir"/policy/* 2>/dev/null || true
   local envs=(-e INPUT_FILE=/in/events.log -e OUTPUT_DIR=/out)
   while IFS= read -r e; do [ -n "$e" ] && envs+=(-e "$e"); done < "$dir/env"
   local vols=(-v "$dir/events.log":/in/events.log:ro -v "$dir":/out -v "$dir/policy":/policy:ro
               -v "$HERE/replay.yaml":/cfg/replay.yaml:ro)
+  if [ "$arm" = before ]; then
+    vols+=(-v "$BEFORE_DIR":/etc/tenx/config:ro -v "$MODULES_DIR":/opt/tenx-edge/lib/app/modules:ro)
+  fi
   if [ "$arm" = fix ]; then
     vols+=(-v "$CONFIG_DIR":/etc/tenx/config:ro -v "$MODULES_DIR":/opt/tenx-edge/lib/app/modules:ro)
     if [ "$variant" = no-keepcounts ]; then
@@ -113,5 +127,5 @@ for name in "${CASES[@]}"; do
 done
 
 echo
-echo "=== summary (a gate holds when main=FAIL and fix=PASS)"
+echo "=== summary (a gate holds when main=FAIL, or before=FAIL, and fix=PASS)"
 printf '  %s\n' "${summary[@]}"
