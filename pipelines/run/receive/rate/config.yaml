@@ -76,8 +76,10 @@ rateReceiver:
   #  level once the pattern is over its cap or its container is over its total,
   #  also under a mute file entry. A listed level skips its 'severityFloors' draw.
   #  Keys must match the level vocabulary emitted by the level enrichment. The
-  #  module's settings set the same three counts; an entry here wins for its
-  #  level, and -1 gives a level its floor instead.
+  #  module's settings set the same three counts and entries merge by level, so
+  #  ERROR, CRITICAL and FATAL always keep a count (50 unless set here): to change
+  #  one, set it; -1 gives it its floor instead. Any other level not listed
+  #  follows its floor.
   keepCounts:
     - ERROR=50
     - CRITICAL=50    # the level enrichment maps fatal/critical -> CRITICAL
