@@ -43,7 +43,7 @@ run_arm() {
   touch "$dir"/policy/* 2>/dev/null || true
   local envs=(-e INPUT_FILE=/in/events.log -e OUTPUT_DIR=/out)
   while IFS= read -r e; do [ -n "$e" ] && envs+=(-e "$e"); done < "$dir/env"
-  local vols=(-v "$dir/events.log":/in/events.log:ro -v "$dir":/out -v "$dir/policy":/policy:ro
+  local vols=(-v "$dir/events.log":/in/events.log:ro -v "$dir":/out -v "$dir/policy":"$(cat "$dir/mount")":ro
               -v "$HERE/replay.yaml":/cfg/replay.yaml:ro)
   if [ "$arm" = fix ]; then
     vols+=(-v "$CONFIG_DIR":/etc/tenx/config:ro -v "$MODULES_DIR":/opt/tenx-edge/lib/app/modules:ro)

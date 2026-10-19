@@ -81,7 +81,7 @@
         },
         "paths": {
           "type": "array",
-          "description": "Glob patterns within 'repo' to pull and extract to a temp folder",
+          "description": "Glob patterns within 'repo' to pull and extract to a temp folder. List items are literal ('$=' is not evaluated inside a list), and a folder missing from the repo stops the pull",
           "items": {
             "type": "string"
           },
@@ -112,7 +112,7 @@
             "string",
             "null"
           ],
-          "description": "Stable absolute folder the pulled content is mirrored into after the initial pull and after every sync (atomic per-file writes; mtime refreshed every sync). Lookup options such as rateReceiverLookupFile must target this folder, not the sha-addressed pull cache. Unset disables the mirror. Requires engine >= 1.1.69."
+          "description": "Stable absolute folder the pulled content is mirrored into after the initial pull and after every sync (atomic per-file writes; mtime refreshed every sync). Lookup options such as rateReceiverLookupFile must target this folder, not the sha-addressed pull cache. Unset disables the mirror; the shipped policy lane defaults it to ${java.io.tmpdir}/tenx/github. Requires engine >= 1.1.69."
         }
       },
       "required": [

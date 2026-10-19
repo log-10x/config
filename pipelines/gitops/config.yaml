@@ -13,29 +13,39 @@ tenx: any
 
 include:
 
+  # ---------------------------------------------------------------------------
+  # Policy lane: the rate regulator's files from a policy repo
+  #
+  # Pulls log10x/policy/*.csv (caps.csv, actions.csv, totals.csv,
+  # config-generation.csv) and mirrors them into a stable folder, by default
+  # ${java.io.tmpdir}/tenx/github/log10x/policy/. With GH_ENABLED=true the rate
+  # regulator's CAP_LOOKUP_FILE, ACTION_LOOKUP_FILE, TOTAL_LOOKUP_FILE and
+  # CONFIG_GENERATION_FILE default to those mirrored copies
+  # (pipelines/run/receive/rate/config.yaml), and every sync rewrites them in
+  # place, so the lookups hot-reload. The folder must exist in the repo and
+  # hold caps.csv when the engine starts: a missing folder stops the pull, and
+  # a sync refreshes only the files the first pull found.
+
   - source: github
 
     options:
-      # Env-var overrides: GH_ENABLED, GH_REPO, GH_BRANCH, GH_PATH, GH_SYNC_INTERVAL.
-      # Defaults below are for the compact-receiver GitOps reload test:
-      # they pull test/compact-lookup.csv from talwgx/test every 30s.
-      # For a real deployment, set GH_ENABLED=false OR override the repo.
+      # Env-var overrides: GH_ENABLED, GH_TOKEN, GH_REPO, GH_BRANCH,
+      # GH_SYNC_INTERVAL, GH_DEST.
       enabled: $=TenXEnv.get("GH_ENABLED", false)
 
       # 'token' specifies an access token for accessing the Github repo.
       token: $=TenXEnv.get("GH_TOKEN")
 
-      # 'repo' specifies the GitHub user/repo from which to pull
-      repo: $=TenXEnv.get("GH_REPO", "talwgx/test")
+      # 'repo' specifies the GitHub owner/repo from which to pull; required when enabled.
+      repo: $=TenXEnv.get("GH_REPO")
 
       # 'branch' on 'repo' (if null, uses default repo default branch)
       branch: $=TenXEnv.get("GH_BRANCH", "main")
 
-      # 'paths' specifies Glob patterns within 'repo' to pull and extract to a temp folder.
-      # (List items don't honor $= expressions; hardcoded glob. Override repo+branch
-      # to target a different repo layout. Compact lookup must live as test/*.csv.)
+      # 'paths' specifies Glob patterns within 'repo' to pull. List items are
+      # literal: '$=' is not evaluated inside a list.
       paths:
-        - test/*.csv
+        - log10x/policy/*.csv
 
       # 'syncInterval' specifies an interval by which check to check the remote branch for updates (null to disable).
       # This interval works in conjunction with: https://doc.log10x.com/run/reload
@@ -44,12 +54,40 @@ include:
       # 'destination' mirrors pulled content into a stable absolute folder,
       # after the initial pull and after every sync (atomic per-file writes,
       # mtime refreshed every sync). The pull cache itself lives under a
-      # sha-addressed temp folder whose path changes per commit -- options
-      # like rateReceiverLookupFile must point HERE, not into the cache:
-      #   GH_DEST=/tmp/policy  +  rateReceiverLookupFile=/tmp/policy/test/mutes.csv
-      # The folder must be writable by the engine user: the shipped container
-      # runs as uid 1000, so a root-level path like /policy fails the launch.
-      # Unset = no mirror (prior behavior). Requires engine >= 1.1.69.
+      # sha-addressed temp folder whose path changes per commit, so lookup
+      # options point HERE. The folder must be writable by the engine user:
+      # the shipped container runs as uid 1000, so a root-level path like
+      # /policy fails the launch. Requires engine >= 1.1.69.
+      destination: $=TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github")
+
+  # ---------------------------------------------------------------------------
+  # Files lane: other files a config repo carries
+  #
+  # Pulls the 'paths' below from the same repo, for files such as the compact
+  # receiver's lookup or a mute file. Enabled on its own (GH_FILES_ENABLED) so
+  # a policy repo does not need these folders. The compact-receiver reload test
+  # runs it with GH_FILES_ENABLED=true and GH_REPO pointing at the test repo.
+  # To pull other folders, edit 'paths' in a fork of this config.
+
+  - source: github
+
+    options:
+      enabled: $=TenXEnv.get("GH_FILES_ENABLED", false)
+
+      token: $=TenXEnv.get("GH_TOKEN")
+
+      repo: $=TenXEnv.get("GH_REPO")
+
+      branch: $=TenXEnv.get("GH_BRANCH", "main")
+
+      # Literal glob list, as above.
+      paths:
+        - test/*.csv
+
+      syncInterval: $=TenXEnv.get("GH_SYNC_INTERVAL", "30s")
+
+      # Unset = no mirror. With GH_DEST set, the files land beside the policy
+      # lane's, e.g. GH_DEST=/tmp/policy + rateReceiverLookupFile=/tmp/policy/test/mutes.csv
       destination: $=TenXEnv.get("GH_DEST")
 
 # ---------------------------------------------------------------------------

@@ -186,7 +186,12 @@ rateReceiver:
     # That broke the documented receiver install out of the box, since the CSV
     # arrives later via GitOps/configure_engine. With this unset, the module
     # falls back to the fleet-wide absoluteCap, exactly as module.yaml documents.
-    file: $=TenXEnv.get("CAP_LOOKUP_FILE")
+    #
+    # With GH_ENABLED=true (the policy lane in pipelines/gitops/config.yaml), the
+    # default is the pulled copy of the policy repo's log10x/policy/caps.csv, in
+    # the lane's mirror folder: ${GH_DEST:-${java.io.tmpdir}/tenx/github}. The
+    # policy folder must then hold caps.csv when the engine starts.
+    file: '$=TenXEnv.get("CAP_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/caps.csv" : TenXEnv.get("CAP_LOOKUP_FILE"))'
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
@@ -207,8 +212,10 @@ rateReceiver:
   # no dependency, no init failure on a missing file. Set CONFIG_GENERATION_FILE
   # (or this) to the sibling of caps.csv, e.g.:
   #   ${java.io.tmpdir}/tenx/kubernetes/<namespace>/<configMap>/config-generation.csv
+  # With GH_ENABLED=true the default is the GitHub policy lane's pulled copy of
+  # log10x/policy/config-generation.csv.
   configGeneration:
-    file: $=TenXEnv.get("CONFIG_GENERATION_FILE", "")
+    file: '$=TenXEnv.get("CONFIG_GENERATION_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/config-generation.csv" : "")'
 
   # --------------------------- Action File Options ---------------------------
 
@@ -234,9 +241,10 @@ rateReceiver:
   #  key (like 'fieldNames' / 'minSharePercent'): the schema generator nests a
   #  group only when two or more options share its prefix, and this option is
   #  the only one under 'actionLookup'. Always set (default below, sibling to the
-  #  cap file) so the cap-variant regulator can read it.
+  #  cap file) so the cap-variant regulator can read it: the pulled copy of
+  #  log10x/policy/actions.csv with GH_ENABLED=true, else the ConfigMap path.
   #  ACTION_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
-  actionLookupFile: $=TenXEnv.get("ACTION_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")
+  actionLookupFile: '$=TenXEnv.get("ACTION_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/actions.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")'
 
   # ---------------------------- Total File Options ---------------------------
 
@@ -259,6 +267,7 @@ rateReceiver:
   #   *,<total>[:<untilEpochSec>][:<reason>]
   #
   # 'totalLookupFile' is the per-service total file path, a FLAT key like
-  #  'actionLookupFile', defaulting to the sibling of the cap file.
-  #  TOTAL_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
-  totalLookupFile: $=TenXEnv.get("TOTAL_LOOKUP_FILE", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/totals.csv")
+  #  'actionLookupFile', defaulting to the sibling of the cap file: the pulled
+  #  copy of log10x/policy/totals.csv with GH_ENABLED=true, else the ConfigMap
+  #  path. TOTAL_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
+  totalLookupFile: '$=TenXEnv.get("TOTAL_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/totals.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/totals.csv")'
