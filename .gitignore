@@ -43,3 +43,4 @@ my.*.bat
 *.10x.json
 *.10x.pb
 *.10x.tar
+__pycache__/
