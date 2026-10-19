@@ -190,8 +190,11 @@ rateReceiver:
     # With GH_ENABLED=true (the policy lane in pipelines/gitops/config.yaml), the
     # default is the pulled copy of the policy repo's log10x/policy/caps.csv, in
     # the lane's mirror folder: ${GH_DEST:-${java.io.tmpdir}/tenx/github}. The
-    # policy folder must then hold caps.csv when the engine starts.
-    file: '$=TenXEnv.get("CAP_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/caps.csv" : TenXEnv.get("CAP_LOOKUP_FILE"))'
+    # policy folder must then hold caps.csv when the engine starts. GH_ENABLED is
+    # read as the lane reads it: true, True or TRUE turn it on (any other value
+    # but false/False/FALSE stops the launch). It wins over the ConfigMap path
+    # for all four policy files: enable one lane, not both.
+    file: '$=TenXEnv.get("CAP_LOOKUP_FILE", (TenXEnv.get("GH_ENABLED", "false") == "true" || TenXEnv.get("GH_ENABLED", "false") == "True" || TenXEnv.get("GH_ENABLED", "false") == "TRUE") ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/caps.csv" : TenXEnv.get("CAP_LOOKUP_FILE"))'
 
     # 'retain' specifies the period before the file is marked as stale.
     retain: $=parseDuration("10m")
@@ -215,7 +218,7 @@ rateReceiver:
   # With GH_ENABLED=true the default is the GitHub policy lane's pulled copy of
   # log10x/policy/config-generation.csv.
   configGeneration:
-    file: '$=TenXEnv.get("CONFIG_GENERATION_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/config-generation.csv" : "")'
+    file: '$=TenXEnv.get("CONFIG_GENERATION_FILE", (TenXEnv.get("GH_ENABLED", "false") == "true" || TenXEnv.get("GH_ENABLED", "false") == "True" || TenXEnv.get("GH_ENABLED", "false") == "TRUE") ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/config-generation.csv" : "")'
 
   # --------------------------- Action File Options ---------------------------
 
@@ -244,7 +247,7 @@ rateReceiver:
   #  cap file) so the cap-variant regulator can read it: the pulled copy of
   #  log10x/policy/actions.csv with GH_ENABLED=true, else the ConfigMap path.
   #  ACTION_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
-  actionLookupFile: '$=TenXEnv.get("ACTION_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/actions.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")'
+  actionLookupFile: '$=TenXEnv.get("ACTION_LOOKUP_FILE", (TenXEnv.get("GH_ENABLED", "false") == "true" || TenXEnv.get("GH_ENABLED", "false") == "True" || TenXEnv.get("GH_ENABLED", "false") == "TRUE") ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/actions.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/actions.csv")'
 
   # ---------------------------- Total File Options ---------------------------
 
@@ -270,4 +273,4 @@ rateReceiver:
   #  'actionLookupFile', defaulting to the sibling of the cap file: the pulled
   #  copy of log10x/policy/totals.csv with GH_ENABLED=true, else the ConfigMap
   #  path. TOTAL_LOOKUP_FILE overrides for non-k8s / fixed-path deployments.
-  totalLookupFile: '$=TenXEnv.get("TOTAL_LOOKUP_FILE", TenXEnv.get("GH_ENABLED") == "true" ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/totals.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/totals.csv")'
+  totalLookupFile: '$=TenXEnv.get("TOTAL_LOOKUP_FILE", (TenXEnv.get("GH_ENABLED", "false") == "true" || TenXEnv.get("GH_ENABLED", "false") == "True" || TenXEnv.get("GH_ENABLED", "false") == "TRUE") ? TenXEnv.get("GH_DEST", TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/github") + "/log10x/policy/totals.csv" : TenXEnv.get("java.io.tmpdir", "/tmp") + "/tenx/kubernetes/" + TenXEnv.get("K8S_NAMESPACE", "demo") + "/" + TenXEnv.get("K8S_CONFIGMAP", "log10x-action-intent") + "/totals.csv")'

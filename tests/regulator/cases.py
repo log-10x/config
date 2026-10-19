@@ -155,24 +155,9 @@ def case_t3_reservation():
         "fill": {"svc": (total - bs, total)}}
 
 
-def case_g1_gitops_policy():
-    """Ruling 17: GH_ENABLED=true and no lookup env. The policy files sit where the GitHub
-    policy lane mirrors log10x/policy/*.csv (${java.io.tmpdir}/tenx/github/log10x/policy), and
-    the regulator reads caps.csv, totals.csv and actions.csv from there."""
-    lines = [info_line("svc", WORDS[w], i) for w in range(10) for i in range(60)]
-    lines = shuffled(lines, 19)
-    b = size(info_line("svc", WORDS[0], 0))
-    files = {"caps.csv": csv("container,cap", [("svc", 40 * b)]),
-             "totals.csv": csv("container,total", [("svc", 200 * b)]),
-             "actions.csv": csv("container,action", [("svc", "tier_down")]),
-             "config-generation.csv": csv("key,value", [("generation", "a1b2c3d4e5f6")])}
-    return lines, files, ["rateReceiverWarmupMs", "0"], ["GH_ENABLED=true"], {
-        "policy_mount": "/tmp/tenx/github/log10x/policy",
-        "held_min": 1, "routes": {"svc": {"tier_down"}}, "total": {"svc": 200 * b}, "patterns": {"svc": 10}}
-
-
 def case_g0_gitops_off():
-    """Ruling 17 regression: GH_ENABLED unset and no lookup env. The cap file stays unset, so the
+    """Ruling 17 regression: GH_ENABLED unset and no lookup env. (The lane itself is checked
+    live by gitops-live.sh.) The cap file stays unset, so the
     regulator loads no cap table and every line passes, as on main."""
     lines = [error_line("svc", i) for i in range(300)]
     return lines, {"caps.csv": csv("container,cap", [("svc", 1)])}, ["rateReceiverWarmupMs", "0"], [], {
@@ -253,7 +238,6 @@ CASES = {
     "u3-unit-typo-mute": case_u3_unit_typo_mute,
     "m1-mute-counts": case_m1_mute_counts,
     "t3-reservation": case_t3_reservation,
-    "g1-gitops-policy": case_g1_gitops_policy,
     "g0-gitops-off": case_g0_gitops_off,
     "t1-total": case_t1_total,
     "t2-noisiest": case_t2_noisiest,
@@ -278,8 +262,6 @@ def prepare(name, out):
     with open(os.path.join(out, "env"), "w") as f:
         for e in env:
             f.write((e if "=" in e else "%s=/policy/%s" % ENV[e]) + "\n")
-    with open(os.path.join(out, "mount"), "w") as f:
-        f.write(expect.get("policy_mount", "/policy") + "\n")
     with open(os.path.join(out, "config"), "w") as f:
         f.write(expect.get("config", "") + "\n")
 

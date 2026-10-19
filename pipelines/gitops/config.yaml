@@ -24,7 +24,8 @@ include:
   # (pipelines/run/receive/rate/config.yaml), and every sync rewrites them in
   # place, so the lookups hot-reload. The folder must exist in the repo and
   # hold caps.csv when the engine starts: a missing folder stops the pull, and
-  # a sync refreshes only the files the first pull found.
+  # a sync refreshes only the files the first pull found. With the kubernetes
+  # lane below also on, these copies win for the four files: enable one lane.
 
   - source: github
 
@@ -98,6 +99,10 @@ include:
 # source-of-truth lives in the cluster rather than a remote repo. Useful
 # for air-gapped deployments and for tooling that already writes intent
 # (e.g. log10x-mcp configure_engine) directly into kubernetes.
+#
+# Enable one lane for the regulator's files, not both: with GH_ENABLED=true the
+# rate regulator's caps, actions, totals and config-generation files default to
+# the GitHub policy lane's mirror, so this lane's copies of them are not read.
 #
 # DISABLED unless K8S_ENABLED=true on the pod. The MCP install wizard sets
 # it (with a seeded ConfigMap + RBAC read grant), so a wizard-installed
