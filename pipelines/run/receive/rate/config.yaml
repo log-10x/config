@@ -75,8 +75,9 @@ rateReceiver:
   # 'keepCounts' is the number of lines per pattern per window that pass for a
   #  level once the pattern is over its cap or its container is over its total,
   #  also under a mute file entry. A listed level skips its 'severityFloors' draw.
-  #  Keys must match the level vocabulary emitted by the level enrichment. Keep at
-  #  least one entry: like 'severityFloors', an empty list stops the launch.
+  #  Keys must match the level vocabulary emitted by the level enrichment. The
+  #  module's settings set the same three counts; an entry here wins for its
+  #  level, and -1 gives a level its floor instead.
   keepCounts:
     - ERROR=50
     - CRITICAL=50    # the level enrichment maps fatal/critical -> CRITICAL
@@ -124,8 +125,9 @@ rateReceiver:
   #   <fieldSetKey>,<sampleRate>:<untilEpochSec>[:<reason>]
   #
   # sampleRate 1.0 = never sampled; <1.0 = retain at that rate. Entries self-heal
-  # past 'untilEpochSec'. The severity floor still applies so a 0.0 mute never
-  # silences ERROR/FATAL.
+  # past 'untilEpochSec'. The 'keepCounts' levels still pass their count per
+  # pattern per window, so a 0.0 mute never silences ERROR/CRITICAL/FATAL, and in
+  # a capped container the lines a mute passes count toward the service's total.
   #
   # Periodically pulling the mute file to keep it fresh is done via the gitops
   # configuration -- see https://doc.log10x.com/config/github/#config
@@ -147,7 +149,8 @@ rateReceiver:
   # 'absoluteCap' above. A row keyed '*' applies to every container without a
   # row of its own. Unlisted containers with no '*' row fall back to
   # 'absoluteCap' (or to no cap, when 'absoluteCap' is unset/0). A row of 0
-  # exempts its container.
+  # exempts its container; a '*' row of 0 exempts every container without a row
+  # of its own, so 'absoluteCap' then applies to none of them.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,cap
@@ -241,10 +244,12 @@ rateReceiver:
   # window, every pattern's cap scales by total / service volume, so its largest
   # patterns are held first; once the lines it passed reach the total, every
   # further line takes the service's action. The 'baselineCount' sample and the
-  # 'keepCounts' lines still pass and count toward the total, so an error storm
-  # can exceed it by that much. Read by the cap-file regulators, for containers
-  # with a cap. A row keyed '*' applies to every service without a row of its
-  # own; a row of 0 exempts its service. A missing file loads as an empty table.
+  # 'keepCounts' lines and the lines a mute entry passes still pass and count
+  # toward the total, so an error storm or a muted pattern can exceed it by that
+  # much. Read by the cap-file regulators, for containers with a cap. A row keyed
+  # '*' applies to every service without a row of its own; a row of 0 exempts its
+  # service, and a '*' row of 0 gives every unlisted service no total. A missing
+  # file loads as an empty table.
   #
   # File format (CSV; header row + one comma-separated entry per row):
   #   container,total

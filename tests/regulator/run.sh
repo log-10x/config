@@ -12,13 +12,14 @@
 #
 # Environment:
 #   MODULES_DIR  modules checkout to mount for the fix arm (required)
+#   CONFIG_DIR   config checkout to mount for the fix arm (default: this one)
 #   IMAGE        engine image (default: edge-10x 1.1.145, by digest)
 #   OUT          output folder (default: a new temporary folder)
 #   ARMS         arms to run (default: "main fix")
 
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_DIR="$(cd "$HERE/../.." && pwd)"
+CONFIG_DIR="$(cd "${CONFIG_DIR:-$HERE/../..}" && pwd)"
 : "${MODULES_DIR:?set MODULES_DIR to a modules checkout}"
 MODULES_DIR="$(cd "$MODULES_DIR" && pwd)"
 IMAGE="${IMAGE:-log10x/edge-10x:1.1.145@sha256:aec232a2f7d9da8277a529ea9d844267f8c6f10bb241f088c1fbe774b8b9949e}"

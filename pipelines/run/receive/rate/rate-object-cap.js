@@ -217,12 +217,14 @@ export class rateReceiverCapObject extends TenXObject {
         if (!keep && share < minSharePercent) regular = true;
         if (!keep && keepCount < 0 && TenXMath.random() < floor) regular = true;
 
-        // Hard bound: the units the service passed this window, reserved before the pass.
-        var reserved = false;
+        // Hard bound: the units the service passed this window. A line reserves
+        // its units, and a line that does not fit hands them back.
+        var counted = false;
         var passedBefore = 0;
         if (regular && serviceTotal > 0) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
-        if (regular && serviceTotal > 0) reserved = true;
-        if (regular && serviceTotal > 0 && (passedBefore + units) > serviceTotal) regular = false;
+        if (regular && serviceTotal > 0 && (passedBefore + units) <= serviceTotal) counted = true;
+        if (regular && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
+        if (regular && serviceTotal > 0 && !counted) regular = false;
         if (regular) keep = true;
 
         // Error-class levels with a keep count: the first K lines of a pattern
@@ -231,7 +233,7 @@ export class rateReceiverCapObject extends TenXObject {
         if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
         if (keptBefore >= 0 && keptBefore < keepCount) keep = true;
 
-        if (keep && serviceTotal > 0 && !reserved) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (keep && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
         if (keep) return true;
 
         // Held: the action is the container's active row, else the `*` row,

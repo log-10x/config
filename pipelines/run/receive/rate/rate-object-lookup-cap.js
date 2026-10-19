@@ -10,6 +10,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 // files are read as in rate-object-cap.js (the container's own row, then the
 // `*` row); mute-file decisions win over the regulator path entirely, except
 // that levels in `rateReceiverKeepCounts` pass their first lines per window.
+// Muted lines that pass count toward their capped service's total.
 //
 // One class only: rateReceiverLookupCapObject (regulator + mute-lookup +
 // cap, total and action lookups). Input classes for the tables live in
@@ -72,15 +73,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
                 }
             }
         }
-        // Under a mute, the levels with a keep count pass their first K lines
-        // per pattern per window; the mute's sample rate decides the rest.
-        var muteKept = -1;
-        if (hasActiveMute && keepCount >= 0) muteKept = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
-        if (hasActiveMute && muteKept >= 0 && muteKept < keepCount) return true;
-        if (hasActiveMute && TenXMath.random() > muteThreshold) this.route("drop");
-        if (hasActiveMute) return true; // mute decision is terminal (marked if over threshold)
-
-        // ---- regulator path (cap, total and action files, as in rate-object-cap.js) ----
+        // ---- 2. cap, total and action files, as in rate-object-cap.js ----
 
         // Cap: the container's active row, else the `*` row, else rateReceiverAbsoluteCap.
         // Entry shape: <units>[:<untilEpochSec>[:<reason>]]. A row of 0 exempts the container.
@@ -117,7 +110,6 @@ export class rateReceiverLookupCapObject extends TenXObject {
             }
         }
         if (!capFound) absoluteCap = TenXEnv.get("rateReceiverAbsoluteCap", 0);
-        if (absoluteCap == 0) return true;
 
         // Total per window: the container's active row, else the `*` row, else none.
         var serviceTotal = 0;
@@ -156,6 +148,25 @@ export class rateReceiverLookupCapObject extends TenXObject {
 
         var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
 
+        // A muted pattern follows its entry: the levels with a keep count pass
+        // their first K lines per pattern per window, and the sample rate decides
+        // the rest. In a capped container the lines that pass still count toward
+        // the pattern, the service volume and the service total, so the rest of
+        // the service gives way first.
+        var mutePass = false;
+        var muteKept = -1;
+        if (hasActiveMute && keepCount >= 0) muteKept = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (hasActiveMute && muteKept >= 0 && muteKept < keepCount) mutePass = true;
+        if (hasActiveMute && !mutePass && TenXMath.random() <= muteThreshold) mutePass = true;
+        if (hasActiveMute && mutePass && absoluteCap != 0) TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
+        if (hasActiveMute && mutePass && absoluteCap != 0) TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
+        if (hasActiveMute && mutePass && absoluteCap != 0 && serviceTotal > 0) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (hasActiveMute && !mutePass) this.route("drop");
+        if (hasActiveMute) return true; // mute decision is terminal (marked if over threshold)
+
+        // ---- 3. regulator path ----
+        if (absoluteCap == 0) return true;
+
         var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
         var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
@@ -186,12 +197,14 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (!keep && share < minSharePercent) regular = true;
         if (!keep && keepCount < 0 && TenXMath.random() < floor) regular = true;
 
-        // Hard bound: the units the service passed this window, reserved before the pass.
-        var reserved = false;
+        // Hard bound: the units the service passed this window. A line reserves
+        // its units, and a line that does not fit hands them back.
+        var counted = false;
         var passedBefore = 0;
         if (regular && serviceTotal > 0) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
-        if (regular && serviceTotal > 0) reserved = true;
-        if (regular && serviceTotal > 0 && (passedBefore + units) > serviceTotal) regular = false;
+        if (regular && serviceTotal > 0 && (passedBefore + units) <= serviceTotal) counted = true;
+        if (regular && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
+        if (regular && serviceTotal > 0 && !counted) regular = false;
         if (regular) keep = true;
 
         // Error-class levels with a keep count: the first K lines of a pattern
@@ -200,7 +213,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
         if (keptBefore >= 0 && keptBefore < keepCount) keep = true;
 
-        if (keep && serviceTotal > 0 && !reserved) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (keep && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
         if (keep) return true;
 
         // Held: the action is the container's active row, else the `*` row,

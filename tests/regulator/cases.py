@@ -85,11 +85,10 @@ def case_k3_mute_nocap():
 
 
 def case_k4_keepcounts_unset():
-    """keepCounts removed from config stops the launch, as a removed severityFloors does on main:
-    TenXMap.fromEntries is checked at parse time against the option's value, '' when unset."""
+    """keepCounts removed from config: the module's settings.yaml still sets K = 50, so the launch
+    works and ERROR passes the cap's 8 plus 50."""
     lines, files, args, env, _ = case_k1_errors()
-    return lines, files, args, env, {"config": "no-keepcounts", "launch_fails_with": [
-        "could not parse function: 'TenXMap_fromEntries'", "varName: rateReceiverKeepCounts, varValue: ''"]}
+    return lines, files, args, env, {"pass": {"ERROR": 58}, "config": "no-keepcounts"}
 
 
 def case_u1_events():
@@ -102,6 +101,58 @@ def case_u1_events():
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
     args = ["rateReceiverWarmupMs", "0", "rateReceiverUnit", "events"]
     return lines, files, args, ["CAP", "ACTION"], {"pass": {"INFO": 40}, "sizes_vary": True}
+
+
+def case_u2_unit_typo():
+    """4a.2: a unit other than bytes or events stops the launch (no-mute Input)."""
+    lines, files, _, env, _ = case_k1_errors()
+    return lines, files, ["rateReceiverWarmupMs", "0", "rateReceiverUnit", "event"], env, {
+        "launch_fails_with": ["the 'rateReceiverUnit' argument must be 'bytes' or 'events', received: event"]}
+
+
+def case_u3_unit_typo_mute():
+    """4a.2: the same with a mute file (the mute Input validates)."""
+    lines, files, args, env, _ = case_k2_mute()
+    return lines, files, args + ["rateReceiverUnit", "event"], env, {
+        "launch_fails_with": ["the 'rateReceiverUnit' argument must be 'bytes' or 'events', received: event"]}
+
+
+def case_m1_mute_counts():
+    """Ruling 16: a pattern muted at 0.5 still passes about half its lines, and those lines count
+    toward the service total, so the service's other patterns (80 lines, under the 100-line
+    total on their own) are held once the total is reached."""
+    muted = "alpha"
+    width = max(len(w) for w in WORDS) + 6
+    line = lambda w, i: record("svc", "2026-10-18T10:00:00.000Z INFO %s request served id=%0*d" % (w, width - len(w), i))
+    lines = [line(muted, i) for i in range(10000)]
+    lines += [line(WORDS[w], i) for w in range(1, 11) for i in range(8)]
+    lines = shuffled(lines, 13)
+    b = size(lines[0])
+    assert len({size(l) for l in lines}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 100000 * b)]),
+             "totals.csv": csv("container,total", [("svc", 100 * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")]),
+             "mutes.csv": csv("fieldSet,value", [("%s_request_served_id" % muted, "0.5:%d:test" % FUTURE)])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverLookupFile", "/policy/mutes.csv"]
+    others = ["%s_request_served_id" % WORDS[w] for w in range(1, 11)]
+    return lines, files, args, ["CAP", "ACTION", "TOTAL"], {
+        "share": {"%s_request_served_id" % muted: (0.45, 0.55)},
+        "held_in": {"patterns": others, "min": 1, "max_pass": 5 * 10 + 100}}
+
+
+def case_t3_reservation():
+    """Item 5: a line that does not fit the total hands its units back, so the service's small
+    lines fill the total to within one small line. Baseline 0, every pattern under its cap."""
+    big = [record("svc", "2026-10-18T10:00:00.000Z INFO upload stored blob=%s" % (("%06d" % i) * 300)) for i in range(300)]
+    small = [info_line("svc", WORDS[0], i) for i in range(300)]
+    lines = shuffled(big + small, 17)
+    bs = size(small[0])
+    total = 20000
+    files = {"caps.csv": csv("container,cap", [("svc", 10 ** 9)]),
+             "totals.csv": csv("container,total", [("svc", total)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    return lines, files, ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0"], ["CAP", "ACTION", "TOTAL"], {
+        "fill": {"svc": (total - bs, total)}}
 
 
 def case_t1_total():
@@ -174,6 +225,10 @@ CASES = {
     "k3-mute-nocap": case_k3_mute_nocap,
     "k4-keepcounts-unset": case_k4_keepcounts_unset,
     "u1-events": case_u1_events,
+    "u2-unit-typo": case_u2_unit_typo,
+    "u3-unit-typo-mute": case_u3_unit_typo_mute,
+    "m1-mute-counts": case_m1_mute_counts,
+    "t3-reservation": case_t3_reservation,
     "t1-total": case_t1_total,
     "t2-noisiest": case_t2_noisiest,
     "s1-star": case_s1_star,
@@ -274,6 +329,25 @@ def check(name, out):
         if pas_bytes > total:
             problems.append("%s passed %d bytes, over its total %d: the scaled cap alone should keep it under" % (c, pas_bytes, total))
 
+    for p, (lo, hi) in expect.get("share", {}).items():
+        got = by_pattern_pass[p] / max(1, by_pattern_all[p])
+        facts.append("%s passed %d of %d" % (p, by_pattern_pass[p], by_pattern_all[p]))
+        if not lo <= got <= hi:
+            problems.append("%s passed %.3f of its lines, want %.2f to %.2f" % (p, got, lo, hi))
+    if "held_in" in expect:
+        h = expect["held_in"]
+        pas = sum(by_pattern_pass[p] for p in h["patterns"])
+        tot = sum(by_pattern_all[p] for p in h["patterns"])
+        facts.append("other patterns passed %d of %d" % (pas, tot))
+        if tot - pas < h["min"]:
+            problems.append("other patterns held %d, want at least %d" % (tot - pas, h["min"]))
+        if pas > h["max_pass"]:
+            problems.append("other patterns passed %d, want at most %d" % (pas, h["max_pass"]))
+    for c, (lo, hi) in expect.get("fill", {}).items():
+        pas_bytes = sum(r["utfeightSize_of"] for r in passed if r["k8s_container"] == c)
+        facts.append("%s passed %d bytes of a %d total" % (c, pas_bytes, hi))
+        if not lo < pas_bytes <= hi:
+            problems.append("%s passed %d bytes, want more than %d and at most %d" % (c, pas_bytes, lo, hi))
     for c, want in expect.get("routes", {}).items():
         got = {r["routeState"] for r in rows if r["k8s_container"] == c and r["routeState"] != "pass"}
         facts.append("%s held as %s" % (c, sorted(got) or "nothing"))
