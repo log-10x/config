@@ -1,0 +1,43 @@
+# The paced regulator cases (cases.py, run.sh): replay.yaml with the Forward protocol input
+# in place of the file input, so cases.py can send batches a window apart.
+tenx: run
+runtimeName: paced
+include:
+  - apps/shared
+  - run/initialize/inputField
+  - run/initialize/level
+  - run/initialize/group
+  - run/initialize/message
+  - run/initialize/httpCode
+  - run/initialize/lookup
+  - run/initialize/custom
+  - run/initialize/k8s
+  - run/receive/rate
+  - run/aggregate/receive
+  - run/input/forward
+  - run/modules/output/event/file
+outputFile:
+  - path: $=TenXEnv.get("OUTPUT_DIR") + "/routed.jsonl"
+    encodeType: json
+    fields:
+      - routeState
+      - k8s_container
+      - severity_level
+      - message_pattern
+      - tenx_hash
+      - groupSize
+      - utf8Size()
+  - path: $=TenXEnv.get("OUTPUT_DIR") + "/summaries.jsonl"
+    encodeType: json
+    filter: isSummary
+    fields:
+      - inputName
+      - k8s_container
+      - severity_level
+      # A summary's own routeState is always pass; the bucket's value is encoded on it
+      # under the l1e_ prefix, which is what the metric outputs read.
+      - routeState=l1e_routeState
+      - message_pattern
+      - tenx_hash
+      - summaryVolume
+      - summaryBytes

@@ -177,6 +177,21 @@ export class rateReceiverCapObject extends TenXObject {
 
         var key = fieldSetKey + "@" + container;
         var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
+        var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
+
+        // What the service's caps alone let through in the previous window:
+        // rg_run_ counts it, and the first line of each window moves the count
+        // to rg_prev_. A service with no line in the window before gets 0.
+        var prevUnits = 0;
+        if (serviceTotal > 0) {
+            if (TenXCounter.getAndInc("rg_win_" + container, 1, windowMs) == 0) {
+                var lastStart = TenXCounter.getAndSet("rg_ws_" + container, nowSec);
+                var lastUnits = TenXCounter.getAndSet("rg_run_" + container, 0);
+                var lastWindow = (lastStart > 0 && (nowSec - lastStart) * 1000 < 2 * windowMs) ? lastUnits : 0;
+                TenXCounter.getAndSet("rg_prev_" + container, lastWindow);
+            }
+            prevUnits = TenXCounter.getAndInc("rg_prev_" + container, 0);
+        }
 
         var level = this.get(TenXEnv.get("levelField"));
         var floorMap = TenXMap.fromEntries(TenXEnv.get("rateReceiverSeverityFloors"));
@@ -186,10 +201,10 @@ export class rateReceiverCapObject extends TenXObject {
         var keepRaw = TenXMap.get(keepMap, level, "");
         var keepCount = TenXString.length(keepRaw) > 0 ? TenXMath.parseDouble(keepRaw) : -1;
 
-        var windowMs = TenXEnv.get("rateReceiverResetIntervalMs", 240000);
         var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
         var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
+        if (serviceTotal > 0 && (patternUnits + units) <= absoluteCap) TenXCounter.getAndInc("rg_run_" + container, units);
 
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
@@ -205,10 +220,13 @@ export class rateReceiverCapObject extends TenXObject {
         if (warmupMs > 0 && (now - firstSeen) < warmupMs) keep = true;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) keep = true;
 
-        // Noisiest first: once the service has seen more than its total this
-        // window, every pattern's cap scales by total / service units.
+        // Noisiest first: when the service's caps alone let more than its total
+        // through in the previous window, every pattern's cap scales by total /
+        // that amount for the whole window. With no previous window, the scale
+        // is total / the service's units so far this window.
         var effectiveCap = absoluteCap;
-        if (serviceTotal > 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
+        if (serviceTotal > 0 && prevUnits > serviceTotal) effectiveCap = absoluteCap * serviceTotal / prevUnits;
+        if (serviceTotal > 0 && prevUnits == 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
 
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
         var share = (patternUnits + units) / (containerUnits + units);

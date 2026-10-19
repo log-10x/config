@@ -4,6 +4,11 @@ files, then check what the engine routed.
   python3 cases.py list
   python3 cases.py prepare <case> <dir>   writes <dir>/events.log, <dir>/policy/*, <dir>/args, <dir>/env
   python3 cases.py check <case> <dir>     reads <dir>/routed.jsonl and <dir>/exit, prints PASS or FAIL
+  python3 cases.py send <dir> <port>      sends a paced case's batches over the Forward protocol
+
+A paced case (expect "pace") runs on paced.yaml: run.sh starts the engine with the Forward
+input and `send` sends each batch, a gap of seconds apart, so the batches land in
+consecutive regulator windows.
 
 Every line of a pattern has the same byte length, so caps and totals in bytes are
 exact line counts. Floors are 0 on the shipped configuration, so the expected
@@ -12,7 +17,10 @@ counts are exact, not statistical.
 import json
 import os
 import random
+import socket
+import struct
 import sys
+import time
 from collections import Counter, defaultdict
 
 FUTURE = 4102444800  # 2100-01-01, an expiry that never passes during a run
@@ -50,6 +58,44 @@ def shuffled(lines, seed):
     lines = list(lines)
     random.Random(seed).shuffle(lines)
     return lines
+
+
+FORWARD_TAG = "kube.var.log.containers.paced"
+
+
+def forward_size(line):
+    """The bytes of a line the Forward input emits: the record as compact JSON, the tag first."""
+    return len(('{"tag":"%s",' % FORWARD_TAG + line[1:]).encode("utf-8"))
+
+
+def pack(o):
+    """The msgpack subset the Forward protocol needs: str, int, list, dict."""
+    if isinstance(o, str):
+        b = o.encode()
+        n = len(b)
+        return (bytes([0xa0 | n]) if n < 32 else b"\xd9" + bytes([n]) if n < 256 else b"\xda" + struct.pack(">H", n)) + b
+    if isinstance(o, int):
+        return b"\xce" + struct.pack(">I", o)
+    if isinstance(o, list):
+        return bytes([0x90 | len(o)]) + b"".join(pack(x) for x in o)
+    if isinstance(o, dict):
+        return bytes([0x80 | len(o)]) + b"".join(pack(k) + pack(v) for k, v in o.items())
+    raise TypeError(type(o))
+
+
+def send(out, port):
+    pace = json.load(open(os.path.join(out, "pace")))
+    lines = open(os.path.join(out, "events.log")).read().splitlines()
+    start = 0
+    for i, n in enumerate(pace["batches"]):
+        if i:
+            time.sleep(pace["gap"])
+        with socket.create_connection(("127.0.0.1", int(port)), timeout=10) as s:
+            for l in lines[start:start + n]:
+                s.sendall(pack([FORWARD_TAG, int(time.time()), json.loads(l)]))
+            time.sleep(1)
+        print("sent batch %d: %d records" % (i + 1, n))
+        start += n
 
 
 # Each case returns (lines, files, args, env, expect). `files` maps policy file
@@ -228,6 +274,35 @@ def case_d1_defaults():
     return lines, files, [], ["CAP", "ACTION"], {"pass": {"ERROR": 58, "INFO": cap // bi}}
 
 
+def case_w1_windows():
+    """Ruling 21: the budget run's shape (a cap at the level L and a total of sum(min(rate, L)))
+    over two windows. In the second window the cap scale comes from the first window, so the
+    service passes its total to within one line."""
+    counts = [200, 120, 80, 40, 30, 20, 15, 10, 8, 6, 5, 4]
+    width = max(len(w) for w in WORDS) + 6
+    line = lambda w, i: record("svc", "2026-10-18T10:00:00.000Z INFO %s request served id=%0*d" % (w, width - len(w), i))
+    batches = [shuffled([line(WORDS[p], b * 1000 + i) for p, n in enumerate(counts) for i in range(n)], 23 + b)
+               for b in range(2)]
+    b = forward_size(batches[0][0])
+    assert len({forward_size(l) for l in batches[0] + batches[1]}) == 1
+    cap = 29
+    total = sum(min(n, cap) for n in counts)
+    files = {"caps.csv": csv("container,cap", [("svc", cap * b)]),
+             "totals.csv": csv("container,total", [("svc", total * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverResetIntervalMs", "60000"]
+    return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
+        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total},
+        "window_pass": {1: (total - 1, total)}}
+
+
+def case_w2_windows_mute():
+    """Ruling 21 with a mute file (the mute and cap file variant): the same two windows."""
+    lines, files, args, env, expect = case_w1_windows()
+    files["mutes.csv"] = csv("fieldSet,value", [("payment_failed_order_upstream_timeout", "0:%d:test" % FUTURE)])
+    return lines, files, args + ["rateReceiverLookupFile", "/policy/mutes.csv"], env, expect
+
+
 CASES = {
     "k1-errors": case_k1_errors,
     "k2-mute": case_k2_mute,
@@ -243,6 +318,8 @@ CASES = {
     "t2-noisiest": case_t2_noisiest,
     "s1-star": case_s1_star,
     "d1-defaults": case_d1_defaults,
+    "w1-windows": case_w1_windows,
+    "w2-windows-mute": case_w2_windows_mute,
 }
 
 ENV = {"CAP": ("CAP_LOOKUP_FILE", "caps.csv"), "ACTION": ("ACTION_LOOKUP_FILE", "actions.csv"),
@@ -264,6 +341,8 @@ def prepare(name, out):
             f.write((e if "=" in e else "%s=/policy/%s" % ENV[e]) + "\n")
     with open(os.path.join(out, "config"), "w") as f:
         f.write(expect.get("config", "") + "\n")
+    with open(os.path.join(out, "pace"), "w") as f:
+        f.write(json.dumps(expect["pace"]) if "pace" in expect else "")
 
 
 def check(name, out):
@@ -363,6 +442,21 @@ def check(name, out):
         facts.append("%s held as %s" % (c, sorted(got) or "nothing"))
         if got != want:
             problems.append("%s held as %s, want %s" % (c, sorted(got) or "nothing", sorted(want)))
+    if "pace" in expect:
+        start = 0
+        for i, n in enumerate(expect["pace"]["batches"]):
+            win = rows[start:start + n]
+            win_pass = [r for r in win if r.get("routeState") == "pass"]
+            sizes = {r["utfeightSize_of"] for r in win}
+            facts.append("window %d: %d of %d lines passed (total %d)" % (
+                i + 1, len(win_pass), len(win), expect["pace"]["total"]))
+            if len(sizes) > 1:
+                problems.append("window %d has lines of %d sizes, want one" % (i + 1, len(sizes)))
+            if i in expect.get("window_pass", {}):
+                lo, hi = expect["window_pass"][i]
+                if not lo <= len(win_pass) <= hi:
+                    problems.append("window %d passed %d lines, want %d to %d" % (i + 1, len(win_pass), lo, hi))
+            start += n
     for c, want in expect.get("pass_by_container", {}).items():
         got = sum(1 for r in passed if r["k8s_container"] == c)
         facts.append("%s passed %d (want %d)" % (c, got, want))
@@ -381,6 +475,8 @@ if __name__ == "__main__":
         print("\n".join(CASES))
     elif cmd == "prepare":
         prepare(sys.argv[2], sys.argv[3])
+    elif cmd == "send":
+        send(sys.argv[2], sys.argv[3])
     elif cmd == "check":
         sys.exit(0 if check(sys.argv[2], sys.argv[3]) else 1)
     else:

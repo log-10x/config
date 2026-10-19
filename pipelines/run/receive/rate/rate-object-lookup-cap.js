@@ -15,7 +15,7 @@ import { TenXObject, TenXEnv, TenXCounter, TenXMap, TenXMath, TenXLog, TenXLooku
 // One class only: rateReceiverLookupCapObject (regulator + mute-lookup +
 // cap, total and action lookups). Input classes for the tables live in
 // rate-object-lookup.js (mute) and rate-object-cap.js (cap, total, action),
-// both gated on their respective env vars independently of cap/mute state --
+// both gated on their respective env vars independently of cap/mute state,
 // so when both files are set, every table is loaded and this Object class can
 // call TenXLookup.get on each.
 //
@@ -148,6 +148,19 @@ export class rateReceiverLookupCapObject extends TenXObject {
 
         var units = (TenXEnv.get("rateReceiverUnit", "bytes") == "events") ? 1 : this.utf8Size();
 
+        // What the service's caps alone let through in the previous window, as
+        // in rate-object-cap.js. Muted lines that pass count in it.
+        var prevUnits = 0;
+        if (serviceTotal > 0 && absoluteCap != 0) {
+            if (TenXCounter.getAndInc("rg_win_" + container, 1, windowMs) == 0) {
+                var lastStart = TenXCounter.getAndSet("rg_ws_" + container, nowSec);
+                var lastUnits = TenXCounter.getAndSet("rg_run_" + container, 0);
+                var lastWindow = (lastStart > 0 && (nowSec - lastStart) * 1000 < 2 * windowMs) ? lastUnits : 0;
+                TenXCounter.getAndSet("rg_prev_" + container, lastWindow);
+            }
+            prevUnits = TenXCounter.getAndInc("rg_prev_" + container, 0);
+        }
+
         // A muted pattern follows its entry: the levels with a keep count pass
         // their first K lines per pattern per window, and the sample rate decides
         // the rest. In a capped container the lines that pass still count toward
@@ -161,6 +174,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (hasActiveMute && mutePass && absoluteCap != 0) TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
         if (hasActiveMute && mutePass && absoluteCap != 0) TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         if (hasActiveMute && mutePass && absoluteCap != 0 && serviceTotal > 0) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (hasActiveMute && mutePass && absoluteCap != 0 && serviceTotal > 0) TenXCounter.getAndInc("rg_run_" + container, units);
         if (hasActiveMute && !mutePass) this.route("drop");
         if (hasActiveMute) return true; // mute decision is terminal (marked if over threshold)
 
@@ -170,6 +184,7 @@ export class rateReceiverLookupCapObject extends TenXObject {
         var patternUnits = TenXCounter.getAndInc("rg_num_" + key, units, windowMs);
         var containerUnits = TenXCounter.getAndInc("rg_den_" + container, units, windowMs);
         var n = TenXCounter.getAndInc("rg_cnt_" + key, 1, windowMs);
+        if (serviceTotal > 0 && (patternUnits + units) <= absoluteCap) TenXCounter.getAndInc("rg_run_" + container, units);
 
         var now = TenXDate.now();
         var firstSeen = TenXCounter.getAndInc("rg_seen_" + container, 0);
@@ -185,10 +200,13 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (warmupMs > 0 && (now - firstSeen) < warmupMs) keep = true;
         if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) keep = true;
 
-        // Noisiest first: once the service has seen more than its total this
-        // window, every pattern's cap scales by total / service units.
+        // Noisiest first: when the service's caps alone let more than its total
+        // through in the previous window, every pattern's cap scales by total /
+        // that amount for the whole window. With no previous window, the scale
+        // is total / the service's units so far this window.
         var effectiveCap = absoluteCap;
-        if (serviceTotal > 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
+        if (serviceTotal > 0 && prevUnits > serviceTotal) effectiveCap = absoluteCap * serviceTotal / prevUnits;
+        if (serviceTotal > 0 && prevUnits == 0 && (containerUnits + units) > serviceTotal) effectiveCap = absoluteCap * serviceTotal / (containerUnits + units);
 
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
         var share = (patternUnits + units) / (containerUnits + units);
