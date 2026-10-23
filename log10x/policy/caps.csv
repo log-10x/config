@@ -1,4 +1,4 @@
 container,cap
-inventory,233::budget run
-opentelemetry-collector,170::budget run
-*,1077::budget run
+inventory,845::budget run
+opentelemetry-collector,156::budget run
+*,667::budget run
