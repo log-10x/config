@@ -189,10 +189,13 @@ rateReceiver:
   # 'configGeneration.file' points at the config-generation.csv the MCP control
   # plane (log10x_configure_engine) writes as a SIBLING of the cap file in the
   # cap ConfigMap. The receiver reads its `generation` value (a hash of the cap
-  # policy) and stamps it on every event as the `tenx_config_version` metric
-  # label, so the running engine advertises which config generation it loaded and
-  # the MCP can verify the policy it wrote is live (the config-generation closed
-  # loop). Hot-reloaded like the cap file.
+  # policy) and stamps it on every event as `tenx_config_version`. The
+  # `config_generation` aggregator publishes it as one series per generation
+  # (`config_generation_summaryVolume{tenx_config_version=...}`); the per-pattern
+  # counters do not carry it, so a policy write does not restart their series.
+  # The running engine advertises which config generation it loaded and the MCP
+  # can verify the policy it wrote is live (the config-generation closed loop).
+  # Hot-reloaded like the cap file.
   #
   # OPT-IN, decoupled from caps: unset by default, so the stamp is emitted ONLY
   # when this points at a file. A receiver running the regulator WITHOUT the MCP

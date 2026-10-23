@@ -49,8 +49,10 @@ elastic:
 
     # 'tagFields' sets the TenXSummary fields used as the counter tag dimension values.
     #  Defaults to https://doc.log10x.com/run/initialize/#enrichmentFields
+    #  plus https://doc.log10x.com/run/initialize/#metricTagFields
     tagFields:
       - $=yield TenXEnv.get("enrichmentFields")
+      - $=yield TenXEnv.get("metricTagFields")
 
     # 'tagFieldNames' allows setting custom names to aggregated fields for metrics reporting.
     #  Defaults to https://doc.log10x.com/run/initialize/#metricFieldNames

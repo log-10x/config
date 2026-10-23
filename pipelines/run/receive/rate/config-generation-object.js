@@ -46,9 +46,10 @@ export class configGenerationObject extends TenXObject {
     }
 
     constructor() {
-        // Stamp the running generation onto every event so it rides the summary
-        // metrics as the `tenx_config_version` label (declared in the receiver
-        // module settings.yaml). Table is referenced by the option (env-var)
+        // Stamp the running generation onto every event; the receiver's
+        // `config_generation` aggregator publishes it as one series per
+        // generation (`tenx_config_version` is a metricTagFields entry in the
+        // receiver module settings.yaml, not an enrichment field). Table is referenced by the option (env-var)
         // name, the same way rate-object-cap.js reads its cap table. "unset"
         // when the row is absent (file present but no generation written yet).
         var g = TenXLookup.get("rateReceiverConfigGenerationFile", "generation", "key", "value");

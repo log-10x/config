@@ -103,3 +103,27 @@ aggregator:
     # 'defaultValue' sets a constant value that is used instead of 'values' when
     #  'maxCardinality' is exceeded within 'flushInterval'
     defaultValue: unknown
+
+  # Defines an aggregator for the fields that label metrics without grouping the
+  # per-pattern aggregators above (metricTagFields), such as the config generation
+  # the receiver stamps as `tenx_config_version`. Each value gets one series, so a
+  # policy write adds one series instead of starting every pattern's series over.
+  # Enabled only when the receiver stamps a generation.
+  - name: config_generation
+
+    enabled: '$=yield TenXEnv.get("rateReceiverConfigGenerationFile") ? "true" : "false"'
+
+    filter: isObject
+
+    fields:
+      - $=yield TenXEnv.get("metricTagFields")
+
+    totalFields: []
+
+    flushThreshold: 10000
+
+    flushInterval: 2s
+
+    maxCardinality: 1024
+
+    defaultValue: unknown
