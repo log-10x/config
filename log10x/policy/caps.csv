@@ -1,10 +1,14 @@
 container,cap
-fluentd-10x,111::budget run
-grafana,111::budget run
-inventory,111::budget run
-opentelemetry-collector,111::budget run
-payment,111::budget run
-postgresql,111::budget run
-prometheus-server,111::budget run
-recommendation,111::budget run
-*,111::budget run
+ad,49::budget run
+cart,49::budget run
+fluentd-10x,49::budget run
+frontend,49::budget run
+grafana,49::budget run
+inventory,49::budget run
+kafka,49::budget run
+opensearch,49::budget run
+opentelemetry-collector,49::budget run
+quote,49::budget run
+recommendation,49::budget run
+valkey-cart,49::budget run
+*,49::budget run
