@@ -1,3 +1,4 @@
 container,total
-kafka,510::budget run
-*,825::budget run
+opensearch,718::budget run
+opentelemetry-collector,915::budget run
+*,816::budget run
