@@ -18,6 +18,7 @@ grafana,tier_down::budget run
 grafana-sc-alerts,tier_down::budget run
 grafana-sc-dashboard,tier_down::budget run
 grafana-sc-datasources,tier_down::budget run
+hb-inventory,tier_down::budget run
 init-config,tier_down::budget run
 jaeger,tier_down::budget run
 kafka,tier_down::budget run
