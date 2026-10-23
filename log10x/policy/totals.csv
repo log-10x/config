@@ -1,15 +1,14 @@
 container,total
-ad,131::budget run
-cart,118::budget run
-fluentd-10x,59::budget run
-frontend,59::budget run
-grafana,45::budget run
-inventory,59::budget run
-jaeger,54::budget run
-kafka,766::budget run
-opensearch,12::budget run
-opentelemetry-collector,237::budget run
-prometheus-server,8::budget run
-recommendation,59::budget run
+ad,141::budget run
+cart,125::budget run
+fluentd-10x,52::budget run
+frontend,62::budget run
+grafana,32::budget run
+inventory,62::budget run
+kafka,815::budget run
+opensearch,4::budget run
+opentelemetry-collector,250::budget run
+prometheus-server,4::budget run
+recommendation,62::budget run
 valkey-cart,20::budget run
-*,59::budget run
+*,62::budget run
