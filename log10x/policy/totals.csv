@@ -1,2 +1,3 @@
 container,total
-tenx-seed,1::install seed
+grafana,20::budget run
+*,20::budget run

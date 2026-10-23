@@ -1,2 +1,3 @@
 container,cap
-tenx-seed,1::install seed
+grafana,1::budget run
+*,1::budget run

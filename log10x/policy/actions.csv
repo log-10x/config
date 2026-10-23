@@ -1,2 +1,3 @@
 container,action
-tenx-seed,pass::install seed
+grafana,offload::budget run
+*,offload::budget run
