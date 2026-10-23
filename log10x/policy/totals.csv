@@ -1,3 +1,4 @@
 container,total
-opentelemetry-collector,808::budget run
-*,1229::budget run
+inventory,233::budget run
+opentelemetry-collector,878::budget run
+*,1077::budget run
