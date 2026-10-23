@@ -1,4 +1,10 @@
 container,total
-inventory,845::budget run
-opentelemetry-collector,788::budget run
-*,816::budget run
+fluentd-10x,170::budget run
+grafana,111::budget run
+inventory,111::budget run
+opentelemetry-collector,445::budget run
+payment,10::budget run
+postgresql,391::budget run
+prometheus-server,261::budget run
+recommendation,131::budget run
+*,151::budget run

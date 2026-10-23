@@ -1,4 +1,10 @@
 container,cap
-inventory,845::budget run
-opentelemetry-collector,156::budget run
-*,667::budget run
+fluentd-10x,111::budget run
+grafana,111::budget run
+inventory,111::budget run
+opentelemetry-collector,111::budget run
+payment,111::budget run
+postgresql,111::budget run
+prometheus-server,111::budget run
+recommendation,111::budget run
+*,111::budget run
