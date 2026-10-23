@@ -39,7 +39,8 @@ rateReceiver:
   resetIntervalMs: $=parseDuration("4m")
 
   # 'unit' is what the caps, the totals and the share guard count: 'bytes' (each
-  #  line counts its UTF-8 size) or 'events' (each line counts 1). Write the cap
+  #  event counts the UTF-8 size of the whole record the forwarder sends, not only
+  #  the message) or 'events' (each line counts 1). Write the cap
   #  and total files in the same unit. Any other value stops the launch.
   unit: bytes
 
