@@ -1,2 +1,2 @@
 container,action
-*,offload::budget run
+tenx-seed,pass::install seed
