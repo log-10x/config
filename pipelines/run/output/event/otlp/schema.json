@@ -76,6 +76,42 @@
             "markdownDescription" : "Maximum age in ms of a buffered LogRecord before forced flush\n\nPeriodic flush interval in milliseconds. Buffered LogRecords are flushed at most this often even when the batch size has not been reached. A longer interval lets more records coalesce into a single OTLP `ExportLogsServiceRequest`, which preserves the resource/scope grouping the destination Collector would see if Log10x weren't in the path. (Default: 1000)",
             "default" : "1000"
           },
+          "inflight" : {
+            "type" : [
+              "string",
+              "number",
+              "null"
+            ],
+            "markdownDescription" : "Most export requests outstanding at once\n\nNumber of `ExportLogsServiceRequest` calls the appender keeps open at once, retries included. When every one is outstanding and the buffer holds a full request, writing an event blocks until one is acknowledged, so the pipeline slows to the destination's pace instead of dropping records. (Default: 4)",
+            "default" : "4"
+          },
+          "retryInitialMs" : {
+            "type" : [
+              "string",
+              "number",
+              "null"
+            ],
+            "markdownDescription" : "Delay in ms before the first retry of a failed export\n\nA failed or timed-out export is retried with the same records until the destination accepts it. The delay starts at this value and doubles on each further failure, up to `outputOtlpRetryMaxMs`. (Default: 200)",
+            "default" : "200"
+          },
+          "retryMaxMs" : {
+            "type" : [
+              "string",
+              "number",
+              "null"
+            ],
+            "markdownDescription" : "Longest delay in ms between retries of a failed export\n\nUpper bound of the doubling retry delay. Retries continue at this interval for as long as the destination keeps refusing. (Default: 5000)",
+            "default" : "5000"
+          },
+          "deadlineMs" : {
+            "type" : [
+              "string",
+              "number",
+              "null"
+            ],
+            "markdownDescription" : "Time in ms an export may take before it counts as failed\n\ngRPC deadline of each export call. A destination that has not answered within it is treated as a failure and the export is retried. Keep it above the time the destination's slowest exporter takes to accept a request. (Default: 30000)",
+            "default" : "30000"
+          },
           "fields" : {
             "type" : [
               "array",
