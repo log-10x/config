@@ -1,4 +1,3 @@
 container,total
-opensearch,718::budget run
-opentelemetry-collector,915::budget run
-*,816::budget run
+opentelemetry-collector,808::budget run
+*,1229::budget run

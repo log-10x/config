@@ -1,4 +1,3 @@
 container,cap
-opensearch,68::budget run
-opentelemetry-collector,68::budget run
-*,68::budget run
+opentelemetry-collector,152::budget run
+*,1229::budget run
