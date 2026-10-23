@@ -1,3 +1,2 @@
 container,total
-grafana,20::budget run
-*,20::budget run
+*,1::budget run
