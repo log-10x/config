@@ -1,2 +1,3 @@
 container,action
+kafka,offload::budget run
 *,offload::budget run

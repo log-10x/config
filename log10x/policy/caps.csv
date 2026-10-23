@@ -1,2 +1,3 @@
 container,cap
-*,1::budget run
+kafka,94::budget run
+*,825::budget run

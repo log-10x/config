@@ -1,2 +1,3 @@
 container,total
-*,1::budget run
+kafka,510::budget run
+*,825::budget run
