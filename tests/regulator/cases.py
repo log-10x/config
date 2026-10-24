@@ -279,21 +279,21 @@ def sample_burst(extra_args=(), files_extra=None):
 
 
 def case_b1_sample_bound():
-    """E94: 200 new patterns, a 50-line total: the service passes its total and then at most
+    """200 new patterns, a 50-line total: the service passes its total and then at most
     rateReceiverBaselineMaxOverTotal (50) more sample lines, 100 in all, not 400."""
     lines, files, args, env = sample_burst()
     return lines, files, args, env, {"pass_by_container": {"svc": 100}}
 
 
 def case_b2_sample_bound_off():
-    """E94: rateReceiverBaselineMaxOverTotal 0 removes the bound: every sample line passes, as
+    """rateReceiverBaselineMaxOverTotal 0 removes the bound: every sample line passes, as
     before the bound (the option is new, so the case runs on the fix only)."""
     lines, files, args, env = sample_burst(["rateReceiverBaselineMaxOverTotal", "0"])
     return lines, files, args, env, {"pass_by_container": {"svc": 400}, "config": "fix-only"}
 
 
 def case_b3_sample_bound_mute():
-    """E94: the same burst with a mute file present (the mute + cap variant), the mute entry for
+    """the same burst with a mute file present (the mute + cap variant), the mute entry for
     a pattern that never prints: 100 pass."""
     lines, files, args, env = sample_burst(
         ["rateReceiverLookupFile", "/policy/mutes.csv"],
