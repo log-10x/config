@@ -27,6 +27,15 @@
               "markdownDescription" : "TCP port to listen on for OTLP/gRPC events from the OpenTelemetry Collector\n\nTCP port where Log10x listens for OTLP/gRPC log records from the OpenTelemetry Collector's `otlp` exporter. Match this against the `endpoint` of your Collector exporter. (Default: 4317)",
               "default" : "4317"
             },
+            "maxQueuedLines" : {
+              "type" : [
+                "string",
+                "number",
+                "null"
+              ],
+              "markdownDescription" : "Most lines the input queues before it refuses a request with UNAVAILABLE\n\nThe input answers an OTLP export only once every line of it has been written back to the Collector and acknowledged, removed by the output filter, or rejected by the decoder, so the Collector keeps custody of each line until then. Lines the engine has not yet read wait in a queue; a request that would take that queue past this many lines is refused with `UNAVAILABLE` and queues nothing, and the Collector's exporter retries it. The default is about ten seconds of the input's 2 MB a second decode budget at roughly 1 KB a record. (Default: 20000)",
+              "default" : "20000"
+            },
             "messageField" : {
               "type" : [
                 "string",

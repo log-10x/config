@@ -31,6 +31,12 @@ otelCollector:
     #  Env var: TENX_OTEL_COLLECTOR_INPUT_PORT
     port: $=TenXEnv.get("TENX_OTEL_COLLECTOR_INPUT_PORT", 4317)
 
+    # 'maxQueuedLines' caps the lines queued for the engine. An export is
+    #  answered only once every line of it is done, so the Collector keeps each
+    #  line until then; a request that would pass the cap is refused with
+    #  UNAVAILABLE and the Collector's exporter retries it.
+    maxQueuedLines: 20000
+
     # 'messageField' is the name of the JSON field on the rendered record
     #  carrying the log line text.
     messageField: body

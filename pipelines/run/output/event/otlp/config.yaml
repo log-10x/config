@@ -29,6 +29,19 @@ outputOtlp:
     # To learn more see https://doc.log10x.com/run/output/event/otlp/#outputotlpinsecure
     insecure: "true"
 
+    # 'inflight' caps the export requests outstanding at once, retries included. With every one
+    # outstanding and a full request buffered, writing blocks until one is acknowledged.
+    # To learn more see https://doc.log10x.com/run/output/event/otlp/#outputotlpinflight
+    inflight: 4
+
+    # 'retryInitialMs' and 'retryMaxMs' bound the doubling delay between retries of a failed
+    # export, which is retried until the destination accepts it.
+    retryInitialMs: 200
+    retryMaxMs: 5000
+
+    # 'deadlineMs' is how long one export may take before it counts as failed and is retried.
+    deadlineMs: 30000
+
     # 'filter' sets a JavaScript expression that TenXObjects must evaluate as truthy to write to the output.
     # To learn more see https://doc.log10x.com/run/output/receive/#filter-expressions
     filter: null
