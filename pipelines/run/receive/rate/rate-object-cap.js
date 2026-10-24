@@ -223,10 +223,13 @@ export class rateReceiverCapObject extends TenXObject {
         }
         var warmupMs = TenXEnv.get("rateReceiverWarmupMs", 0);
 
-        // Always kept: the warm-up and the per-pattern baseline sample.
+        // Always kept: the warm-up. The per-pattern baseline sample passes
+        // within the service total like any line, and past it up to
+        // rateReceiverBaselineMaxOverTotal sample lines per service per window.
         var keep = false;
         if (warmupMs > 0 && (now - firstSeen) < warmupMs) keep = true;
-        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) keep = true;
+        var inSample = false;
+        if (n < TenXEnv.get("rateReceiverBaselineCount", 5)) inSample = true;
 
         // Noisiest first: when the service's caps alone let more than its total
         // through in the previous window, every pattern's cap scales by total /
@@ -241,6 +244,7 @@ export class rateReceiverCapObject extends TenXObject {
         var minSharePercent = TenXEnv.get("rateReceiverMinSharePercent", 0);
         var share = (patternUnits + units) / (containerUnits + units);
         var regular = false;
+        if (!keep && inSample) regular = true;
         if (!keep && (patternUnits + units) <= effectiveCap) regular = true;
         if (!keep && share < minSharePercent) regular = true;
         if (!keep && keepCount < 0 && TenXMath.random() < floor) regular = true;
@@ -254,6 +258,12 @@ export class rateReceiverCapObject extends TenXObject {
         if (regular && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
         if (regular && serviceTotal > 0 && !counted) regular = false;
         if (regular) keep = true;
+
+        // A sample line past the service total: the service's allowance of
+        // sample lines over its total this window, unbounded at 0.
+        var sampleOver = TenXEnv.get("rateReceiverBaselineMaxOverTotal", 50);
+        if (!keep && inSample && sampleOver <= 0) keep = true;
+        if (!keep && inSample && sampleOver > 0 && TenXCounter.getAndInc("rg_sx_" + container, 1, windowMs) < sampleOver) keep = true;
 
         // Error-class levels with a keep count: the first K lines of a pattern
         // held by its cap or by the service total pass each window.

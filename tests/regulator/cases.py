@@ -265,6 +265,42 @@ def case_s1_star():
         "total": {"other": 80 * b}, "patterns": {"other": 2}}
 
 
+def sample_burst(extra_args=(), files_extra=None):
+    """200 new patterns of 2 lines each in one service whose total is 50 lines: every line is in
+    its pattern's sample, so only the sample bound stops them."""
+    lines = shuffled([pair_line(p, i) for p in range(200) for i in range(2)], 41)
+    b = size(lines[0])
+    assert len({size(l) for l in lines}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 100000 * b)]),
+             "totals.csv": csv("container,total", [("svc", 50 * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    files.update(files_extra or {})
+    return lines, files, ["rateReceiverWarmupMs", "0"] + list(extra_args), ["CAP", "ACTION", "TOTAL"]
+
+
+def case_b1_sample_bound():
+    """200 new patterns, a 50-line total: the service passes its total and then at most
+    rateReceiverBaselineMaxOverTotal (50) more sample lines, 100 in all, not 400."""
+    lines, files, args, env = sample_burst()
+    return lines, files, args, env, {"pass_by_container": {"svc": 100}}
+
+
+def case_b2_sample_bound_off():
+    """rateReceiverBaselineMaxOverTotal 0 removes the bound: every sample line passes, as
+    before the bound (the option is new, so the case runs on the fix only)."""
+    lines, files, args, env = sample_burst(["rateReceiverBaselineMaxOverTotal", "0"])
+    return lines, files, args, env, {"pass_by_container": {"svc": 400}, "config": "fix-only"}
+
+
+def case_b3_sample_bound_mute():
+    """the same burst with a mute file present (the mute + cap variant), the mute entry for
+    a pattern that never prints: 100 pass."""
+    lines, files, args, env = sample_burst(
+        ["rateReceiverLookupFile", "/policy/mutes.csv"],
+        {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
+    return lines, files, args, env, {"pass_by_container": {"svc": 100}}
+
+
 def case_d1_defaults():
     """4a.4: no command-line overrides. A capped container first seen this window is held."""
     lines = [error_line("svc", i) for i in range(1000)]
@@ -394,6 +430,9 @@ CASES = {
     "t2-noisiest": case_t2_noisiest,
     "s1-star": case_s1_star,
     "d1-defaults": case_d1_defaults,
+    "b1-sample-bound": case_b1_sample_bound,
+    "b2-sample-bound-off": case_b2_sample_bound_off,
+    "b3-sample-bound-mute": case_b3_sample_bound_mute,
     "w1-windows": case_w1_windows,
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
