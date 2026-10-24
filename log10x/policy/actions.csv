@@ -5,7 +5,6 @@ fluentd-10x,offload::budget run
 frontend,offload::budget run
 grafana,offload::budget run
 kafka,offload::budget run
-kube-proxy,offload::budget run
 opensearch,offload::budget run
 opentelemetry-collector,offload::budget run
 prometheus-server,offload::budget run
