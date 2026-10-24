@@ -11,8 +11,8 @@ tenx: compile
 # ============================ Symbol Library Output ==========================
 
 # 'outputSymbolLibraryFile' specifies location of output symbol library file which
-#  links the contents of 'outputSymbolFolder' to a single .json artifact and a
-#  compressed .zip version for use at run time by 10x 'run' pipelines.
+#  links the contents of 'outputSymbolFolder' to a single .10x.tar archive for
+#  use at run time by 10x 'run' pipelines.
 #  If a local output dir exists write to it, otherwise use the pipeline's temp folder.
 #  To learn more see https://doc.log10x.com/compile/link
 
