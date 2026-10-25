@@ -3,10 +3,8 @@ ad,offload::budget run
 cart,offload::budget run
 fluentd-10x,offload::budget run
 frontend,offload::budget run
-frontend-proxy,offload::budget run
 grafana,offload::budget run
 inventory,offload::budget run
-jaeger,offload::budget run
 kafka,offload::budget run
 opensearch,offload::budget run
 opentelemetry-collector,offload::budget run
