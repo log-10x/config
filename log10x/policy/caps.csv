@@ -1,13 +1,13 @@
 container,cap
-ad,46::budget run
-cart,46::budget run
-fluentd-10x,46::budget run
-frontend,46::budget run
-grafana,46::budget run
-inventory,46::budget run
-kafka,46::budget run
-opensearch,46::budget run
-opentelemetry-collector,46::budget run
-recommendation,46::budget run
-valkey-cart,46::budget run
-*,46::budget run
+ad,65::budget run
+cart,65::budget run
+fluentd-10x,65::budget run
+frontend,65::budget run
+grafana,65::budget run
+inventory,65::budget run
+kafka,65::budget run
+opensearch,65::budget run
+opentelemetry-collector,65::budget run
+recommendation,65::budget run
+valkey-cart,65::budget run
+*,65::budget run
