@@ -1,11 +1,2 @@
 container,cap
-ad,31::budget run
-cart,209::budget run
-fluentd-10x,15::budget run
-frontend,36::budget run
-grafana,5::budget run
-inventory,141::budget run
-kafka,31::budget run
-opentelemetry-collector,471::budget run
-recommendation,31::budget run
-*,278::budget run
+*,2053::budget run
