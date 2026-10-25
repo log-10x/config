@@ -4,6 +4,7 @@ cart,offload::budget run
 fluentd-10x,offload::budget run
 frontend,offload::budget run
 grafana,offload::budget run
+inventory,offload::budget run
 kafka,offload::budget run
 kube-proxy,offload::budget run
 opensearch,offload::budget run
