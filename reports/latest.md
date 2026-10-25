@@ -1,26 +1,27 @@
-# Rows run: 2026-10-25T04:02:34.000Z
+# Rows run: 2026-10-25T04:12:34.000Z
 
-Rows written: 30k of 30k an hour last hour (30k rows an hour set in the policy; part_log on default.otel_logs); at these limits the table takes about 30k an hour, with 87k an hour of lines to the account's bucket.
+Rows written: 31k of 30k an hour last hour (30k rows an hour set in the policy; part_log on default.otel_logs); at these limits the table takes about 30k an hour, with 83k an hour of lines to the account's bucket.
 
-- Outside the Receiver: 0 rows an hour (outside_rows_per_hour). The Receiver's counters read 30k pass lines an hour against 30k rows the meter puts on it, so each statement's rate is scaled by 1.00. The table holds 74k active rows.
-- The Receiver's statements send 117k lines an hour; 30k an hour fits the rate, so each statement keeps up to 1036 an hour and the noisiest give way first.
-- The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) keeps about 6048 lines an hour whatever the limits; the rate holds down to that floor.
+- Outside the Receiver: 0 rows an hour (outside_rows_per_hour). The Receiver's counters read 30k pass lines an hour against 31k rows the meter puts on it, so each statement's rate is scaled by 1.01. The table holds 79k active rows.
+- The Receiver's statements send 113k lines an hour; 30k an hour fits the rate, so each statement keeps up to 1065 an hour and the noisiest give way first.
+- The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) keeps about 5412 lines an hour whatever the limits; the rate holds down to that floor.
+- The meter read above the rate last hour; the limits below hold the next hour at the rate, and each node's totals bind inside every window.
 
 | Service | Destination | Nodes | Sent an hour | Kept an hour | Limit per statement | Total |
 |---|---|---|---|---|---|---|
-| ad | the account's bucket | 1 | 4236 | 2385 | 69 | 158 |
-| cart | the account's bucket | 1 | 13k | 2937 | 69 | 195 |
-| fluentd-10x | the account's bucket | 1 | 792 | 792 | 69 | 52 |
-| frontend | the account's bucket | 1 | 2508 | 1984 | 69 | 132 |
-| grafana | the account's bucket | 1 | 11k | 1606 | 69 | 107 |
-| inventory | the account's bucket | 1 | 7206 | 1036 | 69 | 69 |
-| kafka | the account's bucket | 1 | 18k | 14k | 69 | 901 |
-| kube-proxy | the account's bucket | 1 | 36 | 36 | 69 | 2 |
-| opensearch | the account's bucket | 1 | 144 | 144 | 69 | 9 |
-| opentelemetry-collector | the account's bucket | 1 | 57k | 4146 | 69 | 276 |
-| prometheus-server | the account's bucket | 1 | 84 | 84 | 69 | 5 |
-| recommendation | the account's bucket | 1 | 2430 | 1036 | 69 | 69 |
-| valkey-cart | the account's bucket | 1 | 390 | 390 | 69 | 26 |
-| `*` (any other service) | the account's bucket | 1 | | 1036 | 69 | 69 |
+| ad | the account's bucket | 1 | 5008 | 2475 | 70 | 165 |
+| cart | the account's bucket | 1 | 14k | 2948 | 70 | 196 |
+| fluentd-10x | the account's bucket | 1 | 843 | 843 | 70 | 56 |
+| frontend | the account's bucket | 1 | 2589 | 2132 | 70 | 142 |
+| grafana | the account's bucket | 1 | 612 | 612 | 70 | 40 |
+| inventory | the account's bucket | 1 | 7263 | 1065 | 70 | 70 |
+| kafka | the account's bucket | 1 | 19k | 14k | 70 | 925 |
+| kube-proxy | the account's bucket | 1 | 55 | 55 | 70 | 3 |
+| opensearch | the account's bucket | 1 | 188 | 188 | 70 | 12 |
+| opentelemetry-collector | the account's bucket | 1 | 60k | 4260 | 70 | 283 |
+| prometheus-server | the account's bucket | 1 | 152 | 152 | 70 | 10 |
+| recommendation | the account's bucket | 1 | 2401 | 1065 | 70 | 70 |
+| valkey-cart | the account's bucket | 1 | 424 | 424 | 70 | 28 |
+| `*` (any other service) | the account's bucket | 1 | | 1065 | 70 | 70 |
 
 Limits and totals are lines per 4-minute window per node. Error lines pass 50 over a limit per statement per node per window. The meter is `system.part_log` NewPart rows on default.otel_logs, read by the event's own time.
