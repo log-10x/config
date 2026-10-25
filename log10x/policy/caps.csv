@@ -1,14 +1,13 @@
 container,cap
-ad,224::budget run
-cart,224::budget run
-fluentd-10x,224::budget run
-frontend,224::budget run
-grafana,224::budget run
-kafka,224::budget run
-kube-proxy,224::budget run
-opensearch,224::budget run
-opentelemetry-collector,224::budget run
-prometheus-server,224::budget run
-recommendation,224::budget run
-valkey-cart,224::budget run
-*,224::budget run
+ad,230::budget run
+cart,230::budget run
+fluentd-10x,230::budget run
+frontend,230::budget run
+grafana,230::budget run
+kafka,230::budget run
+opensearch,230::budget run
+opentelemetry-collector,230::budget run
+prometheus-server,230::budget run
+recommendation,230::budget run
+valkey-cart,230::budget run
+*,230::budget run
