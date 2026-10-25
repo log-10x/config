@@ -1,3 +1,4 @@
 container,action
+inventory,offload::budget run
 opentelemetry-collector,offload::budget run
 *,offload::budget run
