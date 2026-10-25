@@ -6,8 +6,6 @@ frontend,offload::budget run
 grafana,offload::budget run
 inventory,offload::budget run
 kafka,offload::budget run
-opensearch,offload::budget run
 opentelemetry-collector,offload::budget run
 recommendation,offload::budget run
-valkey-cart,offload::budget run
 *,offload::budget run
