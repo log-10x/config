@@ -1,4 +1,3 @@
 container,total
-jaeger,707::budget run
-kafka,1345::budget run
-*,1026::budget run
+kafka,2053::budget run
+*,2053::budget run

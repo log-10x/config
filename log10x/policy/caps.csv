@@ -1,4 +1,3 @@
 container,cap
-jaeger,13::budget run
-kafka,13::budget run
-*,13::budget run
+kafka,70::budget run
+*,70::budget run

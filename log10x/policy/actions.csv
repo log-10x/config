@@ -1,4 +1,3 @@
 container,action
-jaeger,offload::budget run
 kafka,offload::budget run
 *,offload::budget run
