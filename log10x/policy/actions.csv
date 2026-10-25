@@ -1,3 +1,4 @@
 container,action
-grafana,offload::budget run
+jaeger,offload::budget run
+kafka,offload::budget run
 *,offload::budget run
