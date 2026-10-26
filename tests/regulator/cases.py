@@ -9,7 +9,8 @@ files, then check what the engine routed.
 A paced case (expect "pace") runs on paced.yaml: run.sh starts the engine with the Forward
 input and `send` sends each batch, a gap of seconds apart (or at the offsets in "at"), so
 the batches land in consecutive regulator windows. Windows start at epoch multiples of the
-window, so with "align" (the window in ms) `send` starts 2 seconds after the next multiple.
+window, so with "align" (the window in ms) `send` starts 2 seconds after the next multiple,
+and with "start" (epoch seconds, a window edge chosen at prepare) 2 seconds after it.
 
 Every line of a pattern has the same byte length, so caps and totals in bytes are
 exact line counts. Floors are 0 on the shipped configuration, so the expected
@@ -92,14 +93,18 @@ def send(out, port):
     if "align" in pace:
         w = pace["align"] / 1000.0
         t0 = (int((t0 + 1) / w) + 1) * w + 2
-        time.sleep(max(0, t0 - time.time()))
+    if "start" in pace:
+        t0 = pace["start"] + 2
+        if time.time() > t0 - 1:
+            sys.exit("the window edge chosen at prepare has passed")
+    time.sleep(max(0, t0 - time.time()))
     sent = []
     for i, n in enumerate(pace["batches"]):
         if "at" in pace:
             time.sleep(max(0, t0 + pace["at"][i] - time.time()))
         elif i:
             time.sleep(pace["gap"])
-        sent.append(time.time() - (t0 - 2 if "align" in pace else t0))
+        sent.append(time.time() - (t0 - 2 if "align" in pace or "start" in pace else t0))
         with socket.create_connection(("127.0.0.1", int(port)), timeout=10) as s:
             for l in lines[start:start + n]:
                 s.sendall(pack([FORWARD_TAG, int(time.time()), json.loads(l)]))
@@ -376,8 +381,8 @@ def case_e3_keep_bound_mute():
 
 def case_d1_defaults():
     """4a.4: no command-line overrides. A capped container first seen this window is held. The
-    ERROR lines arrive within seconds, so they pass the cap's 8 and one slice's share of K = 50
-    (12 or 13), or two slices' shares if the replay crosses a slice edge."""
+    ERROR lines arrive within seconds, so they pass the cap's 8 and the keep-count allowance of
+    the minute they arrive in: 12, 25, 37 or 50 of K = 50."""
     lines = [error_line("svc", i) for i in range(1000)]
     lines += [info_line("svc", WORDS[0], i) for i in range(200)]
     b = size(lines[0])
@@ -385,7 +390,7 @@ def case_d1_defaults():
     cap = 8 * b
     files = {"caps.csv": csv("container,cap", [("svc", cap)]),
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
-    return lines, files, [], ["CAP", "ACTION"], {"pass": {"INFO": cap // bi}, "pass_range": {"ERROR": (8 + 12, 8 + 26)}}
+    return lines, files, [], ["CAP", "ACTION"], {"pass": {"INFO": cap // bi}, "pass_range": {"ERROR": (8 + 12, 8 + 50)}}
 
 
 def case_w1_windows():
@@ -511,12 +516,13 @@ def error_storm(extra_args=(), files_extra=None):
     return lines, files, args, ["CAP", "ACTION"], {
         "pace": {"batches": [STORM_LINES + 1] * STORM_BATCHES, "at": [6 * k - 0.5 for k in range(STORM_BATCHES)],
                  "align": 240000},
-        "minute_pass": [13, 13, 12, 12, 13], "window_max": 50}
+        "slice_pass": (60, [12, 13, 12, 13, 12]), "window_max": 50}
 
 
 def case_k5_slices():
-    """E93: a steady ERROR storm over a full window passes K = 50 as 13, 13, 12 and 12 lines in
-    the window's four minutes, never a minute with none, and 13 in the next window's first."""
+    """E93: a steady ERROR storm over a full window passes K = 50 on the cumulative allowance
+    12, 25, 37, 50: 12, 13, 12 and 13 lines in the window's four minutes, never a minute with
+    none, and 12 in the next window's first."""
     return error_storm()
 
 
@@ -525,6 +531,27 @@ def case_k6_slices_mute():
     prints."""
     return error_storm(["rateReceiverLookupFile", "/policy/mutes.csv"],
                        {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
+
+
+def case_k7_mute_ends():
+    """E93: the storm's own pattern muted at 0 until 89 s into the window (the mute + cap variant).
+    The entry passes K = 50 on the count the regulator shares, so once it ends the window has no
+    count left: at most 50 for the window, and the next window passes lines again."""
+    edge = (int((time.time() + 150) / 240) + 1) * 240
+    lines, files, args, env, expect = error_storm(
+        ["rateReceiverLookupFile", "/policy/mutes.csv"],
+        {"mutes.csv": csv("fieldSet,value", [("payment_failed_order_upstream_timeout", "0:%d:test" % (edge + 89))])})
+    pace = dict(expect["pace"], start=edge)
+    del pace["align"]
+    return lines, files, args, env, {"pace": pace, "window_max": 50, "window_min": 1}
+
+
+def case_k8_slices_two():
+    """E93: rateReceiverKeepCountSlices 2 on the command line: 25 lines in each half of the
+    window and 25 in the next window's first half (the option is new, so the case runs on the
+    fix only)."""
+    lines, files, args, env, expect = error_storm(["rateReceiverKeepCountSlices", "2"])
+    return lines, files, args, env, dict(expect, slice_pass=(120, [25, 25, 25]), config="fix-only")
 
 
 CASES = {
@@ -554,6 +581,8 @@ CASES = {
     "w4-windows-late": case_w4_windows_late,
     "k5-slices": case_k5_slices,
     "k6-slices-mute": case_k6_slices_mute,
+    "k7-mute-ends": case_k7_mute_ends,
+    "k8-slices-two": case_k8_slices_two,
 }
 
 ENV = {"CAP": ("CAP_LOOKUP_FILE", "caps.csv"), "ACTION": ("ACTION_LOOKUP_FILE", "actions.csv"),
@@ -688,10 +717,10 @@ def check(name, out):
             win = rows[start:start + n]
             win_pass = [r for r in win if r.get("routeState") == "pass"]
             sizes = {r["utfeightSize_of"] for r in win}
-            if "minute_pass" not in expect:
+            if "window_max" not in expect:
                 facts.append("window %d: %d of %d lines passed (total %d)" % (
                     i + 1, len(win_pass), len(win), expect["pace"]["total"]))
-            if len(sizes) > 1 and "minute_pass" not in expect:
+            if len(sizes) > 1 and "window_max" not in expect:
                 problems.append("window %d has lines of %d sizes, want one" % (i + 1, len(sizes)))
             if i in expect.get("window_pass", {}):
                 lo, hi = expect["window_pass"][i]
@@ -714,7 +743,7 @@ def check(name, out):
                 facts.append("window %d large patterns passed %d to %d lines each" % (
                     i + 1, min(got[p] for p in moved), max(got[p] for p in moved)))
             start += n
-    if "minute_pass" in expect:
+    if "window_max" in expect:
         sent = json.load(open(os.path.join(out, "sent.json")))
         edge = [round(s, 1) for s in sent if min(s % 60, 60 - s % 60) < 1]
         if edge:
@@ -725,15 +754,20 @@ def check(name, out):
             minutes[int(sent[i] // 60)] += sum(1 for r in rows[start:start + n]
                                                if r.get("routeState") == "pass" and r["severity_level"] == "ERROR")
             start += n
-        got = [minutes[m] for m in range(len(expect["minute_pass"]))]
-        facts.append("passed per minute %s (want %s)" % (got, expect["minute_pass"]))
-        if got != expect["minute_pass"]:
-            problems.append("passed per minute %s, want %s" % (got, expect["minute_pass"]))
-        if 0 in got:
-            problems.append("minute %d of the storm passed nothing" % (got.index(0) + 1))
-        for w in range(0, len(got), 4):
-            if sum(got[w:w + 4]) > expect["window_max"]:
-                problems.append("window %d passed %d, more than %d" % (w // 4 + 1, sum(got[w:w + 4]), expect["window_max"]))
+        span = int(sent[-1] // 60) + 1
+        facts.append("ERROR passed per minute %s" % [minutes[m] for m in range(span)])
+        if "slice_pass" in expect:
+            sec, want = expect["slice_pass"]
+            got = [sum(minutes[m] for m in range(span) if m * 60 // sec == s) for s in range(len(want))]
+            facts.append("per %d s %s (want %s)" % (sec, got, want))
+            if got != want:
+                problems.append("passed per %d s %s, want %s" % (sec, got, want))
+        for w in range(0, span, 4):
+            got = sum(minutes[m] for m in range(w, min(w + 4, span)))
+            if got > expect["window_max"]:
+                problems.append("window %d passed %d, more than %d" % (w // 4 + 1, got, expect["window_max"]))
+            if got < expect.get("window_min", 0):
+                problems.append("window %d passed %d, want at least %d" % (w // 4 + 1, got, expect["window_min"]))
     for c, want in expect.get("distinct_patterns", {}).items():
         got = len({r["message_pattern"] for r in rows if r["k8s_container"] == c})
         facts.append("%s patterns %d (want %d)" % (c, got, want))

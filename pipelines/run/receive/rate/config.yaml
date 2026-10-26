@@ -87,13 +87,14 @@ rateReceiver:
     - FATAL=50       # kept for forwarders whose level vocabulary emits FATAL
 
   # 'keepCountSlices' is how many equal slices of the window release each
-  #  pattern's 'keepCounts' lines: a slice passes the count divided by the
-  #  slices, rounded down, and each of the first slices one more until the
-  #  remainder is used, so the count per window is unchanged. With ERROR=50 and
-  #  the 4-minute window, 4 slices pass 13, 13, 12 and 12 lines in its four
-  #  minutes, so an error storm reaches the destination every minute. A slice's
-  #  unused lines do not carry over, and lines under a mute entry pass at the
-  #  window start. 1 passes the whole count at the window start. Read by the
+  #  pattern's 'keepCounts' lines. The allowance accumulates: by the end of
+  #  slice i of S the pattern may have passed the count x i / S, rounded down,
+  #  so with ERROR=50 and the 4-minute window, 4 slices pass 12, 13, 12 and 13
+  #  lines of a sustained storm in its four minutes. Lines a slice leaves unused
+  #  carry to the next, so a burst late in the window passes more than one
+  #  early in it, never more than the count, and lines under a mute entry share
+  #  the same count. 1 passes the whole count at the window start; below 1 or
+  #  not a number acts as 1, and a fraction is rounded down. Read by the
   #  regulators that consult 'capLookup.file'.
   keepCountSlices: 4
 
