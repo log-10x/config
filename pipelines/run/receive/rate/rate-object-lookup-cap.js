@@ -242,10 +242,21 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if (!keep && inSample && sampleOver > 0 && TenXCounter.getAndInc("rg_sx_" + container, 1, windowMs) < sampleOver) keep = true;
 
         // Error-class levels with a keep count: the first K lines of a pattern
-        // held by its cap or by the service total pass each window.
+        // held by its cap or by the service total pass each window, within the
+        // service total like any line, and past it up to
+        // rateReceiverKeepMaxOverTotal keep lines per service per window.
         var keptBefore = -1;
         if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
-        if (keptBefore >= 0 && keptBefore < keepCount) keep = true;
+        var inKeep = false;
+        if (keptBefore >= 0 && keptBefore < keepCount) inKeep = true;
+        var keepOver = TenXEnv.get("rateReceiverKeepMaxOverTotal", 500);
+        if (inKeep && serviceTotal <= 0) keep = true;
+        if (inKeep && keepOver <= 0) keep = true;
+        if (inKeep && !keep) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
+        if (inKeep && !keep && (passedBefore + units) <= serviceTotal) counted = true;
+        if (inKeep && !keep && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
+        if (inKeep && counted) keep = true;
+        if (inKeep && !keep && TenXCounter.getAndInc("rg_kx_" + container, 1, windowMs) < keepOver) keep = true;
 
         if (keep && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
         if (keep) return true;
