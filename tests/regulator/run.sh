@@ -15,21 +15,23 @@
 # Environment:
 #   MODULES_DIR  modules checkout to mount for the fix arm (required)
 #   CONFIG_DIR   config checkout to mount for the fix arm (default: this one)
-#   IMAGE        engine image (default: edge-10x 1.1.145, by digest)
+#   IMAGE        engine image (default: edge-10x 1.1.150, by digest)
 #   OUT          output folder (default: a new temporary folder)
 #   ARMS         arms to run (default: "main fix"; add "before" with BEFORE_REF)
 #   BEFORE_REF   config commit for the before arm, extracted with git archive
 #   PORT         host port for the paced cases' Forward input (default: 24298)
+#   PREFIX       container name prefix (default: tenx-regulator)
 
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${CONFIG_DIR:-$HERE/../..}" && pwd)"
 : "${MODULES_DIR:?set MODULES_DIR to a modules checkout}"
 MODULES_DIR="$(cd "$MODULES_DIR" && pwd)"
-IMAGE="${IMAGE:-log10x/edge-10x:1.1.145@sha256:aec232a2f7d9da8277a529ea9d844267f8c6f10bb241f088c1fbe774b8b9949e}"
+IMAGE="${IMAGE:-ghcr.io/log-10x/edge-10x:1.1.150@sha256:3e755bbc14780a27e643e09b76dfd7ec9616cab67833f70daf9420eff646d350}"
 OUT="${OUT:-$(mktemp -d)}"
 ARMS="${ARMS:-main fix}"
 PORT="${PORT:-24298}"
+PREFIX="${PREFIX:-tenx-regulator}"
 CASES=("$@")
 [ ${#CASES[@]} -gt 0 ] || mapfile -t CASES < <(python3 -I "$HERE/cases.py" list)
 
@@ -78,24 +80,32 @@ PY
   local args=()
   while IFS= read -r a; do [ -n "$a" ] && args+=("$a"); done < "$dir/args"
   if [ -s "$dir/pace" ]; then run_paced "$name-$arm" "$dir" envs vols args; return; fi
+  local cname="$PREFIX-$name-$arm" code
+  docker rm -f -v "$cname" >/dev/null 2>&1 || true
   set +e
-  docker run --rm "${envs[@]}" "${vols[@]}" "$IMAGE" @/cfg/replay.yaml ${args[@]+"${args[@]}"} > "$dir/engine.log" 2>&1
-  echo $? > "$dir/exit"
+  if docker run -d --name "$cname" "${envs[@]}" "${vols[@]}" "$IMAGE" @/cfg/replay.yaml ${args[@]+"${args[@]}"} >/dev/null; then
+    code="$(timeout 600 docker wait "$cname")" || code=124
+    docker logs "$cname" > "$dir/engine.log" 2>&1
+  else
+    code=1; echo "docker run failed" > "$dir/engine.log"
+  fi
+  docker rm -f -v "$cname" >/dev/null 2>&1
+  echo "$code" > "$dir/exit"
   set -e
 }
 
 # A paced case: the engine runs on paced.yaml (the Forward input) and cases.py sends the
 # batches. The exit file says 0 once the pipeline started.
 run_paced() {
-  local cname="tenx-regulator-$1" dir="$2"
+  local cname="$PREFIX-$1" dir="$2"
   local -n p_envs="$3" p_vols="$4" p_args="$5"
-  docker rm -f "$cname" >/dev/null 2>&1 || true
+  docker rm -f -v "$cname" >/dev/null 2>&1 || true
   docker run -d --name "$cname" -p "127.0.0.1:$PORT:24224" "${p_envs[@]}" "${p_vols[@]}" \
     -v "$HERE/paced.yaml":/cfg/paced.yaml:ro "$IMAGE" @/cfg/paced.yaml ${p_args[@]+"${p_args[@]}"} >/dev/null
   local t=0
-  until docker logs "$cname" 2>&1 | grep -q "pipeline units:"; do
+  until docker logs "$cname" 2>&1 | grep -q "Forward protocol server listening"; do
     if [ "$t" -ge 120 ] || ! docker ps -q -f "name=^$cname$" | grep -q .; then
-      docker logs "$cname" > "$dir/engine.log" 2>&1; docker rm -f "$cname" >/dev/null 2>&1
+      docker logs "$cname" > "$dir/engine.log" 2>&1; docker rm -f -v "$cname" >/dev/null 2>&1
       echo 1 > "$dir/exit"; return
     fi
     sleep 2; t=$((t + 2))
@@ -105,7 +115,7 @@ run_paced() {
   sleep 8
   docker stop -t 20 "$cname" >/dev/null
   docker logs "$cname" > "$dir/engine.log" 2>&1
-  docker rm "$cname" >/dev/null
+  docker rm -f -v "$cname" >/dev/null
   echo 0 > "$dir/exit"
 }
 

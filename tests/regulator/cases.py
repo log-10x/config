@@ -301,6 +301,66 @@ def case_b3_sample_bound_mute():
     return lines, files, args, env, {"pass_by_container": {"svc": 100}}
 
 
+BURST_PATTERNS = 1422
+BURST_LINES = 7
+TRIPLE_WIDTH = 3 * max(len(w) for w in WORDS) + 8
+
+
+def triple_words(p):
+    """Three different words per pattern, in order: 6,840 distinct triples of the 20 words."""
+    a = p // 342
+    rest = [w for w in range(20) if w != a]
+    b = rest[(p % 342) // 18]
+    c = [w for w in rest if w != b][p % 18]
+    return WORDS[a], WORDS[b], WORDS[c]
+
+
+def burst_line(p, i):
+    w = "%s %s %s" % triple_words(p)
+    return record("svc", "2026-10-18T10:00:00.000Z ERROR %s migration failed id=%0*d" % (w, TRIPLE_WIDTH - len(w), i))
+
+
+def error_burst(extra_args=(), files_extra=None):
+    """1,422 new ERROR patterns of 7 lines each in one window, in a service whose total is 100
+    lines and whose cap is 1 byte, so every line is over its cap: each pattern's first 5 lines
+    are its sample and the next 2 reach the keep count."""
+    lines = shuffled([burst_line(p, p * 10 + i) for p in range(BURST_PATTERNS) for i in range(BURST_LINES)], 43)
+    b = size(lines[0])
+    assert len({size(l) for l in lines}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 1)]),
+             "totals.csv": csv("container,total", [("svc", 100 * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    files.update(files_extra or {})
+    return lines, files, ["rateReceiverWarmupMs", "0"] + list(extra_args), ["CAP", "ACTION", "TOTAL"]
+
+
+def case_e1_keep_bound():
+    """1,422 new ERROR patterns, a 100-line total: the service passes its total, then at most
+    rateReceiverBaselineMaxOverTotal (50) sample lines and rateReceiverKeepMaxOverTotal (500)
+    keep-count lines, 650 in all; the rest take the service's action."""
+    lines, files, args, env = error_burst()
+    return lines, files, args, env, {"pass_by_container": {"svc": 650}, "routes": {"svc": {"tier_down"}},
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}}
+
+
+def case_e2_keep_bound_off():
+    """rateReceiverKeepMaxOverTotal 0 removes the bound: every line passes, the sample past the
+    sample bound by the keep count (the option is new, so the case runs on the fix only)."""
+    lines, files, args, env = error_burst(["rateReceiverKeepMaxOverTotal", "0"])
+    return lines, files, args, env, {"pass_by_container": {"svc": BURST_PATTERNS * BURST_LINES},
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}, "config": "fix-only"}
+
+
+def case_e3_keep_bound_mute():
+    """the same burst with a mute file present (the mute + cap variant), the mute entry for a
+    pattern that never prints: 650 pass."""
+    lines, files, args, env = error_burst(
+        ["rateReceiverLookupFile", "/policy/mutes.csv"],
+        {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
+    return lines, files, args, env, {"pass_by_container": {"svc": 650}, "routes": {"svc": {"tier_down"}},
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}}
+
+
 def case_d1_defaults():
     """4a.4: no command-line overrides. A capped container first seen this window is held."""
     lines = [error_line("svc", i) for i in range(1000)]
@@ -433,6 +493,9 @@ CASES = {
     "b1-sample-bound": case_b1_sample_bound,
     "b2-sample-bound-off": case_b2_sample_bound_off,
     "b3-sample-bound-mute": case_b3_sample_bound_mute,
+    "e1-keep-bound": case_e1_keep_bound,
+    "e2-keep-bound-off": case_e2_keep_bound_off,
+    "e3-keep-bound-mute": case_e3_keep_bound_mute,
     "w1-windows": case_w1_windows,
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
@@ -590,6 +653,11 @@ def check(name, out):
                 facts.append("window %d large patterns passed %d to %d lines each" % (
                     i + 1, min(got[p] for p in moved), max(got[p] for p in moved)))
             start += n
+    for c, want in expect.get("distinct_patterns", {}).items():
+        got = len({r["message_pattern"] for r in rows if r["k8s_container"] == c})
+        facts.append("%s patterns %d (want %d)" % (c, got, want))
+        if got != want:
+            problems.append("%s has %d patterns, want %d" % (c, got, want))
     for c, want in expect.get("pass_by_container", {}).items():
         got = sum(1 for r in passed if r["k8s_container"] == c)
         facts.append("%s passed %d (want %d)" % (c, got, want))
