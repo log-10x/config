@@ -86,6 +86,17 @@ rateReceiver:
     - CRITICAL=50    # the level enrichment maps fatal/critical -> CRITICAL
     - FATAL=50       # kept for forwarders whose level vocabulary emits FATAL
 
+  # 'keepCountSlices' is how many equal slices of the window release each
+  #  pattern's 'keepCounts' lines: a slice passes the count divided by the
+  #  slices, rounded down, and each of the first slices one more until the
+  #  remainder is used, so the count per window is unchanged. With ERROR=50 and
+  #  the 4-minute window, 4 slices pass 13, 13, 12 and 12 lines in its four
+  #  minutes, so an error storm reaches the destination every minute. A slice's
+  #  unused lines do not carry over, and lines under a mute entry pass at the
+  #  window start. 1 passes the whole count at the window start. Read by the
+  #  regulators that consult 'capLookup.file'.
+  keepCountSlices: 4
+
   # 'severityFloors' is the fraction of each level kept at random once a pattern is
   #  over its cap, for levels not in 'keepCounts'. 0 keeps none, so the cap holds.
   #  Floor-map keys must match the level vocabulary emitted by the level enrichment.

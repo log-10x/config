@@ -15,7 +15,8 @@
 # Environment:
 #   MODULES_DIR  modules checkout to mount for the fix arm (required)
 #   CONFIG_DIR   config checkout to mount for the fix arm (default: this one)
-#   IMAGE        engine image (default: edge-10x 1.1.150, by digest)
+#   IMAGE        engine image (default: edge-10x 1.1.152, by digest; the regulator windows and
+#                the keep-count slices of the paced cases need windows on epoch multiples)
 #   OUT          output folder (default: a new temporary folder)
 #   ARMS         arms to run (default: "main fix"; add "before" with BEFORE_REF)
 #   BEFORE_REF   config commit for the before arm, extracted with git archive
@@ -27,7 +28,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${CONFIG_DIR:-$HERE/../..}" && pwd)"
 : "${MODULES_DIR:?set MODULES_DIR to a modules checkout}"
 MODULES_DIR="$(cd "$MODULES_DIR" && pwd)"
-IMAGE="${IMAGE:-ghcr.io/log-10x/edge-10x:1.1.150@sha256:3e755bbc14780a27e643e09b76dfd7ec9616cab67833f70daf9420eff646d350}"
+IMAGE="${IMAGE:-log10x/edge-10x:1.1.152@sha256:ab3345e4c8a64595f4efaa7f32839dc73abe8fdd539bbabed24ea8ef6618a4dc}"
 OUT="${OUT:-$(mktemp -d)}"
 ARMS="${ARMS:-main fix}"
 PORT="${PORT:-24298}"
@@ -79,6 +80,9 @@ PY
   fi
   local args=()
   while IFS= read -r a; do [ -n "$a" ] && args+=("$a"); done < "$dir/args"
+  if [ "$arm" = fix ]; then
+    while IFS= read -r a; do [ -n "$a" ] && args+=("$a"); done < "$dir/fix-args"
+  fi
   if [ -s "$dir/pace" ]; then run_paced "$name-$arm" "$dir" envs vols args; return; fi
   local cname="$PREFIX-$name-$arm" code
   docker rm -f -v "$cname" >/dev/null 2>&1 || true

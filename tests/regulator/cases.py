@@ -8,7 +8,8 @@ files, then check what the engine routed.
 
 A paced case (expect "pace") runs on paced.yaml: run.sh starts the engine with the Forward
 input and `send` sends each batch, a gap of seconds apart (or at the offsets in "at"), so
-the batches land in consecutive regulator windows, which start at the first line.
+the batches land in consecutive regulator windows. Windows start at epoch multiples of the
+window, so with "align" (the window in ms) `send` starts 2 seconds after the next multiple.
 
 Every line of a pattern has the same byte length, so caps and totals in bytes are
 exact line counts. Floors are 0 on the shipped configuration, so the expected
@@ -88,17 +89,25 @@ def send(out, port):
     lines = open(os.path.join(out, "events.log")).read().splitlines()
     start = 0
     t0 = time.time()
+    if "align" in pace:
+        w = pace["align"] / 1000.0
+        t0 = (int((t0 + 1) / w) + 1) * w + 2
+        time.sleep(max(0, t0 - time.time()))
+    sent = []
     for i, n in enumerate(pace["batches"]):
         if "at" in pace:
             time.sleep(max(0, t0 + pace["at"][i] - time.time()))
         elif i:
             time.sleep(pace["gap"])
+        sent.append(time.time() - (t0 - 2 if "align" in pace else t0))
         with socket.create_connection(("127.0.0.1", int(port)), timeout=10) as s:
             for l in lines[start:start + n]:
                 s.sendall(pack([FORWARD_TAG, int(time.time()), json.loads(l)]))
             time.sleep(1)
         print("sent batch %d: %d records" % (i + 1, n))
         start += n
+    with open(os.path.join(out, "sent.json"), "w") as f:
+        json.dump(sent, f)
 
 
 # Each case returns (lines, files, args, env, expect). `files` maps policy file
@@ -106,12 +115,14 @@ def send(out, port):
 # what check() asserts on the fix.
 
 def case_k1_errors():
-    """4a.3: 1,000 ERROR lines over an 8-line cap pass the cap's 8, then exactly K = 50."""
+    """4a.3: 1,000 ERROR lines over an 8-line cap pass the cap's 8, then exactly K = 50 (the fix
+    with rateReceiverKeepCountSlices 1, the whole count at the window start)."""
     lines = [error_line("svc", i) for i in range(1000)]
     b = size(lines[0])
     files = {"caps.csv": csv("container,cap", [("svc", 8 * b)]),
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
-    return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION"], {"pass": {"ERROR": 58}}
+    return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION"], {
+        "pass": {"ERROR": 58}, "fix_args": ["rateReceiverKeepCountSlices", "1"]}
 
 
 def case_k2_mute():
@@ -136,8 +147,8 @@ def case_k3_mute_nocap():
 def case_k4_keepcounts_unset():
     """keepCounts removed from config: the module's settings.yaml still sets K = 50, so the launch
     works and ERROR passes the cap's 8 plus 50."""
-    lines, files, args, env, _ = case_k1_errors()
-    return lines, files, args, env, {"pass": {"ERROR": 58}, "config": "no-keepcounts"}
+    lines, files, args, env, expect = case_k1_errors()
+    return lines, files, args, env, dict(expect, config="no-keepcounts")
 
 
 def case_u1_events():
@@ -215,7 +226,8 @@ def case_g0_gitops_off():
 
 def case_t1_total():
     """4a.1 (i, iii): every pattern under its cap, the service over its total: held on the fix,
-    and passed bytes stay at or under the total plus the baseline and K allowances."""
+    and passed bytes stay at or under the total plus the baseline and K allowances (the fix
+    with rateReceiverKeepCountSlices 1, the whole count at the window start)."""
     lines = [info_line("svc", WORDS[w], i) for w in range(10) for i in range(60)]
     lines += [error_line("svc", i) for i in range(100)]
     lines = shuffled(lines, 3)
@@ -224,7 +236,8 @@ def case_t1_total():
              "totals.csv": csv("container,total", [("svc", 200 * bi)]),
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
     return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION", "TOTAL"], {
-        "held_min": 1, "total": {"svc": 200 * bi}, "patterns": {"svc": 11}, "error_pass_min": 55}
+        "held_min": 1, "total": {"svc": 200 * bi}, "patterns": {"svc": 11}, "error_pass_min": 55,
+        "fix_args": ["rateReceiverKeepCountSlices", "1"]}
 
 
 def case_t2_noisiest():
@@ -362,7 +375,9 @@ def case_e3_keep_bound_mute():
 
 
 def case_d1_defaults():
-    """4a.4: no command-line overrides. A capped container first seen this window is held."""
+    """4a.4: no command-line overrides. A capped container first seen this window is held. The
+    ERROR lines arrive within seconds, so they pass the cap's 8 and one slice's share of K = 50
+    (12 or 13), or two slices' shares if the replay crosses a slice edge."""
     lines = [error_line("svc", i) for i in range(1000)]
     lines += [info_line("svc", WORDS[0], i) for i in range(200)]
     b = size(lines[0])
@@ -370,7 +385,7 @@ def case_d1_defaults():
     cap = 8 * b
     files = {"caps.csv": csv("container,cap", [("svc", cap)]),
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
-    return lines, files, [], ["CAP", "ACTION"], {"pass": {"ERROR": 58, "INFO": cap // bi}}
+    return lines, files, [], ["CAP", "ACTION"], {"pass": {"INFO": cap // bi}, "pass_range": {"ERROR": (8 + 12, 8 + 26)}}
 
 
 def case_w1_windows():
@@ -392,7 +407,7 @@ def case_w1_windows():
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
     args = ["rateReceiverWarmupMs", "0", "rateReceiverResetIntervalMs", "60000"]
     return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
-        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total},
+        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total, "align": 60000},
         "window_pass": {0: (total - 30, total), 1: (total - 1, total)}}
 
 
@@ -433,7 +448,7 @@ def scaled_windows(counts, cap, total, muted=None):
     large = [pair_name(p) for p, n in enumerate(counts) if n == 60 and p != muted]
     allowance = 5 * len(counts) + (counts[muted] if muted is not None else 0)
     return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
-        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total},
+        "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total, "align": 60000},
         "window_pass": {0: (total - 1, total + allowance), 1: (total - 1, total)},
         "window_all_pass": {1: small}, "window_moved": {1: large}}
 
@@ -469,10 +484,47 @@ def case_w4_windows_late():
     batches = [first] + rest
     small = [pair_name(p) for p in range(20, 23)]
     large = [pair_name(p) for p in range(20)]
-    expect = {"pace": {"batches": [len(x) for x in batches], "at": [0, 110, 125, 185], "total": 301},
+    expect = {"pace": {"batches": [len(x) for x in batches], "at": [0, 110, 125, 185], "total": 301, "align": 60000},
               "window_pass": {0: (21, 21), 1: (300, 301 + 5 * 23), 2: (300, 301), 3: (300, 301)},
               "window_all_pass": {0: small, 2: small, 3: small}, "window_moved": {2: large, 3: large}}
     return [l for b in batches for l in b], files, args, env, expect
+
+
+STORM_BATCHES = 50
+STORM_LINES = 10
+
+
+def error_storm(extra_args=(), files_extra=None):
+    """One ERROR pattern, 10 lines every 6 seconds from 1.5 s after a window edge for 300 s (five
+    minutes, the 4-minute window and the first minute of the next), every line over its 1-byte
+    cap, no total and no sample, so only the keep count passes lines. Each batch ends with an
+    INFO line of the same container, held by its cap: the next group head seals a group, so the
+    INFO line, not the batch's last ERROR line, waits for the next batch or groupFlushTimeout."""
+    lines = []
+    for b in range(STORM_BATCHES):
+        lines += [error_line("svc", b * STORM_LINES + i) for i in range(STORM_LINES)]
+        lines.append(info_line("svc", WORDS[0], b))
+    files = {"caps.csv": csv("container,cap", [("svc", 1)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    files.update(files_extra or {})
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0"] + list(extra_args)
+    return lines, files, args, ["CAP", "ACTION"], {
+        "pace": {"batches": [STORM_LINES + 1] * STORM_BATCHES, "at": [6 * k - 0.5 for k in range(STORM_BATCHES)],
+                 "align": 240000},
+        "minute_pass": [13, 13, 12, 12, 13], "window_max": 50}
+
+
+def case_k5_slices():
+    """E93: a steady ERROR storm over a full window passes K = 50 as 13, 13, 12 and 12 lines in
+    the window's four minutes, never a minute with none, and 13 in the next window's first."""
+    return error_storm()
+
+
+def case_k6_slices_mute():
+    """k5 with a mute file present (the mute + cap variant), the entry for a pattern that never
+    prints."""
+    return error_storm(["rateReceiverLookupFile", "/policy/mutes.csv"],
+                       {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
 
 
 CASES = {
@@ -500,6 +552,8 @@ CASES = {
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
     "w4-windows-late": case_w4_windows_late,
+    "k5-slices": case_k5_slices,
+    "k6-slices-mute": case_k6_slices_mute,
 }
 
 ENV = {"CAP": ("CAP_LOOKUP_FILE", "caps.csv"), "ACTION": ("ACTION_LOOKUP_FILE", "actions.csv"),
@@ -523,6 +577,8 @@ def prepare(name, out):
         f.write(expect.get("config", "") + "\n")
     with open(os.path.join(out, "pace"), "w") as f:
         f.write(json.dumps(expect["pace"]) if "pace" in expect else "")
+    with open(os.path.join(out, "fix-args"), "w") as f:
+        f.write("".join(a + "\n" for a in expect.get("fix_args", [])))
 
 
 def check(name, out):
@@ -556,6 +612,10 @@ def check(name, out):
         facts.append("%s passed %d (want %d)" % (level, by_level[level], want))
         if by_level[level] != want:
             problems.append("%s passed %d, want exactly %d" % (level, by_level[level], want))
+    for level, (lo, hi) in expect.get("pass_range", {}).items():
+        facts.append("%s passed %d (want %d to %d)" % (level, by_level[level], lo, hi))
+        if not lo <= by_level[level] <= hi:
+            problems.append("%s passed %d, want %d to %d" % (level, by_level[level], lo, hi))
     if "held_min" in expect and held < expect["held_min"]:
         problems.append("nothing held")
     if expect.get("sizes_vary"):
@@ -628,9 +688,10 @@ def check(name, out):
             win = rows[start:start + n]
             win_pass = [r for r in win if r.get("routeState") == "pass"]
             sizes = {r["utfeightSize_of"] for r in win}
-            facts.append("window %d: %d of %d lines passed (total %d)" % (
-                i + 1, len(win_pass), len(win), expect["pace"]["total"]))
-            if len(sizes) > 1:
+            if "minute_pass" not in expect:
+                facts.append("window %d: %d of %d lines passed (total %d)" % (
+                    i + 1, len(win_pass), len(win), expect["pace"]["total"]))
+            if len(sizes) > 1 and "minute_pass" not in expect:
                 problems.append("window %d has lines of %d sizes, want one" % (i + 1, len(sizes)))
             if i in expect.get("window_pass", {}):
                 lo, hi = expect["window_pass"][i]
@@ -653,6 +714,26 @@ def check(name, out):
                 facts.append("window %d large patterns passed %d to %d lines each" % (
                     i + 1, min(got[p] for p in moved), max(got[p] for p in moved)))
             start += n
+    if "minute_pass" in expect:
+        sent = json.load(open(os.path.join(out, "sent.json")))
+        edge = [round(s, 1) for s in sent if min(s % 60, 60 - s % 60) < 1]
+        if edge:
+            problems.append("batches sent within 1 s of a minute edge: %s" % edge)
+        minutes = Counter()
+        start = 0
+        for i, n in enumerate(expect["pace"]["batches"]):
+            minutes[int(sent[i] // 60)] += sum(1 for r in rows[start:start + n]
+                                               if r.get("routeState") == "pass" and r["severity_level"] == "ERROR")
+            start += n
+        got = [minutes[m] for m in range(len(expect["minute_pass"]))]
+        facts.append("passed per minute %s (want %s)" % (got, expect["minute_pass"]))
+        if got != expect["minute_pass"]:
+            problems.append("passed per minute %s, want %s" % (got, expect["minute_pass"]))
+        if 0 in got:
+            problems.append("minute %d of the storm passed nothing" % (got.index(0) + 1))
+        for w in range(0, len(got), 4):
+            if sum(got[w:w + 4]) > expect["window_max"]:
+                problems.append("window %d passed %d, more than %d" % (w // 4 + 1, sum(got[w:w + 4]), expect["window_max"]))
     for c, want in expect.get("distinct_patterns", {}).items():
         got = len({r["message_pattern"] for r in rows if r["k8s_container"] == c})
         facts.append("%s patterns %d (want %d)" % (c, got, want))

@@ -265,14 +265,27 @@ export class rateReceiverCapObject extends TenXObject {
         if (!keep && inSample && sampleOver <= 0) keep = true;
         if (!keep && inSample && sampleOver > 0 && TenXCounter.getAndInc("rg_sx_" + container, 1, windowMs) < sampleOver) keep = true;
 
-        // Error-class levels with a keep count: the first K lines of a pattern
-        // held by its cap or by the service total pass each window, within the
+        // Error-class levels with a keep count: K lines of a pattern held by
+        // its cap or by the service total pass each window, within the
         // service total like any line, and past it up to
         // rateReceiverKeepMaxOverTotal keep lines per service per window.
+        // Slice i of S (rateReceiverKeepCountSlices) passes floor(K / S), one
+        // more while i < K mod S; its counter has the window's interval.
+        var keepSlices = TenXEnv.get("rateReceiverKeepCountSlices", 4);
+        var keepKey = "rg_kc_" + key;
+        var sliceKeep = keepCount;
+        if (keepCount >= 0 && keepSlices > 1) {
+            var keepSlicePos = (now % windowMs) * keepSlices;
+            var keepSlice = (keepSlicePos - (keepSlicePos % windowMs)) / windowMs;
+            var keepRem = keepCount % keepSlices;
+            sliceKeep = (keepCount - keepRem) / keepSlices;
+            if (keepSlice < keepRem) sliceKeep = sliceKeep + 1;
+            keepKey = "rg_kc_" + key + "_" + keepSlice;
+        }
         var keptBefore = -1;
-        if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc("rg_kc_" + key, 1, windowMs);
+        if (!keep && keepCount >= 0) keptBefore = TenXCounter.getAndInc(keepKey, 1, windowMs);
         var inKeep = false;
-        if (keptBefore >= 0 && keptBefore < keepCount) inKeep = true;
+        if (keptBefore >= 0 && keptBefore < sliceKeep) inKeep = true;
         var keepOver = TenXEnv.get("rateReceiverKeepMaxOverTotal", 500);
         if (inKeep && serviceTotal <= 0) keep = true;
         if (inKeep && keepOver <= 0) keep = true;
