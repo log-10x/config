@@ -10,6 +10,7 @@ currency,1::budget run
 email,1::budget run
 flagd,1::budget run
 flagd-ui,1::budget run
+fluentd-10x,1::budget run
 fraud-detection,1::budget run
 frontend,1::budget run
 frontend-proxy,1::budget run
@@ -26,6 +27,12 @@ load-generator,1::budget run
 metrics-server,1::budget run
 opensearch,1::budget run
 opentelemetry-collector,1::budget run
+payment,1::budget run
+postgresql,1::budget run
+prometheus-server,1::budget run
+quote,1::budget run
+recommendation,1::budget run
+valkey-cart,1::budget run
 wait-for-kafka,1::budget run
 wait-for-valkey-cart,1::budget run
 *,1::budget run
