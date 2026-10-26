@@ -1,54 +1,54 @@
-# Hot-tier run: 2026-10-26T00:19:09.000Z
+# Hot-tier run: 2026-10-26T00:20:09.000Z
 
-Hot tier: 5 MB of 41 MB (0.0406 GB set in the policy) on 1 hot node; at these limits it settles at about 85 MB within 2 hours, with 992 MB a day of counted lines moved to the frozen tier.
+Hot tier: 12 MB of 41 MB (0.0406 GB set in the policy) on 1 hot node; at these limits it settles at about 158 MB within 2 hours, with 1.1 GB a day of counted lines moved to the frozen tier.
 
-- Outside the Receiver: 0 MB on hot. The Receiver's kept lines: 3 MB in 1 indices; its tier_down lines not yet moved: 3 MB in 1.
+- Outside the Receiver: 0 MB on hot. The Receiver's kept lines: 5 MB in 1 indices; its tier_down lines not yet moved: 6 MB in 1.
 - A kept line stays on hot 2 hours (ILM policy tenx-keep (rollover max_age 10m + frozen min_age 110m)); a tier_down index 2 hours (default (no tier_down index has been moved yet)).
-- Each counted byte takes 1.27 bytes of store kept, 0.61 as tier_down (measured on the indices on hot).
-- The Receiver's statements send 1.3 GB a day; 0 MB a day fits the size, so each statement keeps up to 0 MB a day and the noisiest give way first.
-- The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) keeps about 327 MB a day on hot whatever the limits; the size holds down to that floor.
+- Each counted byte takes 2.44 bytes of store kept, 1.08 as tier_down (measured on the indices on hot).
+- The Receiver's statements send 1.4 GB a day; 0 MB a day fits the size, so each statement keeps up to 0 MB a day and the noisiest give way first.
+- The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) keeps about 294 MB a day on hot whatever the limits; the size holds down to that floor.
 - Warning: 1 documents on hot carry no utf8Size, so their statements count as 0 bytes. The Receiver writes it when installed for the hot-tier run.
-- Warning: The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) alone keeps about 327 MB a day on hot, more than the 0 MB a day that fits, so hot settles above 41 MB at about 85 MB. Raise the size, move the noisiest services to offload, or lower the sample.
+- Warning: The always-pass sample (5 lines a statement a window on every node, 50 more for an error statement over its limit) alone keeps about 294 MB a day on hot, more than the 0 MB a day that fits, so hot settles above 41 MB at about 158 MB. Raise the size, move the noisiest services to offload, or lower the sample.
 - Warning: Lines outside the Receiver and the tier_down lines waiting to move already fill 41 MB, so the Receiver's services keep nothing beyond the always-pass sample of 5 lines a statement a window.
 
 | Service | Destination | Nodes | Sent a day | Kept a day | Limit per statement | Total |
 |---|---|---|---|---|---|---|
-| accounting | the frozen tier | 1 | 3 MB | 3 MB | 1 | 8904 |
-| ad | the frozen tier | 1 | 36 MB | 2 MB | 1 | 6144 |
-| aws-eks-nodeagent | the frozen tier | 1 | 0 MB | 0 MB | 1 | 170 |
-| aws-node | the frozen tier | 1 | 0 MB | 0 MB | 1 | 809 |
-| aws-vpc-cni-init | the frozen tier | 1 | 0 MB | 0 MB | 1 | 1030 |
-| cart | the frozen tier | 1 | 79 MB | 2 MB | 1 | 4289 |
-| coredns | the frozen tier | 1 | 2 MB | 2 MB | 1 | 5266 |
-| currency | the frozen tier | 1 | 0 MB | 0 MB | 1 | 243 |
-| email | the frozen tier | 1 | 0 MB | 0 MB | 1 | 709 |
-| flagd | the frozen tier | 1 | 1 MB | 1 MB | 1 | 2288 |
-| flagd-ui | the frozen tier | 1 | 0 MB | 0 MB | 1 | 404 |
-| fluentd-10x | the frozen tier | 1 | 14 MB | 6 MB | 1 | 15612 |
-| fraud-detection | the frozen tier | 1 | 0 MB | 0 MB | 1 | 604 |
-| frontend | the frozen tier | 1 | 18 MB | 12 MB | 1 | 34653 |
-| frontend-proxy | the frozen tier | 1 | 10 MB | 10 MB | 1 | 26643 |
-| grafana | the frozen tier | 1 | 107 MB | 105 MB | 1 | 292016 |
-| grafana-sc-alerts | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1770 |
-| grafana-sc-dashboard | the frozen tier | 1 | 1 MB | 1 MB | 1 | 2504 |
-| grafana-sc-datasources | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1795 |
-| image-provider | the frozen tier | 1 | 2 MB | 2 MB | 1 | 4501 |
-| init-config | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1487 |
-| jaeger | the frozen tier | 1 | 7 MB | 7 MB | 1 | 18183 |
-| kafka | the frozen tier | 1 | 192 MB | 30 MB | 1 | 82001 |
-| kube-proxy | the frozen tier | 1 | 13 MB | 7 MB | 1 | 19177 |
-| load-generator | the frozen tier | 1 | 1 MB | 1 MB | 1 | 2049 |
-| metrics-server | the frozen tier | 1 | 2 MB | 2 MB | 1 | 6413 |
-| opensearch | the frozen tier | 1 | 18 MB | 18 MB | 1 | 50179 |
-| opentelemetry-collector | the frozen tier | 1 | 772 MB | 105 MB | 1 | 291405 |
-| payment | the frozen tier | 1 | 0 MB | 0 MB | 1 | 696 |
-| postgresql | the frozen tier | 1 | 2 MB | 2 MB | 1 | 6486 |
-| prometheus-server | the frozen tier | 1 | 2 MB | 2 MB | 1 | 6366 |
-| quote | the frozen tier | 1 | 0 MB | 0 MB | 1 | 112 |
-| recommendation | the frozen tier | 1 | 24 MB | 1 MB | 1 | 2932 |
-| valkey-cart | the frozen tier | 1 | 2 MB | 2 MB | 1 | 6616 |
-| wait-for-kafka | the frozen tier | 1 | 6 MB | 1 MB | 1 | 1399 |
-| wait-for-valkey-cart | the frozen tier | 1 | 0 MB | 0 MB | 1 | 1226 |
-| `*` (any other service) | the frozen tier | 1 | | 1 MB | 1 | 3611 |
+| accounting | the frozen tier | 1 | 3 MB | 3 MB | 1 | 7844 |
+| ad | the frozen tier | 1 | 39 MB | 2 MB | 1 | 6038 |
+| aws-eks-nodeagent | the frozen tier | 1 | 0 MB | 0 MB | 1 | 150 |
+| aws-node | the frozen tier | 1 | 0 MB | 0 MB | 1 | 713 |
+| aws-vpc-cni-init | the frozen tier | 1 | 0 MB | 0 MB | 1 | 907 |
+| cart | the frozen tier | 1 | 88 MB | 1 MB | 1 | 4146 |
+| coredns | the frozen tier | 1 | 2 MB | 2 MB | 1 | 4793 |
+| currency | the frozen tier | 1 | 0 MB | 0 MB | 1 | 214 |
+| email | the frozen tier | 1 | 0 MB | 0 MB | 1 | 624 |
+| flagd | the frozen tier | 1 | 1 MB | 1 MB | 1 | 2015 |
+| flagd-ui | the frozen tier | 1 | 0 MB | 0 MB | 1 | 356 |
+| fluentd-10x | the frozen tier | 1 | 14 MB | 5 MB | 1 | 14235 |
+| fraud-detection | the frozen tier | 1 | 0 MB | 0 MB | 1 | 532 |
+| frontend | the frozen tier | 1 | 19 MB | 12 MB | 1 | 34477 |
+| frontend-proxy | the frozen tier | 1 | 8 MB | 8 MB | 1 | 23472 |
+| grafana | the frozen tier | 1 | 96 MB | 93 MB | 1 | 258503 |
+| grafana-sc-alerts | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1560 |
+| grafana-sc-dashboard | the frozen tier | 1 | 1 MB | 1 MB | 1 | 2206 |
+| grafana-sc-datasources | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1581 |
+| image-provider | the frozen tier | 1 | 1 MB | 1 MB | 1 | 3965 |
+| init-config | the frozen tier | 1 | 0 MB | 0 MB | 1 | 1310 |
+| jaeger | the frozen tier | 1 | 6 MB | 6 MB | 1 | 16019 |
+| kafka | the frozen tier | 1 | 205 MB | 28 MB | 1 | 76844 |
+| kube-proxy | the frozen tier | 1 | 12 MB | 6 MB | 1 | 17460 |
+| load-generator | the frozen tier | 1 | 1 MB | 1 MB | 1 | 1805 |
+| metrics-server | the frozen tier | 1 | 2 MB | 2 MB | 1 | 5650 |
+| opensearch | the frozen tier | 1 | 16 MB | 16 MB | 1 | 44976 |
+| opentelemetry-collector | the frozen tier | 1 | 826 MB | 94 MB | 1 | 260895 |
+| payment | the frozen tier | 1 | 0 MB | 0 MB | 1 | 613 |
+| postgresql | the frozen tier | 1 | 2 MB | 2 MB | 1 | 5714 |
+| prometheus-server | the frozen tier | 1 | 2 MB | 2 MB | 1 | 5770 |
+| quote | the frozen tier | 1 | 0 MB | 0 MB | 1 | 99 |
+| recommendation | the frozen tier | 1 | 27 MB | 1 MB | 1 | 2881 |
+| valkey-cart | the frozen tier | 1 | 3 MB | 3 MB | 1 | 7058 |
+| wait-for-kafka | the frozen tier | 1 | 5 MB | 0 MB | 1 | 1356 |
+| wait-for-valkey-cart | the frozen tier | 1 | 0 MB | 0 MB | 1 | 1159 |
+| `*` (any other service) | the frozen tier | 1 | | 1 MB | 1 | 3423 |
 
 Limits and totals are bytes per 4-minute window per node, counted the way the Receiver counts them (utf8Size). Error lines pass 50 over a limit per statement per node per window.
