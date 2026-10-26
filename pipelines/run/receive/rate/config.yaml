@@ -33,11 +33,11 @@ rateReceiver:
   #  event (non-k8s input), the regulator falls back to a single node-wide bucket.
   containerField: $=yield TenXEnv.get("k8sContainerNameField")
 
-  # 'resetIntervalMs' is the window over which recent share is measured. A
-  #  regulator instance starts its first window at the first line it regulates
-  #  and a new one every interval after that, the same windows for all its
-  #  patterns and services. They do not follow the clock, and a policy file
-  #  reload does not start a new window.
+  # 'resetIntervalMs' is the window over which recent share is measured.
+  #  Windows start at each multiple of the interval since the Unix epoch, so
+  #  every node's windows line up with the clock, the same windows for all
+  #  patterns and services. The first window after a start is partial, and a
+  #  policy file reload does not start a new window.
   resetIntervalMs: $=parseDuration("4m")
 
   # 'unit' is what the caps, the totals and the share guard count: 'bytes' (each
