@@ -5,6 +5,9 @@ on:
     paths:
       - 'pipelines/run/input/forwarder/config.yaml'
       - 'tests/forwarder-encode-field.test.mjs'
+      - 'pipelines/run/output/event/fluentbit/**'
+      - 'pipelines/run/output/event/process/config.yaml'
+      - 'tests/fluentbit-record.test.mjs'
       - '.github/workflows/forwarder-config.yml'
 
 permissions:
