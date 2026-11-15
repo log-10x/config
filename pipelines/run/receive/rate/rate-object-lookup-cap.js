@@ -59,7 +59,10 @@ export class rateReceiverLookupCapObject extends TenXObject {
         // ---- 1. mute file (FILE WINS) ----
         var hasActiveMute = false;
         var muteThreshold = 0;
-        var entry = TenXLookup.get("rateReceiverLookupFile", fieldSetKey);
+        // The key is passed as a string. The lookup hashes a key's characters, but a
+        // templateHash field value carries the template's own numeric hash and would be
+        // looked up by that, so a mute file keyed on templateHash never matched.
+        var entry = TenXLookup.get("rateReceiverLookupFile", "" + fieldSetKey);
         if (entry) {
             var c1 = TenXString.indexOf(entry, ":", 0);
             if (c1 >= 0) {
