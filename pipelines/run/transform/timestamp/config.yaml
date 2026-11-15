@@ -16,6 +16,13 @@ timestamp:
   # 'timestamp' array. Set to 0 for unlimited.
   maxPerObject: 0
 
+  # 'fieldName' names the field that holds the event's time (e.g., eventTime). With
+  #  'maxPerObject' set to 1, an object whose text holds the name, followed by delimiters
+  #  only and then a timestamp the patterns below read, gets that timestamp as its one
+  #  timestamp. Unset, the first timestamp found is kept. Setting it needs an engine and
+  #  modules that declare 'timestampFieldName'.
+  # fieldName: eventTime
+
   # 'searchDirection' controls the direction(s) from with timestamps are searched for
   #  within the object's 'text' field. Possible values: 
 
