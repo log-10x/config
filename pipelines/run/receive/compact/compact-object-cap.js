@@ -68,7 +68,10 @@ export class CompactObject extends TenXObject {
         var fieldSetKey = this.joinFields("_", TenXEnv.get("compactReceiverFieldNames"));
         if (!fieldSetKey) return defaultEncode;
 
-        var entry = TenXLookup.get("compactReceiverLookupFile", fieldSetKey);
+        // The key is passed as a string. The lookup hashes a key's characters, but a
+        // templateHash field value carries the template's own numeric hash and would be
+        // looked up by that, so a cap file keyed on templateHash never matched.
+        var entry = TenXLookup.get("compactReceiverLookupFile", "" + fieldSetKey);
         if (!entry) return defaultEncode;
 
         // Entry shape: `<true|false>[:<untilEpochSec>][:<reason>]`.

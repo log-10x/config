@@ -22,7 +22,9 @@ compactReceiver:
   # each event's lookup key: the pattern field the message initializer writes
   # (symbolMessageField, message_pattern in the shipped configuration), as the
   # rate receiver's fieldNames, so MCP-authored entries address the same
-  # pattern the Reporter attributes cost to.
+  # pattern the Reporter attributes cost to. To key on the template, list
+  # `templateHash` instead, and quote each hash in the cap file: a hash can
+  # start with `#` or hold a space.
   fieldNames:
     - $=yield TenXEnv.get("symbolMessageField")
 
