@@ -41,6 +41,7 @@ group:
     - 'syslog:'           # Indicates a syslog message, marking the start of a system log event (e.g., "syslog: Message ...")
     - 'rsyslogd:'         # Indicates an rsyslog daemon log entry, marking the start of a logging system event (e.g., "rsyslogd: Log started ...")
     - 'auditd['           # Indicates an audit daemon log entry, marking the start of a security audit event (e.g., "auditd[1234]: Audit event ...")
+    - 'type='             # Indicates a Linux audit record as auditd writes it (e.g., "type=SYSCALL msg=audit(1723042099.699:13369): arch=c000003e ..."); each record is one event. The record's time in seconds and milliseconds is not read as a timestamp, so without this indicator the record joins the event above it.
     - 'daemon:'           # Indicates a syslog daemon facility log, marking the start of a system service event (e.g., "daemon: Service started ...")
     - 'user:'             # Indicates a syslog user facility log, marking the start of a user-related event (e.g., "user: User logged in ...")
     - 'local0:'           # Indicates a syslog local facility log, marking the start of a custom system event (e.g., "local0: Custom message ...")
