@@ -131,7 +131,7 @@ timestamp:
   - "yyyy-MM-dd HH:mm:ss.SSSS"                 # Microsecond precision format, 4-digit precision.
   - "yyyy-MM-dd HH:mm:ss.SSSSS"                # Microsecond precision format, 5-digit precision.
   - "yyyy-MM-dd HH:mm:ss.SSSSSS"               # Microsecond precision format, 6-digit precision.
-  - "MM/dd/yyyy*HH:mm:ss*SSS"                  # Used in some U.S.-based systems, particularly in legacy applications or specific logging frameworks.
+  - "MM/dd/yyyy HH:mm:ss.SSS"                  # U.S. date with milliseconds, e.g. "02/20/2025 13:07:46.504" in Linux audit records read with ausearch -i (msg=audit(02/20/2025 13:07:46.504:118908)).
   - "M/d/yyyy h:mm:ss a:SSS"                   # Common in systems using 12-hour time format, such as some Windows applications or older logging systems.
   - "M/d/yyyy hh:mm:ss a:SSS"                  # Common in systems using 12-hour time format with milliseconds and padded hour, such as some Windows applications.
   - "M/dd/yyyy hh:mm:ss a"                     # Similar to above, used in systems where millisecond precision is not needed.
