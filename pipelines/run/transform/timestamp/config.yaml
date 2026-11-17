@@ -16,6 +16,13 @@ timestamp:
   # 'timestamp' array. Set to 0 for unlimited.
   maxPerObject: 0
 
+  # 'fieldName' names the field that holds the event's time (e.g., eventTime). With
+  #  'maxPerObject' set to 1, an object whose text holds the name, followed by delimiters
+  #  only and then a timestamp the patterns below read, gets that timestamp as its one
+  #  timestamp. Unset, the first timestamp found is kept. Setting it needs an engine and
+  #  modules that declare 'timestampFieldName'.
+  # fieldName: eventTime
+
   # 'searchDirection' controls the direction(s) from with timestamps are searched for
   #  within the object's 'text' field. Possible values: 
 
@@ -131,7 +138,7 @@ timestamp:
   - "yyyy-MM-dd HH:mm:ss.SSSS"                 # Microsecond precision format, 4-digit precision.
   - "yyyy-MM-dd HH:mm:ss.SSSSS"                # Microsecond precision format, 5-digit precision.
   - "yyyy-MM-dd HH:mm:ss.SSSSSS"               # Microsecond precision format, 6-digit precision.
-  - "MM/dd/yyyy*HH:mm:ss*SSS"                  # Used in some U.S.-based systems, particularly in legacy applications or specific logging frameworks.
+  - "MM/dd/yyyy HH:mm:ss.SSS"                  # U.S. date with milliseconds, e.g. "02/20/2025 13:07:46.504" in Linux audit records read with ausearch -i (msg=audit(02/20/2025 13:07:46.504:118908)).
   - "M/d/yyyy h:mm:ss a:SSS"                   # Common in systems using 12-hour time format, such as some Windows applications or older logging systems.
   - "M/d/yyyy hh:mm:ss a:SSS"                  # Common in systems using 12-hour time format with milliseconds and padded hour, such as some Windows applications.
   - "M/dd/yyyy hh:mm:ss a"                     # Similar to above, used in systems where millisecond precision is not needed.

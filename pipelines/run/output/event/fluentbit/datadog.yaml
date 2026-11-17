@@ -140,9 +140,11 @@ fluentbitOut:
     #  https://docs.fluentbit.io/manual/pipeline/inputs/standard-input
     #  The 'text' argument below could be replaced by any list of intrinsic/calculated/extracted fields.
     #  The "" delimiter instructs 'joinFields' to produce JSON output.
+    #  An event with no timestamp is given the time it is written, so that every
+    #  record is a time and a map, as Fluent Bit reads them.
     fields:  #
       - open="["
-      - timestamp=dateFormat("+%s.%N")
+      - 'timestamp=timestamped ? dateFormat("+%s.%N") : now() / 1000'
       - separator=","
       - fields=joinFields("", "text")
       - close="]"

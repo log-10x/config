@@ -74,8 +74,13 @@ fluentbitOut:
       - "event_index=main"
       - "-p"
       - "event_source=fluent-bit-tenx-stream"
+
+      # Setting the sourcetype. The events are the full text of each event, as
+      # {"text": "<event>"}, not compact events, so they are not sent as 'tenx_encoded':
+      # the 10x Splunk app reads every event of that sourcetype as compact. Set
+      # SPLUNK_SOURCETYPE to the sourcetype your searches expect for this data.
       - "-p"
-      - "event_sourcetype=tenx_encoded"
+      - "$=\"event_sourcetype=\" + TenXEnv.get(\"SPLUNK_SOURCETYPE\", \"_json\")"
 
       # Setting TLS
       - "-p"
@@ -89,9 +94,9 @@ fluentbitOut:
 
       ############### Templates output ###############
 
-      # Set templates output to Elasticsearch
+      # Set templates output to Splunk
       - "-o"
-      - "es"
+      - "splunk"
       - "-m"
       - "templates"
 
@@ -146,9 +151,11 @@ fluentbitOut:
     #  https://docs.fluentbit.io/manual/pipeline/inputs/standard-input
     #  The 'text' argument below could be replaced by any list of intrinsic/calculated/extracted fields.
     #  The "" delimiter instructs 'joinFields' to produce JSON output.
+    #  An event with no timestamp is given the time it is written, so that every
+    #  record is a time and a map, as Fluent Bit reads them.
     fields:  #
       - open="["
-      - timestamp=dateFormat("+%s.%N")
+      - 'timestamp=timestamped ? dateFormat("+%s.%N") : now() / 1000'
       - separator=","
       - fields=joinFields("", "text")
       - close="]"
