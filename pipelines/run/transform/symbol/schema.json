@@ -94,14 +94,17 @@
                 "string",
                 "null"
               ],
-              "markdownDescription" : "Keys whose value holds the message\n\nKeys whose value holds the message. The name starts at the value's first word outside brackets, such as `starting` in `msg=starting` or `Subchannel` in `\"msg\":\"[core][Channel #1] Subchannel created\"`.  In a record that opens with `{`, reading starts at the first of these keys that has a value. A message key with no value stays out of the name. (Default: [\"msg\",\"message\",\"body\"])",
+              "markdownDescription" : "Keys whose value holds the message\n\nKeys whose value holds the message. The name starts at the value's first word outside brackets, such as `starting` in `msg=starting` or `Subchannel` in `\"msg\":\"[core][Channel #1] Subchannel created\"`.  In a record that opens with `{`, reading starts at the first of these keys that has a value. A message key with no value stays out of the name. (Default: [\"msg\",\"message\",\"body\",\"eventName\",\"eventType\",\"Message\"])",
               "items" : {
                 "type" : "string"
               },
               "default" : [
                 "msg",
                 "message",
-                "body"
+                "body",
+                "eventName",
+                "eventType",
+                "Message"
               ]
             }
           }
@@ -111,7 +114,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "Line of a multi-line event that names it\n\nWhich line of a multi-line event names it. The name, origin and skeleton all come from that line.  - `firstWithMessage`: the first line that holds message text. A line of only brackets, reserved keys and [joined](https://doc.log10x.com/run/transform/symbol/#symbolpreamblejoiners) names is passed over. The .NET console logger writes `info: cart.cartstore.ValkeyCartStore[0]` and then the message, so the second line names the event. A stack trace is named by its exception line. - `head`: always the first line. (Default: firstWithMessage)",
+          "markdownDescription" : "Line of a multi-line event that names it\n\nWhich line of a multi-line event names it. The name, origin and skeleton all come from that line.  - `firstWithMessage`: the first line that opens with a [message key](https://doc.log10x.com/run/transform/symbol/#symbolpreamblemessagekeys), such as `Message=` in a Windows event, else the first line that holds message text. A line of only brackets, reserved keys and [joined](https://doc.log10x.com/run/transform/symbol/#symbolpreamblejoiners) names is passed over. The .NET console logger writes `info: cart.cartstore.ValkeyCartStore[0]` and then the message, so the second line names the event. A stack trace is named by its exception line. - `head`: always the first line. (Default: firstWithMessage)",
           "default" : "firstWithMessage"
         },
         "maxOrigins" : {
