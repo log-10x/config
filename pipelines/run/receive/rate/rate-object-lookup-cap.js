@@ -38,6 +38,12 @@ export class rateReceiverLookupCapObject extends TenXObject {
         if ((!this.isObject) || (this.isRoute("drop"))) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
+        // An event the Receiver writes as its text while its shape waits for a
+        // template (templateCreateAfter) has none of its template's fields. It is
+        // regulated under the hash its template will have, a function of the event
+        // alone: counted, capped and totalled like any event, muted by an entry
+        // for that hash. Empty with the option off, so nothing changes there.
+        if (!fieldSetKey) fieldSetKey = this.pendingTemplateHash;
         if (!fieldSetKey) return true;
 
         // Inline the env lookup; a local var passed to this.get() is treated as an event field.
