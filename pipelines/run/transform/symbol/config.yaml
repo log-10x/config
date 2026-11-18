@@ -91,6 +91,16 @@ symbol:
     - "time"
     - "timestamp"
     - "ts"
+    - "date"
+    - "eventtime"
+    - "tz"
+    # firewall log header keys: a FortiGate line opens with 'date=... time=...
+    #  devname=... devid=... logid=...' before its type and subtype
+    - "devname"
+    - "devid"
+    - "logid"
+    - "logver"
+    - "clusterid"
     # 'msg' and 'message' are message keys (see 'preamble.messageKeys')
     # OpenTelemetry / collector envelope
     - "otel"
@@ -204,8 +214,11 @@ symbol:
     joiners: ['.', '::']
 
     # 'messageKeys' lists keys whose value holds the message. The name starts at
-    #  the value's first word outside brackets ('starting' in 'msg=starting').
-    messageKeys: [msg, message, body]
+    #  the value's first word outside brackets ('starting' in 'msg=starting'). In
+    #  a record that opens with '{' it starts at the first of these keys, so a
+    #  CloudTrail record is named from its 'eventName' and an Okta System Log
+    #  record from its 'eventType'.
+    messageKeys: [msg, message, body, eventName, eventType]
 
   # 'groupLead' picks the line of a multi-line event that names it.
   #  'firstWithMessage' uses the first line that holds message text, so the .NET
