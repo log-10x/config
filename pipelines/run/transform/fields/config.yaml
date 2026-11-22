@@ -92,5 +92,5 @@ compactFieldsTrim: null
 
 # 'compactFieldsUnsafeChars' is a regular expression for the characters a value
 #  must not hold; an event with such a value is written whole. The default,
-#  '[\x00-\x1f]', matches the control characters.
+#  '[\x00-\x1f]', matches every control character. Write it in quotes.
 compactFieldsUnsafeChars: null

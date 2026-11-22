@@ -160,7 +160,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "A regular expression for the characters a compactFields value must not hold\n\nA Java regular expression that matches one character, such as `[\\x00-\\x1f]`. An event with a listed value that holds such a character is written whole, in either `compactFieldsForm`. This is for a destination that would read such a value back changed. The default matches the control characters, tabs and line breaks among them. (Default: [\\x00-\\x1f])",
+      "markdownDescription" : "A regular expression for the characters a compactFields value must not hold\n\nA Java regular expression that matches one character, such as `'[\\x00-\\x1f]'`. An event with a listed value that holds such a character is written whole, in either `compactFieldsForm`. This is for a destination that reads some characters in an indexed value back as others, such as a tab as a space. The default matches every control character. In a YAML file, write the expression in quotes, since an unquoted `[...]` is a list. (Default: [\\x00-\\x1f])",
       "default" : "[\\x00-\\x1f]"
     }
   },
