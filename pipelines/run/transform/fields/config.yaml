@@ -78,6 +78,10 @@ field:
   #  'Subject.Account Name'. The default is '.'.
   lineHeadingJoin: null
 
+  # 'lineRestNames' lists the names whose value runs to the end of the text for
+  #  the 'lines' reader. For example: [Message]
+  lineRestNames: null
+
 # =========================== Compact Field Options ===========================
 
 # 'compactFields' lists the fields encode() writes beside each compact event,
