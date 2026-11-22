@@ -95,6 +95,9 @@ export class rateReceiverCapObject extends TenXObject {
         if ((!this.isObject) || (this.isRoute("drop"))) return true;
 
         var fieldSetKey = this.joinFields("_", TenXEnv.get("rateReceiverFieldNames"));
+        // An event the Receiver writes as its text (templateCreateAfter) has no
+        // template fields, so it is regulated under the hash its template will have.
+        if (!fieldSetKey) fieldSetKey = this.pendingTemplateHash;
         if (!fieldSetKey) return true;
 
         // Inline the env lookup; a local var passed to this.get() is treated as an event field.
