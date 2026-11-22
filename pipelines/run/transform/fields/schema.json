@@ -39,7 +39,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns, lines]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above finds the fields.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`. - **lines**: a text of several `name<separator>value` lines, such as   `LogName=Security`, under headings such as `Subject:`. A pair under a   heading is named by it, such as `Subject.Account Name`. A name that   occurs twice in one event gives no field.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it. A lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first, then `lines`. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
+          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns, lines]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above finds the fields.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`. - **lines**: a text of several `name<separator>value` lines, such as   `LogName=Security`, under headings such as `Subject:`. A pair under a   heading is named by it, such as `Subject.Account Name`. A name that   occurs twice in one event gives no field. A text with one line of text   is left to the next reader. An event with a carriage return that does   not end a line gives no fields.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it. A lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first, then `lines`. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
           "items" : {
             "type" : "string"
           }
@@ -97,7 +97,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The text that ends a pair's name for the lines field reader\n\nThe text that ends a pair's name for the `lines` reader, such as `=`, or a colon and a tab. A line's first separator splits it into a name and a value, and the value runs to the end of the line. The default is `=` and `:`.  Each must be made of token delimiters (`tokenDelims`) other than `-`, or the launch stops. In YAML, write a tab as `\"\\t\"`, in double quotes.",
+          "markdownDescription" : "The text that ends a pair's name for the lines field reader\n\nThe text that ends a pair's name for the `lines` reader, such as `=`, or a colon and a tab. A line's first separator splits it into a name and a value, and the value runs to the end of the line. The default is `=` and `:`.  Each must be made of token delimiters (`tokenDelims`) other than `-` or a line break, or the launch stops. In YAML, write a tab as `\"\\t\"`, in double quotes.",
           "items" : {
             "type" : "string"
           }
@@ -107,7 +107,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The characters that indent a line and follow a separator for the lines field reader\n\nThe characters that indent a line, and that the `lines` reader leaves out between a separator and its value. The default is a space and a tab. Each must be a token delimiter other than `-`. (Default:  \t)",
+          "markdownDescription" : "The characters that indent a line and follow a separator for the lines field reader\n\nThe characters that indent a line, and that the `lines` reader leaves out between a separator and its value. The default is a space and a tab. Each must be a token delimiter other than `-` or a line break. (Default:  \t)",
           "default" : " \t"
         },
         "lineHeadingMark" : {
@@ -115,7 +115,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The text that ends a heading line for the lines field reader\n\nThe text that ends a heading for the `lines` reader. A line that holds only a name and this mark is a heading, such as `Subject:`.  A heading names the lines after it that are indented deeper, up to an empty line or a line indented no deeper. A pair indented under no heading gives no field. (Default: :)",
+          "markdownDescription" : "The text that ends a heading line for the lines field reader\n\nThe text that ends a heading for the `lines` reader. A line that holds only a name and this mark is a heading, such as `Subject:`. It must be made of token delimiters other than `-` or a line break.  A heading names the lines after it that are indented deeper, up to an empty line or a line indented no deeper. A pair indented under no heading gives no field, and neither do other pairs that share its name, such as `Subject.Logon ID` for `Logon ID`. Nor does an indented pair in a text that mixes tabs and spaces in its indentation. (Default: :)",
           "default" : ":"
         },
         "lineHeadingJoin" : {
