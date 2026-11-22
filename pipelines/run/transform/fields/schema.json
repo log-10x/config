@@ -39,7 +39,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above runs as before.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it: a lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
+          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above finds the fields.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it. A lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
           "items" : {
             "type" : "string"
           }
@@ -49,7 +49,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The characters that separate key-value pairs for the kv field reader\n\nThe characters that end an unquoted value and separate pairs for the `kv` reader. A line feed always separates pairs. The default is a space and a comma; `=`, `\"` and `\\` are not accepted. (Default:  ,)",
+          "markdownDescription" : "The characters that separate key-value pairs for the kv field reader\n\nThe characters that end an unquoted value and separate pairs for the `kv` reader. A line feed always separates pairs. The default is a space and a comma. Each must be a token delimiter (`tokenDelims`) other than `=`, `\"` or `\\`, or the launch stops. (Default:  ,)",
           "default" : " ,"
         },
         "columns" : {
@@ -77,7 +77,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The character that separates columns for the columns field reader\n\nThe character that separates columns, other than `\"` or a line break. A column that opens with `\"` runs to its closing quote, and `\"\"` inside it is one quote. (Default: ,)",
+          "markdownDescription" : "The character that separates columns for the columns field reader\n\nThe character that separates columns. It must be a token delimiter (`tokenDelims`) other than `\"` or a line break, or the launch stops. A column that opens with `\"` runs to its closing quote, and `\"\"` inside it is one quote. (Default: ,)",
           "default" : ","
         },
         "nameAttributes" : {
@@ -99,7 +99,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "The fields each compact event carries beside it, as name or name=outputName\n\nThe fields of each event that `encode()` writes beside its compact form, in its record, so that the destination can index them without expanding the event. Each entry is a field name as the template's field readers name it (see `fieldReaders`), or `name=outputName` to write it under another name, such as `Event.EventData.NewProcessName=process_path`.  The fields are read from each event's text where its template places them, and an empty value is left out. An event is written whole (`fullText`) when:  - it has no template, or it is already compact; - it is a group of several lines; - the output writes no JSON record, as for raw lines, so every event is written whole; - no field reader reads its template, or the reader's structure characters   are not all token delimiters; - its text differs from its template's where names are read; - the reader cannot tell where a listed field's name or value ends; - a listed field occurs twice, other than as JSON array elements, which   are written as a list; - a value, or a name read from the event, does not decode; - a value is longer than `compactFieldsMaxValue`; - a value holds a control character and `compactFieldsForm` is `text`.  `compactFieldsWhole()` returns the reason. Unset (the default), records are written as before.",
+      "markdownDescription" : "The fields each compact event carries beside it, as name or name=outputName\n\nThe fields of each event that `encode()` writes beside its compact form in its record. A destination can then index them without expanding the event. Each entry is a field name as the template's field readers name it (see `fieldReaders`). An entry `name=outputName` writes it under another name, such as `Event.EventData.NewProcessName=process_path`. Two entries cannot share an output name, and the launch stops when `fieldReaders` is not set.  The fields are read from each event's text where its template places them, and an empty value is left out. An event is written whole (`fullText`) when:  - it has no template, or it is already compact; - it is a group of several lines; - the output writes no JSON record, as for raw lines, so every event is written whole; - its record already has a key named `compactFieldsKey`; - no field reader reads its template; - its text differs from its template's where names are read; - the reader cannot tell where a listed field's name or value ends; - a listed field occurs twice, other than as JSON array elements, which   are written as a list; - a value, or a name read from the event, does not decode; - a value is longer than `compactFieldsMaxValue`; - a value holds a character that `compactFieldsUnsafeChars` matches.  `compactFieldsWhole()` returns the reason. Unset (the default), `encode()` writes no fields.",
       "items" : {
         "type" : "string"
       }
@@ -109,7 +109,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "How compactFields are written in the record. Possible values: [object, text]\n\n- **object** (the default): a JSON object under `compactFieldsKey`, such as `\"fields\":{\"user\":\"bob\",\"tags\":[\"a\",\"b\"]}`. - **text**: one string under `compactFieldsKey` of `name<separator>\"value\"`   pairs separated by spaces, with `\\` and `\"` in a value escaped by a   backslash, such as `\"meta\":\"user::\\\"bob\\\"\"` with the separator `::`. An   event with a line break or other control character in a value is written whole. (Default: object)",
+      "markdownDescription" : "How compactFields are written in the record. Possible values: [object, text]\n\n- **object** (the default): a JSON object under `compactFieldsKey`, such as `\"fields\":{\"user\":\"bob\",\"tags\":[\"a\",\"b\"]}`. - **text**: one string under `compactFieldsKey` of `name<separator>\"value\"`   pairs separated by spaces, with `\\` and `\"` in a value escaped by a   backslash, such as `\"meta\":\"user::\\\"bob\\\"\"` with the separator `::`. (Default: object)",
       "default" : "object"
     },
     "compactFieldsKey" : {
@@ -117,7 +117,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "The record key compactFields are written under\n\nThe key of the record that holds the fields. The record must not already have a key of that name. (Default: fields)",
+      "markdownDescription" : "The record key compactFields are written under\n\nThe key of the record that holds the fields. An event whose record already has a key of that name is written whole. The launch stops when `encode()` itself adds one, as `encode(\"routeState\")` adds `routeState`. (Default: fields)",
       "default" : "fields"
     },
     "compactFieldsSeparator" : {
@@ -154,6 +154,14 @@
       ],
       "markdownDescription" : "Whether compactFields values lose white space at both ends\n\n`true` leaves out spaces, tabs and line breaks at both ends of each value, for a destination whose own extraction trims them. A value left empty is not written. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
       "default" : false
+    },
+    "compactFieldsUnsafeChars" : {
+      "type" : [
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "A regular expression for the characters a compactFields value must not hold\n\nA Java regular expression that matches one character, such as `[\\x00-\\x1f]`. An event with a listed value that holds such a character is written whole, in either `compactFieldsForm`. This is for a destination that would read such a value back changed. The default matches the control characters, tabs and line breaks among them. (Default: [\\x00-\\x1f])",
+      "default" : "[\\x00-\\x1f]"
     }
   },
   "additionalProperties" : false

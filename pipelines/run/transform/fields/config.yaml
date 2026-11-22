@@ -41,8 +41,8 @@ field:
   #  read almost any line. For example: [xml]
   readers: null
 
-  # 'pairDelimiters' sets the characters that separate pairs for the 'kv' reader.
-  #  The default is a space and a comma.
+  # 'pairDelimiters' sets the characters that separate pairs for the 'kv' reader,
+  #  each a token delimiter. The default is a space and a comma.
   pairDelimiters: null
 
   # 'columns' names the columns the 'columns' reader reads, in order
@@ -54,7 +54,7 @@ field:
   columnsKey: null
 
   # 'columnDelimiter' sets the character that separates columns for the 'columns'
-  #  reader. The default is a comma.
+  #  reader, a token delimiter. The default is a comma.
   columnDelimiter: null
 
   # 'nameAttributes' lists XML elements named by one of their attributes,
@@ -72,6 +72,7 @@ compactFields: null
 compactFieldsForm: null
 
 # 'compactFieldsKey' sets the record key the fields are written under. The default is 'fields'.
+#  An event whose record already has that key is written whole.
 compactFieldsKey: null
 
 # 'compactFieldsSeparator' sets the text between a name and its value in the 'text' form.
@@ -88,3 +89,8 @@ compactFieldsDecode: null
 
 # 'compactFieldsTrim' sets whether values lose white space at both ends. The default is false.
 compactFieldsTrim: null
+
+# 'compactFieldsUnsafeChars' is a regular expression for the characters a value
+#  must not hold; an event with such a value is written whole. The default,
+#  '[\x00-\x1f]', matches the control characters.
+compactFieldsUnsafeChars: null
