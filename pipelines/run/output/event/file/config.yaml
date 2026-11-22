@@ -43,10 +43,10 @@ outputFile:
     
   - path: $=path("data/sample/output") + "/decoded.log"
 
-    # Every object's text: an encoded ('~') line's decoded text, and a line a Receiver
-    #  sent as its text (its shape had no template yet, templateCreateAfter) as it is,
-    #  so a compact file decodes whole. Run with 'groupJoinLines false' to decode such a
-    #  file in its order: lines read as text are not joined into the events around them.
+    # Every object's text: an encoded ('~') line decoded, and a line a Receiver sent as
+    #  its text (templateCreateAfter) as it is, so a compact file decodes whole. Run with
+    #  'groupJoinLines false' to keep such a file's order, since lines read as text are
+    #  not joined into the events around them.
     filter: isObject   # https://doc.log10x.com/api/js/#TenXBaseObject+isObject
 
     fields: 
