@@ -36,9 +36,9 @@ field:
   # =============================== Reader Options ==============================
 
   # 'readers' lists the readers that find each template's fields, in order:
-  #  xml, kv, json or columns. When set, they replace the scan above for every
-  #  consumer of the fields. List xml and json before kv and columns, which
-  #  read almost any line. For example: [xml]
+  #  xml, kv, json, columns or lines. When set, they replace the scan above for
+  #  every consumer of the fields. List xml, json and lines before kv and
+  #  columns, which read almost any line. For example: [xml]
   readers: null
 
   # 'pairDelimiters' sets the characters that separate pairs for the 'kv' reader,
@@ -60,6 +60,23 @@ field:
   # 'nameAttributes' lists XML elements named by one of their attributes,
   #  as element@attribute. For example: [Data@Name]
   nameAttributes: null
+
+  # 'lineSeparators' lists the text that ends a pair's name for the 'lines' reader,
+  #  each made of token delimiters. The default is '=' and ':'. For classic
+  #  Windows event text: ['=', ":\t"]
+  lineSeparators: null
+
+  # 'lineSpaces' sets the characters that indent a line and follow a separator
+  #  for the 'lines' reader. The default is a space and a tab.
+  lineSpaces: null
+
+  # 'lineHeadingMark' sets the text that ends a heading line for the 'lines'
+  #  reader, as in 'Subject:'. The default is ':'.
+  lineHeadingMark: null
+
+  # 'lineHeadingJoin' sets the text between a heading and a name under it, as in
+  #  'Subject.Account Name'. The default is '.'.
+  lineHeadingJoin: null
 
 # =========================== Compact Field Options ===========================
 
