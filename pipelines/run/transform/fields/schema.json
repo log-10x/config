@@ -32,8 +32,128 @@
           ],
           "markdownDescription" : "KV field value terminator chars\n\nControls which characters found to the right of a token whose is a candidate for being a 'value' in a KV field formation should serve  as a terminator for the search.   For example, for an object whose [text](https://doc.log10x.com/api/js/#TenXBaseObject+text) field contains the following entry: 'status=RESULT_SUCCESS' the desired KV value  should be 'RESULT_SUCCESS', and as such the value terminator character  should be ',' vs. '_' (in which case the value would be 'RESULT'). (Default: /\\{}()[])",
           "default" : "/\\{}()[]"
+        },
+        "readers" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above runs as before.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it: a lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "pairDelimiters" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The characters that separate key-value pairs for the kv field reader\n\nThe characters that end an unquoted value and separate pairs for the `kv` reader. A line feed always separates pairs. The default is a space and a comma; `=`, `\"` and `\\` are not accepted. (Default:  ,)",
+          "default" : " ,"
+        },
+        "columns" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The column names for the columns field reader\n\nThe names of the columns the `columns` reader reads, in order, separated by commas, such as `receive_time,serial,type`. An empty name leaves its column unnamed. Columns past the last name are not read.  To name the columns by the value of one column, give one entry per value, such as `TRAFFIC=future_use1,receive_time,serial,type` and `THREAT=future_use1,receive_time,serial,type`, and set `fieldColumnsKey`. An entry without `=` applies to any other value.",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "columnsKey" : {
+          "type" : [
+            "number",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The column, counted from 1, whose value selects a fieldColumns list\n\nThe column, counted from 1, whose value selects the `fieldColumns` entry that names a line's columns. 0 (the default) uses the one entry without a value. (Accepts number or string with $= prefix for runtime evaluation) (Default: 0)",
+          "default" : 0
+        },
+        "columnDelimiter" : {
+          "type" : [
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The character that separates columns for the columns field reader\n\nThe character that separates columns, other than `\"` or a line break. A column that opens with `\"` runs to its closing quote, and `\"\"` inside it is one quote. (Default: ,)",
+          "default" : ","
+        },
+        "nameAttributes" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "XML elements whose attribute names their value, as element@attribute\n\nXML elements named by one of their attributes instead of their own name, as `element@attribute`. With `Data@Name`, the Windows event element `<Data Name='SubjectUserName'>bob</Data>` gives the field `Event.EventData.SubjectUserName` with the value `bob`.",
+          "items" : {
+            "type" : "string"
+          }
         }
       }
+    },
+    "compactFields" : {
+      "type" : [
+        "array",
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "The fields each compact event carries beside it, as name or name=outputName\n\nThe fields of each event that `encode()` writes beside its compact form, in its record, so that the destination can index them without expanding the event. Each entry is a field name as the template's field readers name it (see `fieldReaders`), or `name=outputName` to write it under another name, such as `Event.EventData.NewProcessName=process_path`.  The fields are read from each event's text where its template places them, and an empty value is left out. An event is written whole (`fullText`) when:  - it has no template, or it is already compact; - it is a group of several lines; - the output writes no JSON record, as for raw lines, so every event is written whole; - no field reader reads its template, or the reader's structure characters   are not all token delimiters; - its text differs from its template's where names are read; - the reader cannot tell where a listed field's name or value ends; - a listed field occurs twice, other than as JSON array elements, which   are written as a list; - a value, or a name read from the event, does not decode; - a value is longer than `compactFieldsMaxValue`; - a value holds a control character and `compactFieldsForm` is `text`.  `compactFieldsWhole()` returns the reason. Unset (the default), records are written as before.",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "compactFieldsForm" : {
+      "type" : [
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "How compactFields are written in the record. Possible values: [object, text]\n\n- **object** (the default): a JSON object under `compactFieldsKey`, such as `\"fields\":{\"user\":\"bob\",\"tags\":[\"a\",\"b\"]}`. - **text**: one string under `compactFieldsKey` of `name<separator>\"value\"`   pairs separated by spaces, with `\\` and `\"` in a value escaped by a   backslash, such as `\"meta\":\"user::\\\"bob\\\"\"` with the separator `::`. An   event with a line break or other control character in a value is written whole. (Default: object)",
+      "default" : "object"
+    },
+    "compactFieldsKey" : {
+      "type" : [
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "The record key compactFields are written under\n\nThe key of the record that holds the fields. The record must not already have a key of that name. (Default: fields)",
+      "default" : "fields"
+    },
+    "compactFieldsSeparator" : {
+      "type" : [
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "The text between a name and its value in the text form of compactFields\n\nThe text between a field's name and its quoted value when `compactFieldsForm` is `text`. (Default: =)",
+      "default" : "="
+    },
+    "compactFieldsMaxValue" : {
+      "type" : [
+        "number",
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "The longest value compactFields writes; an event with a longer one is written whole\n\nThe most characters of a field value. An event with a longer value is written whole. (Accepts number or string with $= prefix for runtime evaluation) (Default: 1000)",
+      "default" : 1000
+    },
+    "compactFieldsDecode" : {
+      "type" : [
+        "boolean",
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "Whether compactFields values are decoded or written as their text stands in the event\n\n`true` (the default) writes each value decoded by its format: JSON escapes, XML entities and quoted pair escapes. `false` writes the value's text as it stands in the event, for a destination that reads it that way. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: true)",
+      "default" : true
+    },
+    "compactFieldsTrim" : {
+      "type" : [
+        "boolean",
+        "string",
+        "null"
+      ],
+      "markdownDescription" : "Whether compactFields values lose white space at both ends\n\n`true` leaves out spaces, tabs and line breaks at both ends of each value, for a destination whose own extraction trims them. A value left empty is not written. (Accepts boolean or string with $= prefix for runtime evaluation) (Default: false)",
+      "default" : false
     }
   },
   "additionalProperties" : false
