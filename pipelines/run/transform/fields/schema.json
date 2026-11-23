@@ -39,7 +39,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns, lines]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above finds the fields.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`. - **lines**: a text of several `name<separator>value` lines, such as   `LogName=Security`, under headings such as `Subject:`. A pair under a   heading is named by it, such as `Subject.Account Name`. A name that   occurs twice in one event gives no field. A text with one line of text   is left to the next reader. An event with a carriage return that does   not end a line gives no fields.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it. A lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first, then `lines`. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
+          "markdownDescription" : "The readers that find a template's fields, in order. Possible values: [xml, kv, json, columns, lines]\n\nThe readers that find the fields of each TenXTemplate, tried in order; the first that reads the template's text gives its fields. When set, these readers replace the JSON and key-value scan above for every consumer of the fields. Unset (the default), the scan above finds the fields.  - **xml**: a text that is one XML element. Names are paths of local names   joined by `.`, such as `Event.System.EventID`; an attribute is named   after its element, such as `Event.System.Execution.ProcessID`. - **kv**: `name=value` pairs separated by `fieldPairDelimiters`. A value that   opens with `\"` runs to the next `\"` not escaped by a backslash. A value   that a delimiter ends inside a bracket it opened, as in `a=f(x y)`, gives   no field, since the text after the delimiter may belong to it. - **json**: a text that is one JSON object or array. Names are key paths   joined by `.`, with `[]` for each array a value is in, such as   `userIdentity.arn` or `resources[].ARN`. - **columns**: delimited columns named by position from `fieldColumns`. - **lines**: a text of several `name<separator>value` lines, such as   `LogName=Security`, under headings such as `Subject:`. A pair under a   heading is named by it, such as `Subject.Account Name`. A name that   occurs twice in one event gives no field. A text with one line of text   is left to the next reader. An event with a carriage return that does   not end a line gives no fields.  The fields are found once per template. An event of the template reads each value from its own text at the same place. When the readers cannot be sure of a field in an event, no consumer gets it. A lookup finds it missing, and `compactFields` writes the event whole.  When several readers are listed, put `xml` and `json` first, then `lines`. `kv` and `columns` read almost any line, so a reader listed after them is not tried.",
           "items" : {
             "type" : "string"
           }
@@ -107,7 +107,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The characters that indent a line and follow a separator for the lines field reader\n\nThe characters that indent a line, and that the `lines` reader leaves out between a separator and its value. The default is a space and a tab. Each must be a token delimiter other than `-` or a line break. (Default:  \t)",
+          "markdownDescription" : "The characters that indent a line and follow a separator for the lines field reader\n\nThe characters that indent a line, and that the `lines` reader leaves out between a separator and its value. The default is a space and a tab. Each must be a token delimiter other than `-` or a line break, or the launch stops. (Default:  \t)",
           "default" : " \t"
         },
         "lineHeadingMark" : {
@@ -136,6 +136,17 @@
           "items" : {
             "type" : "string"
           }
+        },
+        "lineListNames" : {
+          "type" : [
+            "array",
+            "string",
+            "null"
+          ],
+          "markdownDescription" : "The names whose value is a list of lines for the lines field reader\n\nThe names, as the `lines` reader gives them, whose value is a list, such as `Privileges`. Its elements are the value on the name's line and each line after it that is indented deeper and is not a pair or a heading. Lines of spaces between them are skipped. `compactFields` writes the elements as a list.",
+          "items" : {
+            "type" : "string"
+          }
         }
       }
     },
@@ -145,7 +156,7 @@
         "string",
         "null"
       ],
-      "markdownDescription" : "The fields each compact event carries beside it, as name or name=outputName\n\nThe fields of each event that `encode()` writes beside its compact form in its record. A destination can then index them without expanding the event. Each entry is a field name as the template's field readers name it (see `fieldReaders`). An entry `name=outputName` writes it under another name, such as `Event.EventData.NewProcessName=process_path`. Two entries cannot share an output name, and the launch stops when `fieldReaders` is not set.  The fields are read from each event's text where its template places them, and an empty value is left out. An event is written whole (`fullText`) when:  - it has no template, or it is already compact; - it is a group of several lines; - the output writes no JSON record, as for raw lines, so every event is written whole; - its record already has a key named `compactFieldsKey`; - no field reader reads its template; - its text differs from its template's where names are read; - the reader cannot tell where a listed field's name or value ends, or   which headings name a field of the event; - a listed field occurs twice, other than as JSON array elements, which   are written as a list; - a value, or a name read from the event, does not decode; - a value is longer than `compactFieldsMaxValue`; - a value holds a character that `compactFieldsUnsafeChars` matches.  `compactFieldsWhole()` returns the reason. Unset (the default), `encode()` writes no fields.",
+      "markdownDescription" : "The fields each compact event carries beside it, as name or name=outputName\n\nThe fields of each event that `encode()` writes beside its compact form in its record. A destination can then index them without expanding the event. Each entry is a field name as the template's field readers name it (see `fieldReaders`). An entry `name=outputName` writes it under another name, such as `Event.EventData.NewProcessName=process_path`. Two entries cannot share an output name, and the launch stops when `fieldReaders` is not set.  The fields are read from each event's text where its template places them, and an empty value is left out. An event is written whole (`fullText`) when:  - it has no template, or it is already compact; - it is a group of several lines; - the output writes no JSON record, as for raw lines, so every event is written whole; - its record already has a key named `compactFieldsKey`; - no field reader reads its template; - its text differs from its template's where names are read; - the reader cannot tell where a listed field's name or value ends, or   which headings name a field of the event; - a listed field occurs twice, other than as the elements of a JSON   array or of a `fieldLineListNames` name, which are written as a list; - a value, or a name read from the event, does not decode; - a value is longer than `compactFieldsMaxValue`; - a value holds a character that `compactFieldsUnsafeChars` matches.  `compactFieldsWhole()` returns the reason. Unset (the default), `encode()` writes no fields.",
       "items" : {
         "type" : "string"
       }
