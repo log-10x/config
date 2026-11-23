@@ -106,8 +106,8 @@ compactFieldsKey: null
 #  The default is '='.
 compactFieldsSeparator: null
 
-# 'compactFieldsMaxValue' sets the longest value written; an event with a longer
-#  one is written whole. The default is 1000.
+# 'compactFieldsMaxValue' sets the longest value written, in UTF-8 bytes; an
+#  event with a longer one is written whole. The default is 1000.
 compactFieldsMaxValue: null
 
 # 'compactFieldsDecode' sets whether values are decoded (JSON escapes, XML entities),
