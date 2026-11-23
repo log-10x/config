@@ -2,13 +2,14 @@
 
 # Windows Security events in classic text (sourcetype WinEventLog, source WinEventLog:Security).
 # Verified with the Splunk Add-on for Microsoft Windows 12.0.0 and CIM 8.8.0.
-# Fills the CIM Change and Endpoint Processes data models.
+# Fills the CIM Authentication, Change and Endpoint Processes data models.
 
 tenx: run
 
 field:
   readers: [lines]
   lineSeparators: ["=", ":\t"]
+  lineListNames: [Privileges, Requested Operation.Privileges, Service Request Information.Privileges]
 
 compactFieldsTrim: true
 
@@ -84,3 +85,4 @@ compactFields:
   - 'Privileges=vendor_privilege'
   - 'Requested Operation.Privileges=vendor_privilege'
   - 'Service Request Information.Privileges=vendor_privilege'
+  - 'Access Request Information.Privileges Used for Access Check=Privileges_Used_for_Access_Check'
