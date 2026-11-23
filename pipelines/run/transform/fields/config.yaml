@@ -85,8 +85,10 @@ field:
 # =========================== Compact Field Options ===========================
 
 # 'compactFields' lists the fields encode() writes beside each compact event,
-#  as name or name=outputName. An event whose fields the readers cannot be
-#  sure of is written whole. For example: [Event.System.EventID=EventCode]
+#  as name or name=outputName. Entries that share an output name write their
+#  values under it as one list, in the order of the text. An event whose
+#  fields the readers cannot be sure of is written whole.
+#  For example: [Event.System.EventID=EventCode]
 compactFields: null
 
 # 'compactFieldsForm' sets how the fields are written: 'object' (the default) or 'text'.
