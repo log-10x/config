@@ -103,3 +103,25 @@ for (const file of profiles) {
     }
   });
 }
+
+// A name read as a list or to the end of the text gives a value only through compactFields.
+for (const file of profiles) {
+  test(`${file} attaches every name it reads as a list or to the end of the text`, () => {
+    const doc = read(file);
+    const sources = new Set(doc.compactFields.map((entry) => entry.split('=')[0]));
+    for (const key of ['lineListNames', 'lineRestNames']) {
+      for (const name of doc.field[key] ?? []) {
+        assert.ok(sources.has(name), `${file}: field.${key} names ${name}, which no compactFields entry attaches`);
+      }
+    }
+  });
+}
+
+// A privileges list spans several lines. Read as a list, an event that holds one is not written whole.
+test('windows-security-classic.yaml reads every privileges name it attaches as a list', () => {
+  const doc = read('windows-security-classic.yaml');
+  const lists = new Set(doc.field.lineListNames ?? []);
+  const names = doc.compactFields.filter((entry) => entry.endsWith('=vendor_privilege')).map((entry) => entry.split('=')[0]);
+  assert.ok(names.length > 0, 'the profile attaches vendor_privilege');
+  names.forEach((name) => assert.ok(lists.has(name), `${name} is in field.lineListNames`));
+});
