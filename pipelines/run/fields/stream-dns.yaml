@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Splunk Stream DNS events in JSON (source stream:dns).
+# Verified with the Splunk Add-on for Stream Wire Data 8.1.7 and CIM 8.8.0.
+# Fills the CIM Network_Resolution DNS and Network_Traffic data models.
+
+tenx: run
+
+field:
+  readers: [json]
+
+compactFields:
+  - 'ancount'
+  - 'arcount'
+  - 'bytes'
+  - 'bytes_in'
+  - 'bytes_out'
+  - 'dest_ip'
+  - 'dest_mac'
+  - 'dest_port'
+  - 'flow_id'
+  - 'host_addr[]=host_addr{}'
+  - 'message_type[]=message_type{}'
+  - 'nscount'
+  - 'packets_in'
+  - 'packets_out'
+  - 'qdcount'
+  - 'query_type[]=query_type{}'
+  - 'query[]=query{}'
+  - 'reply_code'
+  - 'reply_code_id'
+  - 'reply_code_id[]=reply_code_id{}'
+  - 'reply_code[]=reply_code{}'
+  - 'response_time'
+  - 'src_ip'
+  - 'src_mac'
+  - 'src_port'
+  - 'time_taken'
+  - 'transaction_id'
+  - 'transport'
