@@ -53,22 +53,21 @@ output:
   # between tokens as whitespace, and block scalars keep the `\"` below as is.
   #
   # The offload and soft-drop modes splice the `routeState` field onto every
-  # forwarded event, so the forwarder can route by the per-service action name
-  # (offload → the customer's own S3, tier_down → the SIEM cheap tier, compact →
-  # encoded bytes to the SIEM, pass/sample → the SIEM). The splice writes the
+  # forwarded event, so the forwarder can route by the per-service action name.
+  # The names route as offload → the customer's own S3, tier_down → the SIEM
+  # cheap tier, compact → encoded bytes to the SIEM, pass/sample → the SIEM. The splice writes the
   # route NAME as a JSON STRING (e.g. `"routeState":"offload"`), so a forwarder
   # match must be string equality against the action name, NOT truthiness.
   # `symbolMessageHashField`, when set, ships the pattern hash beside it.
   #
   # Receive mode calls the fullText(...) FUNCTION, not the bare `fullText`
   # field. The field splices the decoded body back between the JSON quotes
-  # unescaped and joins grouped lines with ",", so any record whose message
-  # holds a `"` stopped parsing and reached the forwarder as
-  # {"fullText": "<record as text>"} (measured with Fluent Bit 5.1.2 + edge
-  # 1.1.81: 1,030 of 1,453 records). The function re-escapes and joins on "\n".
-  # It takes at least one extra-field name, and a name no event carries adds
-  # nothing: `tenx_passthrough` is never stamped, so records keep exactly the
-  # keys they arrived with.
+  # unescaped and joins grouped lines with ",", so a record whose message holds
+  # a `"` does not parse. The function re-escapes and joins on "\n".
+  #
+  # The function takes at least one extra-field name, and a name no event
+  # carries adds nothing. `tenx_passthrough` is never stamped, so records keep
+  # exactly the keys they arrived with.
   encodeField: |-
     $=yield "encoded=(" + TenXEnv.get("outputEncodeFilter") + ") ? encode("
       + (TenXEnv.get("symbolMessageHashField")
