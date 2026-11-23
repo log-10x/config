@@ -82,6 +82,10 @@ field:
   #  the 'lines' reader. For example: [Message]
   lineRestNames: null
 
+  # 'lineListNames' lists the names whose value is a list of lines for the
+  #  'lines' reader. For example: [Privileges]
+  lineListNames: null
+
 # =========================== Compact Field Options ===========================
 
 # 'compactFields' lists the fields encode() writes beside each compact event,
