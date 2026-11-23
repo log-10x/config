@@ -143,7 +143,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The names whose value is a list of lines for the lines field reader\n\nThe names, as the `lines` reader gives them, whose value is a list, such as `Privileges`. Its elements are the value on the name's line and each line after it that is indented deeper and is not a pair or a heading. Lines of spaces between them are skipped. `compactFields` writes the elements as a list.",
+          "markdownDescription" : "The names whose value is a list of lines for the lines field reader\n\nThe names, as the `lines` reader gives them, whose value is a list, such as `Privileges`. Its elements are the value on the name's line and each line after it that is indented deeper and is not a pair or a heading, skipping lines of spaces between them. `compactFields` writes the elements as a list.",
           "items" : {
             "type" : "string"
           }
