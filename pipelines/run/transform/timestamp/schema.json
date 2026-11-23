@@ -78,7 +78,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "How far ahead of the clock a timestamp without a year stays in the current year\n\nSets how far ahead of the clock a timestamp that has no year, such as `Nov 23 12:07:10` in a classic syslog line, may be and still be dated in the current year, as a duration such as '2d' or '6h'. A timestamp further ahead is dated in the year before. A timestamp read from a file starts from the year the file was last written in. (Default: 2d)",
+          "markdownDescription" : "How far ahead of the clock a timestamp without a year stays in the current year\n\nSets how far ahead of the clock a timestamp that has no year, such as `Nov 23 12:07:10` in a classic syslog line, may be and still be dated in the current year, as a duration below 365 days such as '0', '6h' or '2d'. A timestamp further ahead is dated in the year before. A timestamp read from a file starts from the year the file was last written in. (Default: 2d)",
           "default" : "2d"
         },
         "literals" : {
