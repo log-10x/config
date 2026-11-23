@@ -2,7 +2,8 @@
 
 # 🔟❎ 'run' TenXTemplate field extract configuration
 
-# Configure how to extract JSON objects and KV structures from TenXTemplates.
+# Configure how to extract JSON objects and KV structures from TenXTemplates,
+# and which fields compact events carry.
 # To learn more see https://doc.log10x.com/run/transform/fields/
 
 # Set the 10x pipeline to 'run'
@@ -31,3 +32,86 @@ field:
   #  should be 'RESULT_SUCCESS', and as such, the value terminator character 
   #  should be ',' vs. '_' (in which case the value would be 'RESULT').
   valueBreaks: ', /\{}()[]'
+
+  # =============================== Reader Options ==============================
+
+  # 'readers' lists the readers that find each template's fields, in order:
+  #  xml, kv, json, columns or lines. When set, they replace the scan above for
+  #  every consumer of the fields. List xml, json and lines before kv and
+  #  columns, which read almost any line. For example: [xml]
+  readers: null
+
+  # 'pairDelimiters' sets the characters that separate pairs for the 'kv' reader,
+  #  each a token delimiter. The default is a space and a comma.
+  pairDelimiters: null
+
+  # 'columns' names the columns the 'columns' reader reads, in order
+  #  ('a,b,c'), or per value of the 'columnsKey' column ('TRAFFIC=a,b,c').
+  columns: null
+
+  # 'columnsKey' sets the column, counted from 1, whose value selects a 'columns'
+  #  entry. The default, 0, uses the one entry without a value.
+  columnsKey: null
+
+  # 'columnDelimiter' sets the character that separates columns for the 'columns'
+  #  reader, a token delimiter. The default is a comma.
+  columnDelimiter: null
+
+  # 'nameAttributes' lists XML elements named by one of their attributes,
+  #  as element@attribute. For example: [Data@Name]
+  nameAttributes: null
+
+  # 'lineSeparators' lists the text that ends a pair's name for the 'lines' reader,
+  #  each made of token delimiters. The default is '=' and ':'. For classic
+  #  Windows event text: ['=', ":\t"]
+  lineSeparators: null
+
+  # 'lineSpaces' sets the characters that indent a line and follow a separator
+  #  for the 'lines' reader. The default is a space and a tab.
+  lineSpaces: null
+
+  # 'lineHeadingMark' sets the text that ends a heading line for the 'lines'
+  #  reader, as in 'Subject:'. The default is ':'.
+  lineHeadingMark: null
+
+  # 'lineHeadingJoin' sets the text between a heading and a name under it, as in
+  #  'Subject.Account Name'. The default is '.'.
+  lineHeadingJoin: null
+
+  # 'lineRestNames' lists the names whose value runs to the end of the text for
+  #  the 'lines' reader. For example: [Message]
+  lineRestNames: null
+
+# =========================== Compact Field Options ===========================
+
+# 'compactFields' lists the fields encode() writes beside each compact event,
+#  as name or name=outputName. An event whose fields the readers cannot be
+#  sure of is written whole. For example: [Event.System.EventID=EventCode]
+compactFields: null
+
+# 'compactFieldsForm' sets how the fields are written: 'object' (the default) or 'text'.
+compactFieldsForm: null
+
+# 'compactFieldsKey' sets the record key the fields are written under. The default is 'fields'.
+#  An event whose record already has that key is written whole.
+compactFieldsKey: null
+
+# 'compactFieldsSeparator' sets the text between a name and its value in the 'text' form.
+#  The default is '='.
+compactFieldsSeparator: null
+
+# 'compactFieldsMaxValue' sets the longest value written; an event with a longer
+#  one is written whole. The default is 1000.
+compactFieldsMaxValue: null
+
+# 'compactFieldsDecode' sets whether values are decoded (JSON escapes, XML entities),
+#  the default, or written as their text stands in the event.
+compactFieldsDecode: null
+
+# 'compactFieldsTrim' sets whether values lose white space at both ends. The default is false.
+compactFieldsTrim: null
+
+# 'compactFieldsUnsafeChars' is a regular expression for the characters a value
+#  must not hold; an event with such a value is written whole. The default,
+#  '[\x00-\x1f]', matches every control character. Write it in quotes.
+compactFieldsUnsafeChars: null
