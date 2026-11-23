@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Sysmon events in XML (sourcetype XmlWinEventLog, source XmlWinEventLog:Microsoft-Windows-Sysmon/Operational).
+# Verified with the Splunk Add-on for Sysmon 5.0.1 and CIM 8.8.0.
+# Fills the CIM Endpoint Processes data model.
+
+tenx: run
+
+field:
+  readers: [xml]
+  nameAttributes: [Data@Name]
+
+compactFieldsDecode: false
+compactFieldsTrim: true
+
+compactFields:
+  - 'Event.System.EventID=EventCode'
+  - 'Event.System.Computer=Computer'
+  - 'Event.EventData.Image=Image'
+  - 'Event.EventData.CommandLine=CommandLine'
+  - 'Event.EventData.ParentImage=ParentImage'
+  - 'Event.EventData.ParentCommandLine=ParentCommandLine'
+  - 'Event.EventData.ParentProcessId=ParentProcessId'
+  - 'Event.EventData.ParentProcessGuid=ParentProcessGuid'
+  - 'Event.EventData.ProcessId=ProcessId'
+  - 'Event.EventData.ProcessGuid=ProcessGuid'
+  - 'Event.EventData.User=User'
+  - 'Event.EventData.CurrentDirectory=CurrentDirectory'
+  - 'Event.EventData.IntegrityLevel=IntegrityLevel'
+  - 'Event.EventData.Hashes=Hashes'
+  - 'Event.EventData.OriginalFileName=OriginalFileName'
+  - 'Event.EventData.ImageLoaded=ImageLoaded'
+  - 'Event.EventData.SourceImage=SourceImage'
+  - 'Event.EventData.SourceProcessId=SourceProcessId'
+  - 'Event.EventData.SourceProcessGuid=SourceProcessGuid'
+  - 'Event.EventData.SourceProcessGUID=SourceProcessGUID'
+  - 'Event.EventData.TargetImage=TargetImage'
+  - 'Event.EventData.TargetProcessId=TargetProcessId'
+  - 'Event.EventData.TargetProcessGuid=TargetProcessGuid'
+  - 'Event.EventData.TargetProcessGUID=TargetProcessGUID'
+  - 'Event.EventData.SourceUser=SourceUser'
+  - 'Event.EventData.TargetUser=TargetUser'
+  - 'Event.EventData.StartModule=StartModule'
+  - 'Event.System.Security.UserID=UserID'

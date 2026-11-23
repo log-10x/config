@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Splunk Stream TCP events in JSON (source stream:tcp).
+# Verified with the Splunk Add-on for Stream Wire Data 8.1.7 and CIM 8.8.0.
+# Fills the CIM Network_Traffic data model.
+
+tenx: run
+
+field:
+  readers: [json]
+
+compactFields:
+  - 'app'
+  - 'bytes'
+  - 'bytes_in'
+  - 'bytes_out'
+  - 'dest_ip'
+  - 'dest_mac'
+  - 'dest_port'
+  - 'flow_id'
+  - 'packets_in'
+  - 'packets_out'
+  - 'src_ip'
+  - 'src_mac'
+  - 'src_port'
+  - 'ssl_cert_md5'
+  - 'ssl_issuer'
+  - 'ssl_publickey_algorithm'
+  - 'ssl_serialnumber'
+  - 'ssl_session_id'
+  - 'ssl_signature_algorithm'
+  - 'ssl_subject'
+  - 'ssl_validity_end'
+  - 'ssl_validity_start'
+  - 'ssl_version'
+  - 'time_taken'
