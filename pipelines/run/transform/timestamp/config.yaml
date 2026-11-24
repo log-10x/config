@@ -53,6 +53,11 @@ timestamp:
   #  If set to null, the host OS timezone is used. 
   zone: null
 
+  # 'yearlessMaxAhead' sets how far ahead of the clock a timestamp without a year
+  #  (e.g., 'Nov 23 12:07:10') may be and still be dated in the current year; one
+  #  further ahead is dated in the year before. Unset, the engine uses two days.
+  # yearlessMaxAhead: 2d
+
   # 'literals' contains an array of strings to treat as a part 
   #  of any timestamp candidate found when structuring an TenXObject.
   literals:

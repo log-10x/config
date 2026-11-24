@@ -56,6 +56,10 @@ def csv(header, rows):
     return header + "\n" + "".join("%s,%s\n" % r for r in rows)
 
 
+# The cases written for one burst per window release the whole total at the window start.
+ONE_SLICE = ["rateReceiverTotalSlices", "1"]
+
+
 def shuffled(lines, seed):
     lines = list(lines)
     random.Random(seed).shuffle(lines)
@@ -202,7 +206,7 @@ def case_m1_mute_counts():
     others = ["%s_request_served_id" % WORDS[w] for w in range(1, 11)]
     return lines, files, args, ["CAP", "ACTION", "TOTAL"], {
         "share": {"%s_request_served_id" % muted: (0.45, 0.55)},
-        "held_in": {"patterns": others, "min": 1, "max_pass": 5 * 10 + 100}}
+        "held_in": {"patterns": others, "min": 1, "max_pass": 5 * 10 + 100}, "fix_args": ONE_SLICE}
 
 
 def case_t3_reservation():
@@ -217,7 +221,7 @@ def case_t3_reservation():
              "totals.csv": csv("container,total", [("svc", total)]),
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
     return lines, files, ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0"], ["CAP", "ACTION", "TOTAL"], {
-        "fill": {"svc": (total - bs, total)}}
+        "fill": {"svc": (total - bs, total)}, "fix_args": ONE_SLICE}
 
 
 def case_g0_gitops_off():
@@ -242,7 +246,7 @@ def case_t1_total():
              "actions.csv": csv("container,action", [("svc", "tier_down")])}
     return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION", "TOTAL"], {
         "held_min": 1, "total": {"svc": 200 * bi}, "patterns": {"svc": 11}, "error_pass_min": 55,
-        "fix_args": ["rateReceiverKeepCountSlices", "1"]}
+        "fix_args": ["rateReceiverKeepCountSlices", "1"] + ONE_SLICE}
 
 
 def case_t2_noisiest():
@@ -262,7 +266,7 @@ def case_t2_noisiest():
     smalls = ["%s_request_served_id" % WORDS[w] for w in range(20)]
     return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION", "TOTAL"], {
         "all_pass": smalls, "moved_min": {"large_request_served_id": 1},
-        "total": {"svc": 370 * b}, "below_total": {"svc": 370 * b}, "patterns": {"svc": 22}}
+        "total": {"svc": 370 * b}, "below_total": {"svc": 370 * b}, "patterns": {"svc": 22}, "fix_args": ONE_SLICE}
 
 
 def case_s1_star():
@@ -280,7 +284,7 @@ def case_s1_star():
     return lines, files, ["rateReceiverWarmupMs", "0"], ["CAP", "ACTION", "TOTAL"], {
         "routes": {"other": {"tier_down"}, "named": {"offload"}},
         "pass_by_container": {"exempt": 200, "named": 20},
-        "total": {"other": 80 * b}, "patterns": {"other": 2}}
+        "total": {"other": 80 * b}, "patterns": {"other": 2}, "fix_args": ONE_SLICE}
 
 
 def sample_burst(extra_args=(), files_extra=None):
@@ -300,14 +304,14 @@ def case_b1_sample_bound():
     """200 new patterns, a 50-line total: the service passes its total and then at most
     rateReceiverBaselineMaxOverTotal (50) more sample lines, 100 in all, not 400."""
     lines, files, args, env = sample_burst()
-    return lines, files, args, env, {"pass_by_container": {"svc": 100}}
+    return lines, files, args, env, {"pass_by_container": {"svc": 100}, "fix_args": ONE_SLICE}
 
 
 def case_b2_sample_bound_off():
     """rateReceiverBaselineMaxOverTotal 0 removes the bound: every sample line passes, as
     before the bound (the option is new, so the case runs on the fix only)."""
     lines, files, args, env = sample_burst(["rateReceiverBaselineMaxOverTotal", "0"])
-    return lines, files, args, env, {"pass_by_container": {"svc": 400}, "config": "fix-only"}
+    return lines, files, args, env, {"pass_by_container": {"svc": 400}, "config": "fix-only", "fix_args": ONE_SLICE}
 
 
 def case_b3_sample_bound_mute():
@@ -316,7 +320,7 @@ def case_b3_sample_bound_mute():
     lines, files, args, env = sample_burst(
         ["rateReceiverLookupFile", "/policy/mutes.csv"],
         {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
-    return lines, files, args, env, {"pass_by_container": {"svc": 100}}
+    return lines, files, args, env, {"pass_by_container": {"svc": 100}, "fix_args": ONE_SLICE}
 
 
 BURST_PATTERNS = 1422
@@ -333,9 +337,9 @@ def triple_words(p):
     return WORDS[a], WORDS[b], WORDS[c]
 
 
-def burst_line(p, i):
+def burst_line(p, i, container="svc"):
     w = "%s %s %s" % triple_words(p)
-    return record("svc", "2026-10-18T10:00:00.000Z ERROR %s migration failed id=%0*d" % (w, TRIPLE_WIDTH - len(w), i))
+    return record(container, "2026-10-18T10:00:00.000Z ERROR %s migration failed id=%0*d" % (w, TRIPLE_WIDTH - len(w), i))
 
 
 def error_burst(extra_args=(), files_extra=None):
@@ -358,7 +362,7 @@ def case_e1_keep_bound():
     keep-count lines, 650 in all; the rest take the service's action."""
     lines, files, args, env = error_burst()
     return lines, files, args, env, {"pass_by_container": {"svc": 650}, "routes": {"svc": {"tier_down"}},
-                                     "distinct_patterns": {"svc": BURST_PATTERNS}}
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}, "fix_args": ONE_SLICE}
 
 
 def case_e2_keep_bound_off():
@@ -366,7 +370,8 @@ def case_e2_keep_bound_off():
     sample bound by the keep count (the option is new, so the case runs on the fix only)."""
     lines, files, args, env = error_burst(["rateReceiverKeepMaxOverTotal", "0"])
     return lines, files, args, env, {"pass_by_container": {"svc": BURST_PATTERNS * BURST_LINES},
-                                     "distinct_patterns": {"svc": BURST_PATTERNS}, "config": "fix-only"}
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}, "config": "fix-only",
+                                     "fix_args": ONE_SLICE}
 
 
 def case_e3_keep_bound_mute():
@@ -376,7 +381,7 @@ def case_e3_keep_bound_mute():
         ["rateReceiverLookupFile", "/policy/mutes.csv"],
         {"mutes.csv": csv("fieldSet,value", [("never_printed_pattern", "0:%d:test" % FUTURE)])})
     return lines, files, args, env, {"pass_by_container": {"svc": 650}, "routes": {"svc": {"tier_down"}},
-                                     "distinct_patterns": {"svc": BURST_PATTERNS}}
+                                     "distinct_patterns": {"svc": BURST_PATTERNS}, "fix_args": ONE_SLICE}
 
 
 def case_d1_defaults():
@@ -413,8 +418,49 @@ def case_w1_windows():
     args = ["rateReceiverWarmupMs", "0", "rateReceiverResetIntervalMs", "60000"]
     return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
         "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total, "align": 60000},
-        "window_pass": {0: (total - 30, total), 1: (total - 1, total)}}
+        "window_pass": {0: (total - 30, total), 1: (total - 1, total)}, "fix_args": ONE_SLICE}
 
+
+
+def case_t4_total_slices():
+    """A burst the size of the service's whole total sent into each 10-second slice of a 1-minute
+    window. With the default rateReceiverTotalSlices (6) each slice passes one sixth of the total;
+    one slice passes the whole total in the first burst and nothing after. Each batch ends with a line of a
+    container with no cap row, so the service's last line is decided in its own slice."""
+    width = max(len(w) for w in WORDS) + 6
+    line = lambda c, i: record(c, "2026-10-18T10:00:00.000Z INFO alpha request served id=%0*d" % (width - 5, i))
+    total = 60
+    batches = [[line("svc", b * 1000 + i) for i in range(total)] + [line("oth", b)] for b in range(6)]
+    b = forward_size(batches[0][0])
+    assert len({forward_size(l) for x in batches for l in x}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 1000 * total * b)]),
+             "totals.csv": csv("container,total", [("svc", total * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0", "rateReceiverResetIntervalMs", "60000"]
+    return [l for x in batches for l in x], files, args, ["CAP", "ACTION", "TOTAL"], {
+        "pace": {"batches": [len(x) for x in batches], "at": [10 * k for k in range(6)], "total": total, "align": 60000},
+        "window_pass": {k: (11, 11) for k in range(6)}}
+
+
+def case_t5_slices_over_total():
+    """ERROR lines held back only by the first slice's share take the action and leave
+    rateReceiverKeepMaxOverTotal (20 here) for past the total, and their keep count for later
+    slices. Batch 1, in the first 10-second slice of a 1-minute window, passes 10 of a 60-line
+    total; batch 2, in the last slice, passes the other 50 and then the 20 over-total lines.
+    Each batch ends with an uncapped seal line, as in t4."""
+    total = 60
+    batches = [[burst_line(0, i) for i in range(50)] + [burst_line(0, 900, "oth")],
+               shuffled([burst_line(p, 100 + i) for p in range(2) for i in range(50)], 47) + [burst_line(0, 901, "oth")]]
+    b = forward_size(batches[0][0])
+    assert len({forward_size(l) for x in batches for l in x}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 1)]),
+             "totals.csv": csv("container,total", [("svc", total * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0", "rateReceiverResetIntervalMs", "60000",
+            "rateReceiverKeepCountSlices", "1", "rateReceiverKeepMaxOverTotal", "20", "rateReceiverTotalSlices", "6"]
+    return [l for x in batches for l in x], files, args, ["CAP", "ACTION", "TOTAL"], {
+        "pace": {"batches": [len(x) for x in batches], "at": [0, 50], "total": total, "align": 60000},
+        "window_pass": {0: (11, 11), 1: (71, 71)}}
 
 PAIR_WIDTH = 2 * max(len(w) for w in WORDS) + 6
 
@@ -455,7 +501,7 @@ def scaled_windows(counts, cap, total, muted=None):
     return batches[0] + batches[1], files, args, ["CAP", "ACTION", "TOTAL"], {
         "pace": {"batches": [len(x) for x in batches], "gap": 75, "total": total, "align": 60000},
         "window_pass": {0: (total - 1, total + allowance), 1: (total - 1, total)},
-        "window_all_pass": {1: small}, "window_moved": {1: large}}
+        "window_all_pass": {1: small}, "window_moved": {1: large}, "fix_args": ONE_SLICE}
 
 
 def case_w2_windows_mute():
@@ -491,7 +537,8 @@ def case_w4_windows_late():
     large = [pair_name(p) for p in range(20)]
     expect = {"pace": {"batches": [len(x) for x in batches], "at": [0, 110, 125, 185], "total": 301, "align": 60000},
               "window_pass": {0: (21, 21), 1: (300, 301 + 5 * 23), 2: (300, 301), 3: (300, 301)},
-              "window_all_pass": {0: small, 2: small, 3: small}, "window_moved": {2: large, 3: large}}
+              "window_all_pass": {0: small, 2: small, 3: small}, "window_moved": {2: large, 3: large},
+              "fix_args": ONE_SLICE}
     return [l for b in batches for l in b], files, args, env, expect
 
 
@@ -579,6 +626,8 @@ CASES = {
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
     "w4-windows-late": case_w4_windows_late,
+    "t4-total-slices": case_t4_total_slices,
+    "t5-slices-over-total": case_t5_slices_over_total,
     "k5-slices": case_k5_slices,
     "k6-slices-mute": case_k6_slices_mute,
     "k7-mute-ends": case_k7_mute_ends,

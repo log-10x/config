@@ -104,7 +104,7 @@ aggregator:
     #  'maxCardinality' is exceeded within 'flushInterval'
     defaultValue: unknown
 
-  # Defines an aggregator for metricTagFields, one series per value; enabled only when the receiver stamps a config generation.
+  # Defines an aggregator for the config generation, one series per value; enabled only when the receiver stamps one.
   - name: config_generation
 
     enabled: '$=yield TenXEnv.get("rateReceiverConfigGenerationFile") ? "true" : "false"'
@@ -112,7 +112,7 @@ aggregator:
     filter: isObject
 
     fields:
-      - $=yield TenXEnv.get("metricTagFields")
+      - tenx_config_version
 
     totalFields: []
 
@@ -123,3 +123,32 @@ aggregator:
     maxCardinality: 1024
 
     defaultValue: unknown
+
+  # Defines an aggregator for the events the receiver compacts, the ones
+  # outputEncodeFilter holds for among those outputDropFilter writes. Its series
+  # carry the reason compactFieldsWhole() gives, such as tooLong or unsafe, and
+  # an empty reason for events sent compact with their fields. Enabled only when
+  # compactFields lists fields to attach.
+  - name: compact_events
+
+    enabled: '$=yield TenXEnv.get("compactFields") ? "true" : "false"'
+
+    filter: '$=yield "(" + TenXEnv.get("outputDropFilter", "isObject && !isRoute(\"drop\")") + ") && (" + TenXEnv.get("outputEncodeFilter", "false") + ")"'
+
+    fields:
+      - 'compact_fields_whole=isSummary?l1e_compact_fields_whole:compactFieldsWhole()'
+
+    totalFields: []
+
+    flushThreshold: 10000
+
+    flushInterval: 2s
+
+    maxCardinality: 64
+
+    defaultValue: unknown
+
+# The compact_events reason is a metric tag only, as tenx_config_version is: the
+# per-pattern aggregators do not group by it, so its tag is empty on their series.
+metricTagFields:
+  - '$=yield TenXEnv.get("compactFields") ? "compact_fields_whole=isSummary?l1e_compact_fields_whole:compactFieldsWhole()" : ""'

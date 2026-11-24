@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Windows Security events in classic text (sourcetype WinEventLog, source WinEventLog:Security).
+# Verified with the Splunk Add-on for Microsoft Windows 12.0.0 and CIM 8.8.0.
+# Fills the CIM Authentication, Change and Endpoint Processes data models.
+
+tenx: run
+
+field:
+  readers: [lines]
+  lineSeparators: ["=", ":\t"]
+  lineListNames: [Privileges, Requested Operation.Privileges, Service Request Information.Privileges]
+
+compactFieldsTrim: true
+
+compactFields:
+  - 'EventCode'
+  - 'ComputerName'
+  - 'Keywords'
+  - 'Type'
+  - 'SourceName'
+  - 'TaskCategory'
+  - 'Subject.Account Name=Account_Name'
+  - 'Target Account.Account Name=Account_Name'
+  - 'Creator Subject.Account Name=Account_Name'
+  - 'Target Subject.Account Name=Account_Name'
+  - 'New Logon.Account Name=Account_Name'
+  - 'Account Whose Credentials Were Used.Account Name=Account_Name'
+  - 'Subject.Account Domain=Account_Domain'
+  - 'Target Account.Account Domain=Account_Domain'
+  - 'Creator Subject.Account Domain=Account_Domain'
+  - 'Target Subject.Account Domain=Account_Domain'
+  - 'New Logon.Account Domain=Account_Domain'
+  - 'Account Whose Credentials Were Used.Account Domain=Account_Domain'
+  - 'Subject.Security ID=Security_ID'
+  - 'Target Account.Security ID=Security_ID'
+  - 'Creator Subject.Security ID=Security_ID'
+  - 'Target Subject.Security ID=Security_ID'
+  - 'New Logon.Security ID=Security_ID'
+  - 'Group.Security ID=Security_ID'
+  - 'Subject.Logon ID=Logon_ID'
+  - 'Target Account.Logon ID=Logon_ID'
+  - 'Creator Subject.Logon ID=Logon_ID'
+  - 'Target Subject.Logon ID=Logon_ID'
+  - 'New Logon.Logon ID=Logon_ID'
+  - 'Logon Type=Logon_Type'
+  - 'Logon Information.Logon Type=Logon_Type'
+  - 'Detailed Authentication Information.Authentication Package=Authentication_Package'
+  - 'Network Information.Source Network Address=Source_Network_Address'
+  - 'Network Information.Source Port=Source_Port'
+  - 'Source Port=Source_Port'
+  - 'Network Information.Source Address=Source_Address'
+  - 'Source Address=Source_Address'
+  - 'Network Information.Workstation Name=Workstation_Name'
+  - 'Target Server.Target Server Name=Target_Server_Name'
+  - 'Process Information.Process Name=Process_Name'
+  - 'Process.Process Name=Process_Name'
+  - 'Process Information.Process ID=Process_ID'
+  - 'Process.Process ID=Process_ID'
+  - 'Process Information.New Process Name=New_Process_Name'
+  - 'Process Information.Creator Process Name=Creator_Process_Name'
+  - 'Process Information.Creator Process ID=Creator_Process_ID'
+  - 'Process Information.Process Command Line=Process_Command_Line'
+  - 'Process Information.Token Elevation Type=Token_Elevation_Type'
+  - 'Object.Object Name=Object_Name'
+  - 'Object.Object Type=Object_Type'
+  - 'Network Information.Object Type=Object_Type'
+  - 'Object Type=Object_Type'
+  - 'Share Information.Share Name=Share_Name'
+  - 'Share Information.Share Path=Share_Path'
+  - 'Service.Service Name=Service_Name'
+  - 'Group.Group Name=Group_Name'
+  - 'Group.Group Domain=Group_Domain'
+  - 'Subject.Security ID=Subject_Security_ID'
+  - 'Creator Subject.Security ID=Subject_Security_ID'
+  - 'Subject.Account Name=Subject_Account_Name'
+  - 'Creator Subject.Account Name=Subject_Account_Name'
+  - 'Subject.Account Domain=Subject_Account_Domain'
+  - 'Creator Subject.Account Domain=Subject_Account_Domain'
+  - 'Target Account.Account Name=Target_Account_Name'
+  - 'Target Account.Security ID=Target_Security_ID'
+  - 'Group.Security ID=Group_Security_ID'
+  - 'Process Information.Process ID=process_id'
+  - 'Process Information.New Process ID=process_id'
+  - 'Privileges=vendor_privilege'
+  - 'Requested Operation.Privileges=vendor_privilege'
+  - 'Service Request Information.Privileges=vendor_privilege'
+  - 'Access Request Information.Privileges Used for Access Check=Privileges_Used_for_Access_Check'

@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Kubernetes container logs sent as whole JSON records with the pod's metadata inside, as Fluent Bit's kubernetes filter writes them.
+# Verified with Splunk Enterprise 10.4.3, under the names its JSON extraction (KV_MODE = json) gives the raw records.
+# Searches that filter or group by these fields read them from the index, without expanding the events.
+
+tenx: run
+
+field:
+  readers: [json]
+
+compactFields:
+  - 'stream'
+  - 'kubernetes.namespace_name'
+  - 'kubernetes.pod_name'
+  - 'kubernetes.container_name'
+  - 'kubernetes.host'
+  - 'kubernetes.labels.app.kubernetes.io/name'

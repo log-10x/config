@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://schema.log10x.com/pipelines/run/transform/fields/schema.json
+
+# Windows Security events in XML (sourcetype XmlWinEventLog, source XmlWinEventLog:Security).
+# Verified with the Splunk Add-on for Microsoft Windows 12.0.0 and CIM 8.8.0.
+# Fills the CIM Authentication, Change and Endpoint Processes data models.
+
+tenx: run
+
+field:
+  readers: [xml]
+  nameAttributes: [Data@Name]
+
+compactFieldsDecode: false
+compactFieldsTrim: true
+
+compactFields:
+  - 'Event.System.EventID=EventCode'
+  - 'Event.System.Computer=Computer'
+  - 'Event.System.Keywords=Keywords'
+  - 'Event.System.Provider.Name=Name'
+  - 'Event.System.Task=Task'
+  - 'Event.EventData.AuthenticationPackageName=AuthenticationPackageName'
+  - 'Event.EventData.LogonType=LogonType'
+  - 'Event.EventData.SubjectUserName=SubjectUserName'
+  - 'Event.EventData.SubjectDomainName=SubjectDomainName'
+  - 'Event.EventData.SubjectUserSid=SubjectUserSid'
+  - 'Event.EventData.SubjectLogonId=SubjectLogonId'
+  - 'Event.EventData.TargetUserName=TargetUserName'
+  - 'Event.EventData.TargetDomainName=TargetDomainName'
+  - 'Event.EventData.TargetUserSid=TargetUserSid'
+  - 'Event.EventData.TargetSid=TargetSid'
+  - 'Event.EventData.MemberSid=MemberSid'
+  - 'Event.EventData.MemberName=MemberName'
+  - 'Event.EventData.TargetServerName=TargetServerName'
+  - 'Event.EventData.IpAddress=IpAddress'
+  - 'Event.EventData.IpPort=IpPort'
+  - 'Event.EventData.WorkstationName=WorkstationName'
+  - 'Event.EventData.Workstation=Workstation'
+  - 'Event.EventData.Status=Status'
+  - 'Event.EventData.SubStatus=SubStatus'
+  - 'Event.EventData.ProcessName=ProcessName'
+  - 'Event.EventData.ProcessId=ProcessId'
+  - 'Event.EventData.NewProcessName=NewProcessName'
+  - 'Event.EventData.TokenElevationType=TokenElevationType'
+  - 'Event.EventData.ObjectName=ObjectName'
+  - 'Event.EventData.ObjectType=ObjectType'
+  - 'Event.EventData.SamAccountName=SamAccountName'
+  - 'Event.EventData.CategoryId=CategoryId'
+  - 'Event.EventData.SubcategoryId=SubcategoryId'
+  - 'Event.EventData.SubcategoryGuid=SubcategoryGuid'
+  - 'Event.EventData.AuditPolicyChanges=AuditPolicyChanges'
+  - 'Event.System.TimeCreated.SystemTime=event_time'
+  - 'Event.EventData.ProcessName=process'
+  - 'Event.EventData.ProcessId=process_id'
+  - 'Event.EventData.NewProcessName=new_process'
+  - 'Event.EventData.NewProcessId=new_process_id'
+  - 'Event.EventData.ParentProcessName=parent_process'
+  - 'Event.EventData.CommandLine=Process_Command_Line'
