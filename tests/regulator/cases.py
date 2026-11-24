@@ -416,6 +416,26 @@ def case_w1_windows():
         "window_pass": {0: (total - 30, total), 1: (total - 1, total)}}
 
 
+
+def case_t4_total_slices():
+    """A burst the size of the service's whole total sent into each 10-second slice of a 1-minute
+    window. With rateReceiverTotalSlices 6 each slice passes one sixth of the total; one slice
+    passes the whole total in the first burst and nothing after. Each batch ends with a line of a
+    container with no cap row, so the service's last line is decided in its own slice."""
+    width = max(len(w) for w in WORDS) + 6
+    line = lambda c, i: record(c, "2026-10-18T10:00:00.000Z INFO alpha request served id=%0*d" % (width - 5, i))
+    total = 60
+    batches = [[line("svc", b * 1000 + i) for i in range(total)] + [line("oth", b)] for b in range(6)]
+    b = forward_size(batches[0][0])
+    assert len({forward_size(l) for x in batches for l in x}) == 1
+    files = {"caps.csv": csv("container,cap", [("svc", 1000 * total * b)]),
+             "totals.csv": csv("container,total", [("svc", total * b)]),
+             "actions.csv": csv("container,action", [("svc", "tier_down")])}
+    args = ["rateReceiverWarmupMs", "0", "rateReceiverBaselineCount", "0", "rateReceiverResetIntervalMs", "60000"]
+    return [l for x in batches for l in x], files, args, ["CAP", "ACTION", "TOTAL"], {
+        "pace": {"batches": [len(x) for x in batches], "at": [10 * k for k in range(6)], "total": total, "align": 60000},
+        "window_pass": {k: (11, 11) for k in range(6)}, "fix_args": ["rateReceiverTotalSlices", "6"]}
+
 PAIR_WIDTH = 2 * max(len(w) for w in WORDS) + 6
 
 
@@ -579,6 +599,7 @@ CASES = {
     "w2-windows-mute": case_w2_windows_mute,
     "w3-windows-scaled": case_w3_windows_scaled,
     "w4-windows-late": case_w4_windows_late,
+    "t4-total-slices": case_t4_total_slices,
     "k5-slices": case_k5_slices,
     "k6-slices-mute": case_k6_slices_mute,
     "k7-mute-ends": case_k7_mute_ends,
