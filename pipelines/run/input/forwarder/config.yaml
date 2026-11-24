@@ -36,7 +36,9 @@ output:
   # here, so the output expression below and the compact_events aggregator in
   # run/aggregate/receive read the same condition:
   #   outputOffload truthy           → false                          (offload ships full text)
-  #   outputSoftDrop truthy          → isRoute("compact") || <decide> (the compact-marked slice, plus what <decide> selects)
+  #   outputSoftDrop truthy          → !isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || <decide>)
+  #                                      (the compact-marked slice, plus what <decide> selects; the tier_down and offload
+  #                                      slices always leave as full text, since their destinations do not expand events)
   #   compactReceiverLookupFile set  → shouldEncode()                 (the cap file's per-pattern decision; unlisted patterns follow compactReceiverDefault)
   #   receiverOptimize truthy        → true                           (every event of the source)
   #   none of them                   → false                          (receive mode)
@@ -44,8 +46,9 @@ output:
   encodeFilter: |-
     $=yield TenXEnv.get("outputOffload")
       ? "false"
-      : ((TenXEnv.get("outputSoftDrop") ? "isRoute(\"compact\") || " : "")
-          + (TenXEnv.get("compactReceiverLookupFile") ? "shouldEncode()" : (TenXEnv.get("receiverOptimize") ? "true" : "false")))
+      : ((TenXEnv.get("outputSoftDrop") ? "!isRoute(\"tier_down\") && !isRoute(\"offload\") && (isRoute(\"compact\") || " : "")
+          + (TenXEnv.get("compactReceiverLookupFile") ? "shouldEncode()" : (TenXEnv.get("receiverOptimize") ? "true" : "false"))
+          + (TenXEnv.get("outputSoftDrop") ? ")" : ""))
 
   # outputEncodeField is the per-event output field expression: encode() where
   # outputEncodeFilter holds, fullText(...) otherwise. Written as a YAML `|-`

@@ -45,13 +45,13 @@ const cases = [
   [{ compactReceiverLookupFile: '/cap.csv' }, 'shouldEncode()', 'encoded=(shouldEncode()) ? encode() : fullText("tenx_passthrough")'],
   [{ compactReceiverLookupFile: '/cap.csv', receiverOptimize: true }, 'shouldEncode()', 'encoded=(shouldEncode()) ? encode() : fullText("tenx_passthrough")'],
   [{ outputOffload: true, compactReceiverLookupFile: '/cap.csv' }, 'false', 'encoded=(false) ? encode("routeState") : fullText("routeState")'],
-  [{ outputSoftDrop: true }, 'isRoute("compact") || false', 'encoded=(isRoute("compact") || false) ? encode("routeState") : fullText("routeState")'],
-  [{ outputSoftDrop: true, receiverOptimize: true }, 'isRoute("compact") || true', 'encoded=(isRoute("compact") || true) ? encode("routeState") : fullText("routeState")'],
-  [{ outputSoftDrop: true, compactReceiverLookupFile: '/cap.csv' }, 'isRoute("compact") || shouldEncode()', 'encoded=(isRoute("compact") || shouldEncode()) ? encode("routeState") : fullText("routeState")'],
+  [{ outputSoftDrop: true }, '!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || false)', 'encoded=(!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || false)) ? encode("routeState") : fullText("routeState")'],
+  [{ outputSoftDrop: true, receiverOptimize: true }, '!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || true)', 'encoded=(!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || true)) ? encode("routeState") : fullText("routeState")'],
+  [{ outputSoftDrop: true, compactReceiverLookupFile: '/cap.csv' }, '!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || shouldEncode())', 'encoded=(!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || shouldEncode())) ? encode("routeState") : fullText("routeState")'],
   [{ symbolMessageHashField: 'tenx_hash' }, 'false', 'encoded=(false) ? encode("tenx_hash") : fullText("tenx_hash")'],
   [{ symbolMessageHashField: 'tenx_hash', receiverOptimize: true }, 'true', 'encoded=(true) ? encode("tenx_hash") : fullText("tenx_hash")'],
   [{ symbolMessageHashField: 'tenx_hash', compactReceiverLookupFile: '/cap.csv' }, 'shouldEncode()', 'encoded=(shouldEncode()) ? encode("tenx_hash") : fullText("tenx_hash")'],
-  [{ symbolMessageHashField: 'tenx_hash', outputSoftDrop: true, compactReceiverLookupFile: '/cap.csv' }, 'isRoute("compact") || shouldEncode()', 'encoded=(isRoute("compact") || shouldEncode()) ? encode("tenx_hash","routeState") : fullText("tenx_hash","routeState")'],
+  [{ symbolMessageHashField: 'tenx_hash', outputSoftDrop: true, compactReceiverLookupFile: '/cap.csv' }, '!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || shouldEncode())', 'encoded=(!isRoute("tier_down") && !isRoute("offload") && (isRoute("compact") || shouldEncode())) ? encode("tenx_hash","routeState") : fullText("tenx_hash","routeState")'],
   [{ symbolMessageHashField: 'tenx_hash', outputOffload: true }, 'false', 'encoded=(false) ? encode("tenx_hash","routeState") : fullText("tenx_hash","routeState")'],
 ];
 
@@ -63,4 +63,21 @@ for (const [env, filter, field] of cases) {
 
 test('no branch yields the bare fullText field', () => {
   for (const [env] of cases) assert.doesNotMatch(evaluate(env)[1], /fullText(?!\()/);
+});
+
+// The condition each soft-drop case yields, run against one event per route state.
+function compacts(condition, route, decide) {
+  return new Function('isRoute', 'shouldEncode', 'return (' + condition + ');')((r) => r === route, () => decide);
+}
+
+test('under soft drop the tier_down and offload slices stay full text', () => {
+  for (const env of [{ outputSoftDrop: true }, { outputSoftDrop: true, receiverOptimize: true }, { outputSoftDrop: true, compactReceiverLookupFile: '/cap.csv' }]) {
+    const condition = evaluate(env)[0];
+    for (const decide of [true, false]) {
+      assert.equal(compacts(condition, 'tier_down', decide), false);
+      assert.equal(compacts(condition, 'offload', decide), false);
+      assert.equal(compacts(condition, 'compact', decide), true);
+    }
+    assert.equal(compacts(condition, 'pass', true), !!(env.receiverOptimize || env.compactReceiverLookupFile));
+  }
 });

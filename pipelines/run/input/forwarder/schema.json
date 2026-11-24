@@ -19,7 +19,7 @@
             "string",
             "null"
           ],
-          "markdownDescription" : "The condition under which each forwarder's output stream compacts an event with encode()\n\nResolved once by the customer-facing config.yaml from the Receiver's mode options, so every reader of the condition sees the same one:  - **receive mode** (default) and **outputOffload**: `false`, no event is compacted - **receiverOptimize**: `true`, every event is compacted - **compactReceiverLookupFile**: `shouldEncode()`, the cap file's per-pattern decision - **outputSoftDrop**: `isRoute(\"compact\") || <decide>`, where `<decide>` is   one of the three above  `outputEncodeField` compacts the events the condition holds for, and the Receiver's `compact_events` aggregator counts them. (Default: false)",
+          "markdownDescription" : "The condition under which each forwarder's output stream compacts an event with encode()\n\nResolved once by the customer-facing config.yaml from the Receiver's mode options, so every reader of the condition sees the same one:  - **receive mode** (default) and **outputOffload**: `false`, no event is compacted - **receiverOptimize**: `true`, every event is compacted - **compactReceiverLookupFile**: `shouldEncode()`, the cap file's per-pattern decision - **outputSoftDrop**: `!isRoute(\"tier_down\") && !isRoute(\"offload\") && (isRoute(\"compact\") || <decide>)`, where `<decide>` is   one of the three above; the `tier_down` and `offload` slices stay full text  `outputEncodeField` compacts the events the condition holds for, and the Receiver's `compact_events` aggregator counts them. (Default: false)",
           "default" : "false"
         },
         "encodeField" : {
