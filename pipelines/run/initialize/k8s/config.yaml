@@ -16,7 +16,7 @@ include: run/modules/initialize/k8s
 
 k8s:
 
-  # 'extractorName' specifies which extractor (e.g., fluentK8s/filebeatK8s) to use for k8s metadata extraction
+  # 'extractorName' specifies which extractor (fluentK8s, filebeatK8s or otelK8s) to use for k8s metadata extraction
   extractorName: fluentK8s # extract k8s context using Fluent schema
 
   # 'namespaceNameField' specifies the name of the field in which to assign an extracted k8 namespace name status code, if found
