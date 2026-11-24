@@ -102,10 +102,12 @@ rateReceiver:
   #  total ('totalLookup.file'). By the end of slice i of S the service may have
   #  passed its total x i / S, and what a slice leaves unused carries to the
   #  next, so a sudden burst passes about one slice's share at a time instead
-  #  of the whole total at the start of the window. 1 releases the whole total
+  #  of the whole total at the start of the window. A line held back only by
+  #  its slice's share takes the action and counts toward neither
+  #  'baselineMaxOverTotal' nor 'keepMaxOverTotal'. 1 releases the whole total
   #  at the window start; below 1 or not a number acts as 1, and a fraction is
   #  rounded down. Read by the regulators that consult 'capLookup.file'.
-  totalSlices: 1
+  totalSlices: 6
 
   # 'severityFloors' is the fraction of each level kept at random once a pattern is
   #  over its cap, for levels not in 'keepCounts'. 0 keeps none, so the cap holds.

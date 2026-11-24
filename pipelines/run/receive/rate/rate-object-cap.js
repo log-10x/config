@@ -253,7 +253,7 @@ export class rateReceiverCapObject extends TenXObject {
         // its units, and a line that does not fit hands them back. Through
         // slice i of S (rateReceiverTotalSlices) the service may have passed
         // total x (i + 1) / S, so a burst cannot spend the whole total at once.
-        var totalSlices = TenXMath.parseDouble(TenXEnv.get("rateReceiverTotalSlices", 1), 1);
+        var totalSlices = TenXMath.parseDouble(TenXEnv.get("rateReceiverTotalSlices", 6), 1);
         totalSlices = totalSlices - (totalSlices % 1);
         var totalAllow = serviceTotal;
         if (totalSlices > 1) {
@@ -266,6 +266,10 @@ export class rateReceiverCapObject extends TenXObject {
         if (regular && serviceTotal > 0) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
         if (regular && serviceTotal > 0 && (passedBefore + units) <= totalAllow) counted = true;
         if (regular && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
+        // The over-total allowances below apply only past the whole total; a
+        // line held back by its slice's share alone takes the action.
+        var pastTotal = false;
+        if (regular && serviceTotal > 0 && !counted && (passedBefore + units) > serviceTotal) pastTotal = true;
         if (regular && serviceTotal > 0 && !counted) regular = false;
         if (regular) keep = true;
 
@@ -273,7 +277,7 @@ export class rateReceiverCapObject extends TenXObject {
         // sample lines over its total this window, unbounded at 0.
         var sampleOver = TenXEnv.get("rateReceiverBaselineMaxOverTotal", 50);
         if (!keep && inSample && sampleOver <= 0) keep = true;
-        if (!keep && inSample && sampleOver > 0 && TenXCounter.getAndInc("rg_sx_" + container, 1, windowMs) < sampleOver) keep = true;
+        if (!keep && inSample && pastTotal && sampleOver > 0 && TenXCounter.getAndInc("rg_sx_" + container, 1, windowMs) < sampleOver) keep = true;
 
         // Error-class levels with a keep count: K lines of a pattern held by
         // its cap or by the service total pass each window, within the
@@ -303,7 +307,8 @@ export class rateReceiverCapObject extends TenXObject {
         if (inKeep && !keep && (passedBefore + units) <= totalAllow) counted = true;
         if (inKeep && !keep && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
         if (inKeep && counted) keep = true;
-        if (inKeep && !keep && TenXCounter.getAndInc("rg_kx_" + container, 1, windowMs) < keepOver) keep = true;
+        if (inKeep && !keep && (passedBefore + units) > serviceTotal && TenXCounter.getAndInc("rg_kx_" + container, 1, windowMs) < keepOver) keep = true;
+        if (inKeep && !keep && (passedBefore + units) <= serviceTotal) TenXCounter.getAndInc("rg_kc_" + key, 0 - 1, windowMs);
 
         if (keep && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
         if (keep) return true;
