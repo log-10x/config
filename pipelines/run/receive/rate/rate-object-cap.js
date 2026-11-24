@@ -250,11 +250,21 @@ export class rateReceiverCapObject extends TenXObject {
         if (!keep && keepCount < 0 && TenXMath.random() < floor) regular = true;
 
         // Hard bound: the units the service passed this window. A line reserves
-        // its units, and a line that does not fit hands them back.
+        // its units, and a line that does not fit hands them back. Through
+        // slice i of S (rateReceiverTotalSlices) the service may have passed
+        // total x (i + 1) / S, so a burst cannot spend the whole total at once.
+        var totalSlices = TenXMath.parseDouble(TenXEnv.get("rateReceiverTotalSlices", 1), 1);
+        totalSlices = totalSlices - (totalSlices % 1);
+        var totalAllow = serviceTotal;
+        if (totalSlices > 1) {
+            var totalSlicePos = (now % windowMs) * totalSlices;
+            var totalSlice = (totalSlicePos - (totalSlicePos % windowMs)) / windowMs;
+            totalAllow = serviceTotal * (totalSlice + 1) / totalSlices;
+        }
         var counted = false;
         var passedBefore = 0;
         if (regular && serviceTotal > 0) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
-        if (regular && serviceTotal > 0 && (passedBefore + units) <= serviceTotal) counted = true;
+        if (regular && serviceTotal > 0 && (passedBefore + units) <= totalAllow) counted = true;
         if (regular && serviceTotal > 0 && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
         if (regular && serviceTotal > 0 && !counted) regular = false;
         if (regular) keep = true;
@@ -290,7 +300,7 @@ export class rateReceiverCapObject extends TenXObject {
         if (inKeep && serviceTotal <= 0) keep = true;
         if (inKeep && keepOver <= 0) keep = true;
         if (inKeep && !keep) passedBefore = TenXCounter.getAndInc("rg_pas_" + container, units, windowMs);
-        if (inKeep && !keep && (passedBefore + units) <= serviceTotal) counted = true;
+        if (inKeep && !keep && (passedBefore + units) <= totalAllow) counted = true;
         if (inKeep && !keep && !counted) TenXCounter.getAndInc("rg_pas_" + container, 0 - units, windowMs);
         if (inKeep && counted) keep = true;
         if (inKeep && !keep && TenXCounter.getAndInc("rg_kx_" + container, 1, windowMs) < keepOver) keep = true;
