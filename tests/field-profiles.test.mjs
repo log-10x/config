@@ -102,6 +102,17 @@ for (const file of profiles) {
       assert.match(entry, /^[^=]+(=[^=]+)?$/, `${entry} is name or name=outputName`);
     }
   });
+
+  // Splunk names a field inside a JSON array with {}, where the json reader writes [].
+  test(`${file} writes JSON array fields under Splunk's names`, () => {
+    const doc = read(file);
+    if (!doc.field.readers.includes('json')) return;
+    for (const entry of doc.compactFields) {
+      const [name, out = name] = entry.split('=');
+      assert.ok(!out.includes('[]'), `${entry} writes ${out}; Splunk names it ${out.replaceAll('[]', '{}')}`);
+      assert.equal(name.includes('[]'), out.includes('{}'), `${entry} names an array field under a plain name`);
+    }
+  });
 }
 
 // A name read as a list or to the end of the text gives a value only through compactFields.
